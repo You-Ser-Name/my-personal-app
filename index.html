@@ -850,6 +850,17 @@ select {
   margin-top:14px;
 }
 </style>
+
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#c62810">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Pokémon Campaign">
+
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
 </head>
 
 <body>
@@ -14019,10 +14030,6 @@ function buildCompactPokemonRowHTML(
       owner.trainerType === "PC"
     );
 
-  const showLocationBadge =
-    !owner ||
-    owner.trainerType === "PC";
-
   const evolutionReady =
     pokemonHasAvailableEvolution(
       pokemon
@@ -14123,15 +14130,9 @@ function buildCompactPokemonRowHTML(
             HP ${pokemon.currentHP}/${pokemon.stats.hp}
           </span>
 
-          ${
-            showLocationBadge
-            ? `
-              <span class="pokemon-location-badge">
-                ${location}
-              </span>
-            `
-            : ""
-          }
+          <span class="pokemon-location-badge">
+            ${location}
+          </span>
         </span>
       </summary>
 
@@ -16191,6 +16192,19 @@ function removeInventoryItem(itemId) {
 
 displayPokemonDatabase();
 
+</script>
+
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function() {
+    navigator.serviceWorker
+      .register("./service-worker.js")
+      .catch(function(error) {
+        console.error("Service worker registration failed:", error);
+      });
+  });
+}
 </script>
 
 </body>
