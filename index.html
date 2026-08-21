@@ -849,6 +849,74 @@ select {
 .unassigned-group {
   margin-top:14px;
 }
+
+/* Mobile feedback refinements */
+#pokemonList .card {
+  padding:12px 14px;
+}
+
+#pokemonList .card h3 {
+  margin:2px 0 8px 0;
+}
+
+#pokemonList .card p {
+  margin:5px 0;
+}
+
+#pokemonList .stat-grid {
+  gap:2px 14px;
+}
+
+.pokedex-base-stats-title {
+  margin:8px 0 4px 0;
+  font-size:14px;
+}
+
+.battle-persistent-hp {
+  max-width:860px;
+  margin:0 auto 12px auto;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.battle-hp-chip {
+  background:white;
+  border-radius:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,.14);
+  padding:9px 12px;
+  text-align:center;
+  font-weight:bold;
+}
+
+.damage-preview {
+  background:#eef7ee;
+  border-radius:8px;
+  padding:10px;
+  margin:8px 0 10px 0;
+  text-align:center;
+  font-weight:bold;
+}
+
+.trainer-edit-row {
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  align-items:end;
+}
+
+@media (max-width:600px) {
+  .battle-persistent-hp {
+    grid-template-columns:1fr 1fr;
+    gap:6px;
+  }
+
+  .battle-hp-chip {
+    font-size:12px;
+    padding:7px 6px;
+  }
+}
+
 </style>
 
 
@@ -907,6 +975,12 @@ select {
     </button>
 
     <button
+      class="section-button"
+      onclick="showPage('unassignedPokemonPage')">
+      Unassigned Pokémon
+    </button>
+
+    <button
       id="viewPokedexButton"
       class="section-button"
       onclick="togglePokedex()">
@@ -917,6 +991,17 @@ select {
       id="pokedexSection"
       style="display:none;margin-top:24px;">
       <h2>Pokédex</h2>
+
+      <div class="form-row" style="max-width:520px;margin:0 auto 14px auto;">
+        <label>Search Pokédex</label>
+        <input
+          id="pokedexSearchInput"
+          type="text"
+          placeholder="Search by Pokémon name or number..."
+          oninput="displayPokemonDatabase()"
+          autocomplete="off">
+      </div>
+
       <div id="pokemonList"></div>
     </div>
   </div>
@@ -1032,6 +1117,15 @@ select {
   <div class="page-content">
     <button class="back-button" onclick="showPage('pokemonPage')">← Back</button>
     <div id="trainerPokemonList"></div>
+  </div>
+</div>
+
+<!-- UNASSIGNED POKEMON -->
+<div id="unassignedPokemonPage" style="display:none;">
+  <header><h1>Unassigned Pokémon</h1></header>
+  <div class="page-content">
+    <button class="back-button" onclick="showPage('pokemonPage')">← Back</button>
+    <div id="unassignedPokemonList"></div>
   </div>
 </div>
 
@@ -1207,8 +1301,14 @@ select {
         Pokémon beyond that limit must be stored in a trainer's PC and cannot be selected for battle.
       </p>
 
+      <h3
+        id="pokemonCenterStorageHeader"
+        style="text-align:center;margin-bottom:8px;">
+        Player Storage
+      </h3>
+
       <div class="form-row">
-        <label>Player Character</label>
+        <label>Select Player Character</label>
         <select
           id="pokemonCenterTrainerSelect"
           onchange="displayPokemonCenterStorage()">
@@ -1290,6 +1390,8 @@ select {
         onclick="endBattle()">
         End Battle
       </button>
+
+      <div id="battlePersistentHP" class="battle-persistent-hp"></div>
 
       <div id="battleSelectionArea">
 
@@ -1373,15 +1475,6 @@ select {
       </button>
 
       <div id="pcLevelSummary" class="item-info"></div>
-
-      <div class="hm-note">
-        <strong>Leveling rules:</strong><br>
-        • IVs and EVs stay unchanged.<br>
-        • Stats are recalculated automatically.<br>
-        • Learned moves are not automatically added or removed.<br>
-        • New eligible moves simply become available in Manage Moves.<br>
-        • Evolution remains manual.
-      </div>
     </div>
   </div>
 </div>
@@ -4575,6 +4668,7 @@ function showPage(pageId) {
     "createPokemonPage",
     "partyPokemonPage",
     "trainerPokemonPage",
+    "unassignedPokemonPage",
     "manageMovesPage",
     "trainersPage",
     "createTrainerPage",
@@ -4612,6 +4706,15 @@ function showPage(pageId) {
       pokedexButton.textContent =
         "View Pokédex";
     }
+
+    const pokedexSearch =
+      document.getElementById(
+        "pokedexSearchInput"
+      );
+
+    if (pokedexSearch) {
+      pokedexSearch.value = "";
+    }
   }
 
   if (pageId === "createPokemonPage") {
@@ -4637,6 +4740,7 @@ function showPage(pageId) {
 
   if (pageId === "partyPokemonPage") displayPartyPokemonPage();
   if (pageId === "trainerPokemonPage") displayTrainerPokemonPage();
+  if (pageId === "unassignedPokemonPage") displayUnassignedPokemonPage();
   if (pageId === "trainersPage") displayTrainers();
   if (pageId === "battlesPage") displayBattleSetup();
 
@@ -4713,50 +4817,131 @@ function togglePokedex() {
 
 function displayPokemonDatabase() {
 
-  const list = document.getElementById("pokemonList");
+  const list =
+    document.getElementById(
+      "pokemonList"
+    );
+
+  if (!list) return;
+
+  const search =
+    document.getElementById(
+      "pokedexSearchInput"
+    );
+
+  const query =
+    (
+      search
+      ? search.value
+      : ""
+    )
+      .trim()
+      .toLowerCase()
+      .replace("#","");
+
   list.innerHTML = "";
 
-  pokemonDatabase.forEach(function(pokemon) {
+  const matches =
+    pokemonDatabase.filter(
+      function(pokemon) {
 
-    const card = document.createElement("div");
-    card.className = "card";
+        if (!query) {
+          return true;
+        }
 
-    const number = String(pokemon.number).padStart(3,"0");
+        const number =
+          String(
+            pokemon.number
+          ).padStart(
+            3,
+            "0"
+          );
 
-    const evolution =
-      pokemon.evolutionText
-      ? pokemon.evolutionText
-      : (
-          pokemon.evolutionLevel === null
-          ? "No further level evolution"
-          : "Level " + pokemon.evolutionLevel
+        return (
+          pokemon.name
+            .toLowerCase()
+            .includes(query) ||
+          number.includes(query) ||
+          String(
+            pokemon.number
+          ).includes(query)
         );
+      }
+    );
 
-    card.innerHTML = `
-      <h3>#${number} ${pokemon.name}</h3>
-
-      <p>
-        <strong>Type:</strong>
-        ${pokemon.types.join(" / ")}
-      </p>
-
-      <div class="stat-grid">
-        <p><strong>HP:</strong> ${pokemon.baseStats.hp}</p>
-        <p><strong>Attack:</strong> ${pokemon.baseStats.attack}</p>
-        <p><strong>Defense:</strong> ${pokemon.baseStats.defense}</p>
-        <p><strong>Sp. Attack:</strong> ${pokemon.baseStats.specialAttack}</p>
-        <p><strong>Sp. Defense:</strong> ${pokemon.baseStats.specialDefense}</p>
-        <p><strong>Speed:</strong> ${pokemon.baseStats.speed}</p>
-      </div>
-
-      <p>
-        <strong>Evolution:</strong>
-        ${evolution}
+  if (!matches.length) {
+    list.innerHTML = `
+      <p class="empty-message">
+        No matching Pokémon.
       </p>
     `;
+    return;
+  }
 
-    list.appendChild(card);
-  });
+  matches.forEach(
+    function(pokemon) {
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+      card.className =
+        "card";
+
+      const number =
+        String(
+          pokemon.number
+        ).padStart(
+          3,
+          "0"
+        );
+
+      const evolution =
+        pokemon.evolutionText
+        ? pokemon.evolutionText
+        : (
+            pokemon.evolutionLevel === null
+            ? "No further level evolution"
+            : "Level " +
+              pokemon.evolutionLevel
+          );
+
+      card.innerHTML = `
+        <h3>
+          #${number}
+          ${pokemon.name}
+        </h3>
+
+        <p>
+          <strong>Type:</strong>
+          ${pokemon.types.join(" / ")}
+        </p>
+
+        <div class="pokedex-base-stats-title">
+          <strong>Base Stats</strong>
+        </div>
+
+        <div class="stat-grid">
+          <p><strong>HP:</strong> ${pokemon.baseStats.hp}</p>
+          <p><strong>Attack:</strong> ${pokemon.baseStats.attack}</p>
+          <p><strong>Defense:</strong> ${pokemon.baseStats.defense}</p>
+          <p><strong>Sp. Attack:</strong> ${pokemon.baseStats.specialAttack}</p>
+          <p><strong>Sp. Defense:</strong> ${pokemon.baseStats.specialDefense}</p>
+          <p><strong>Speed:</strong> ${pokemon.baseStats.speed}</p>
+        </div>
+
+        <p>
+          <strong>Evolution:</strong>
+          ${evolution}
+        </p>
+      `;
+
+      list.appendChild(
+        card
+      );
+    }
+  );
 }
 
 
@@ -5405,6 +5590,11 @@ function displayPokemonCenterStorage() {
       "pokemonCenterStorageArea"
     );
 
+  const header =
+    document.getElementById(
+      "pokemonCenterStorageHeader"
+    );
+
   const select =
     document.getElementById(
       "pokemonCenterTrainerSelect"
@@ -5426,6 +5616,14 @@ function displayPokemonCenterStorage() {
         String(trainer.id) ===
         String(selectedTrainerId)
     );
+
+  if (header) {
+    header.textContent =
+      selectedTrainer
+      ? selectedTrainer.name +
+        " Storage"
+      : "Player Storage";
+  }
 
   const selectedTrainerPokemon =
     selectedTrainerId
@@ -5571,8 +5769,7 @@ function storePokemonInPC(
       "ownedPokemonList"
     )
   ) {
-    displayPartyPokemonPage();
-  displayTrainerPokemonPage();
+    refreshPokemonManagementPages();
   }
 }
 
@@ -5625,8 +5822,7 @@ function withdrawPokemonFromPC(
       "ownedPokemonList"
     )
   ) {
-    displayPartyPokemonPage();
-  displayTrainerPokemonPage();
+    refreshPokemonManagementPages();
   }
 }
 
@@ -9352,6 +9548,17 @@ function buildBattleCardHTML(
     pokemon.status === "Burn" ||
     pokemon.status === "Poison";
 
+  const battleOwner =
+    getTrainerById(
+      pokemon.trainerId
+    );
+
+  const isNPCOwned =
+    Boolean(
+      battleOwner &&
+      battleOwner.trainerType === "NPC"
+    );
+
   const actionControls =
     pokemon.temporaryWild
     ? `
@@ -9366,7 +9573,13 @@ function buildBattleCardHTML(
       </div>
     `
     : `
-      <div class="battle-side-actions">
+      <div
+        class="battle-side-actions"
+        style="grid-template-columns:${
+          isNPCOwned
+          ? "repeat(2,1fr)"
+          : "repeat(3,1fr)"
+        };">
         <button
           class="small-button"
           onclick="toggleBattleActionPanel('${side}','item')">
@@ -9379,11 +9592,17 @@ function buildBattleCardHTML(
           Swap Pokémon
         </button>
 
-        <button
-          class="small-button"
-          onclick="runFromBattle('${side}')">
-          Run
-        </button>
+        ${
+          !isNPCOwned
+          ? `
+            <button
+              class="small-button"
+              onclick="runFromBattle('${side}')">
+              Run
+            </button>
+          `
+          : ""
+        }
       </div>
 
       <div
@@ -9428,8 +9647,6 @@ function buildBattleCardHTML(
     `;
 
   return `
-    ${actionControls}
-
     <h2>${getPokemonName(pokemon)}</h2>
 
     <p style="text-align:center;">
@@ -9601,7 +9818,41 @@ function buildBattleCardHTML(
       pokemon,
       side
     )}
+
+    <div style="margin-top:14px;">
+      ${actionControls}
+    </div>
   `;
+}
+
+
+function toggleBattleSection(
+  side,
+  sectionName
+) {
+
+  const id =
+    sectionName === "Stats"
+    ? "battleStats" + side
+    : "battleStages" + side;
+
+  const section =
+    document.getElementById(
+      id
+    );
+
+  if (!section) {
+    return;
+  }
+
+  const isOpen =
+    section.style.display ===
+    "block";
+
+  section.style.display =
+    isOpen
+    ? "none"
+    : "block";
 }
 
 
@@ -9707,7 +9958,49 @@ function toggleBattleVolatileStatus(
 }
 
 
+function updateBattlePersistentHP() {
+
+  const bar =
+    document.getElementById(
+      "battlePersistentHP"
+    );
+
+  if (!bar) {
+    return;
+  }
+
+  const a =
+    getBattlePokemon(
+      "A"
+    );
+
+  const b =
+    getBattlePokemon(
+      "B"
+    );
+
+  if (!a || !b) {
+    bar.innerHTML = "";
+    return;
+  }
+
+  bar.innerHTML = `
+    <div class="battle-hp-chip">
+      ${getPokemonName(a)}
+      — HP ${Math.max(0,a.currentHP)}/${a.stats.hp}
+    </div>
+
+    <div class="battle-hp-chip">
+      ${getPokemonName(b)}
+      — HP ${Math.max(0,b.currentHP)}/${b.stats.hp}
+    </div>
+  `;
+}
+
+
 function displayBattle() {
+
+  updateBattlePersistentHP();
 
   const pokemonA =
     getBattlePokemon("A");
@@ -11060,6 +11353,66 @@ function getSpecialFixedDamage(
   return null;
 }
 
+function updateBattleDamagePreview() {
+
+  const preview =
+    document.getElementById(
+      "battleDamagePreview"
+    );
+
+  const input =
+    document.getElementById(
+      "battleDamageRoll"
+    );
+
+  if (
+    !preview ||
+    !input ||
+    !selectedBattleMove
+  ) {
+    return;
+  }
+
+  const roll =
+    Number(
+      input.value
+    );
+
+  if (
+    !Number.isInteger(roll) ||
+    roll < 1 ||
+    roll > 20
+  ) {
+    preview.textContent =
+      "Enter a d20 roll to preview damage.";
+    return;
+  }
+
+  const normal =
+    calculateBattleDamage(
+      false
+    );
+
+  const critical =
+    calculateBattleDamage(
+      true
+    );
+
+  if (
+    !normal ||
+    !critical
+  ) {
+    return;
+  }
+
+  preview.innerHTML =
+    "Hit Damage: " +
+    normal.damage +
+    " &nbsp; | &nbsp; Crit Damage: " +
+    critical.damage;
+}
+
+
 function calculateBattleDamage(
   critical = false
 ) {
@@ -11397,6 +11750,104 @@ function resolveNoRollBattleMove(
 }
 
 
+function getBattleConclusion() {
+
+  const sideA =
+    getBattlePokemon(
+      "A"
+    );
+
+  const sideB =
+    getBattlePokemon(
+      "B"
+    );
+
+  const pcParty =
+    getSharedPartyPokemon();
+
+  if (
+    pcParty.length > 0 &&
+    pcParty.every(
+      pokemon =>
+        pokemon.currentHP <= 0
+    )
+  ) {
+    return {
+      result:"lost",
+      message:"Battle Lost! All Party Pokémon have fainted."
+    };
+  }
+
+  if (
+    sideB &&
+    sideB.temporaryWild &&
+    sideB.currentHP <= 0
+  ) {
+    return {
+      result:"won",
+      message:"Battle Won! The Wild Pokémon fainted."
+    };
+  }
+
+  if (sideB) {
+
+    const trainer =
+      getTrainerById(
+        sideB.trainerId
+      );
+
+    if (
+      trainer &&
+      trainer.trainerType === "NPC"
+    ) {
+
+      const npcTeam =
+        getTrainerPokemon(
+          trainer.id
+        );
+
+      if (
+        npcTeam.length > 0 &&
+        npcTeam.every(
+          pokemon =>
+            pokemon.currentHP <= 0
+        )
+      ) {
+        return {
+          result:"won",
+          message:"Battle Won! All of " +
+            trainer.name +
+            "'s Pokémon have fainted."
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+
+function handleBattleConclusionIfNeeded() {
+
+  const conclusion =
+    getBattleConclusion();
+
+  if (!conclusion) {
+    return false;
+  }
+
+  alert(
+    conclusion.message
+  );
+
+  endBattle(
+    true
+  );
+
+  return true;
+}
+
+
 function resolveBattleMoveOutcome(
   outcome
 ) {
@@ -11594,6 +12045,12 @@ function resolveBattleMoveOutcome(
       " " +
       getPokemonName(defender) +
       " fainted!";
+
+    if (
+      handleBattleConclusionIfNeeded()
+    ) {
+      return;
+    }
 
     displayBattle();
     displaySelectedBattleMove();
@@ -12549,7 +13006,7 @@ function displaySelectedBattleMove() {
           ${getPokemonName(faintedPokemon)} fainted!
         </strong>
         <br>
-        Use the Swap Pokémon or Run controls above that Pokémon.
+        Choose the appropriate next action for the fainted side.
       </div>
     `;
 
@@ -12859,7 +13316,14 @@ function displaySelectedBattleMove() {
                 type="number"
                 min="1"
                 max="20"
-                placeholder="Enter damage roll">
+                placeholder="Enter damage roll"
+                oninput="updateBattleDamagePreview()">
+            </div>
+
+            <div
+              id="battleDamagePreview"
+              class="damage-preview">
+              Enter a d20 roll to preview damage.
             </div>
           `
           : `
@@ -13595,6 +14059,32 @@ function createPokemon() {
       : "party";
   }
 
+  const startingMoves =
+    assignedTrainer
+    ? getDefaultWildPokemonMoves(
+        species.number,
+        level
+      )
+    : [];
+
+  const startingMovePP = {};
+
+  startingMoves.forEach(
+    function(moveName) {
+      const move =
+        moveDatabase[
+          moveName
+        ];
+
+      if (move) {
+        startingMovePP[
+          moveName
+        ] =
+          move.pp;
+      }
+    }
+  );
+
   ownedPokemon.push({
     id:Date.now(),
     speciesNumber:species.number,
@@ -13606,8 +14096,8 @@ function createPokemon() {
     stats:stats,
     currentHP:stats.hp,
     status:"None",
-    moves:[],
-    movePP:{},
+    moves:startingMoves,
+    movePP:startingMovePP,
     trainerId:trainerId,
     storageLocation:storageLocation
   });
@@ -13967,8 +14457,7 @@ function evolvePokemon(
 
   savePokemon();
 
-  displayPartyPokemonPage();
-  displayTrainerPokemonPage();
+  refreshPokemonManagementPages();
 }
 
 /* =========================================================
@@ -14030,6 +14519,10 @@ function buildCompactPokemonRowHTML(
       owner.trainerType === "PC"
     );
 
+  const showLocationBadge =
+    !owner ||
+    owner.trainerType === "PC";
+
   const evolutionReady =
     pokemonHasAvailableEvolution(
       pokemon
@@ -14083,8 +14576,7 @@ function buildCompactPokemonRowHTML(
         <button
           class="small-button"
           style="width:100%;margin-top:10px;"
-          onclick="withdrawPokemonFromPC('${pokemon.id}');displayPartyPokemonPage();
-  displayTrainerPokemonPage();">
+          onclick="withdrawPokemonFromPC('${pokemon.id}');refreshPokemonManagementPages();">
           Add to Shared Party
         </button>
       `;
@@ -14094,8 +14586,7 @@ function buildCompactPokemonRowHTML(
         <button
           class="small-button"
           style="width:100%;margin-top:10px;"
-          onclick="storePokemonInPC('${pokemon.id}');displayPartyPokemonPage();
-  displayTrainerPokemonPage();">
+          onclick="storePokemonInPC('${pokemon.id}');refreshPokemonManagementPages();">
           Store in PC
         </button>
       `;
@@ -14130,9 +14621,15 @@ function buildCompactPokemonRowHTML(
             HP ${pokemon.currentHP}/${pokemon.stats.hp}
           </span>
 
-          <span class="pokemon-location-badge">
-            ${location}
-          </span>
+          ${
+            showLocationBadge
+            ? `
+              <span class="pokemon-location-badge">
+                ${location}
+              </span>
+            `
+            : ""
+          }
         </span>
       </summary>
 
@@ -14178,12 +14675,7 @@ function buildCompactPokemonRowHTML(
         <button
           class="primary-button"
           style="width:100%;margin-top:8px;"
-          onclick="openMoveManager(
-          ${pokemon.id},
-          isPCOwned
-          ? 'partyPokemonPage'
-          : 'trainerPokemonPage'
-        )">
+          onclick="openMoveManager(${pokemon.id},'${isPCOwned ? "partyPokemonPage" : (owner ? "trainerPokemonPage" : "unassignedPokemonPage")}')">
           Manage Moves
         </button>
 
@@ -14213,10 +14705,10 @@ function buildNPCTrainerPokemonGroupHTML(
       trainer.id
     ).sort(
       function(a,b) {
-        return getPokemonName(a)
-          .localeCompare(
-            getPokemonName(b)
-          );
+        return (
+          a.speciesNumber -
+          b.speciesNumber
+        );
       }
     );
 
@@ -14268,10 +14760,10 @@ function buildPCTrainerPokemonGroupHTML(
         "pc"
     ).sort(
       function(a,b) {
-        return getPokemonName(a)
-          .localeCompare(
-            getPokemonName(b)
-          );
+        return (
+          a.speciesNumber -
+          b.speciesNumber
+        );
       }
     );
 
@@ -14282,10 +14774,10 @@ function buildPCTrainerPokemonGroupHTML(
         "pc"
     ).sort(
       function(a,b) {
-        return getPokemonName(a)
-          .localeCompare(
-            getPokemonName(b)
-          );
+        return (
+          a.speciesNumber -
+          b.speciesNumber
+        );
       }
     );
 
@@ -14467,6 +14959,100 @@ function displayTrainerPokemonPage() {
 }
 
 
+
+
+function displayUnassignedPokemonPage() {
+
+  const list =
+    document.getElementById(
+      "unassignedPokemonList"
+    );
+
+  if (!list) {
+    return;
+  }
+
+  const unassigned =
+    ownedPokemon.filter(
+      pokemon =>
+        !getTrainerById(
+          pokemon.trainerId
+        )
+    ).sort(
+      function(a,b) {
+        return (
+          a.speciesNumber -
+          b.speciesNumber
+        );
+      }
+    );
+
+  const pcTrainers =
+    trainers.filter(
+      trainer =>
+        trainer.trainerType === "PC"
+    ).sort(
+      function(a,b) {
+        return a.name.localeCompare(
+          b.name
+        );
+      }
+    );
+
+  const npcTrainers =
+    trainers.filter(
+      trainer =>
+        trainer.trainerType === "NPC"
+    ).sort(
+      function(a,b) {
+        return a.name.localeCompare(
+          b.name
+        );
+      }
+    );
+
+  const sortedTrainers = [
+    ...pcTrainers,
+    ...npcTrainers
+  ];
+
+  list.innerHTML = `
+    <section class="my-pokemon-section">
+      <h2 class="my-pokemon-section-title">
+        Unassigned Pokémon
+        (${unassigned.length})
+      </h2>
+
+      <div class="party-pokemon-panel">
+        ${
+          unassigned.length
+          ? unassigned.map(
+              pokemon =>
+                buildCompactPokemonRowHTML(
+                  pokemon,
+                  true,
+                  sortedTrainers
+                )
+            ).join("")
+          : `
+            <p class="empty-message">
+              No unassigned Pokémon.
+            </p>
+          `
+        }
+      </div>
+    </section>
+  `;
+}
+
+
+function refreshPokemonManagementPages() {
+  displayPartyPokemonPage();
+  displayTrainerPokemonPage();
+  displayUnassignedPokemonPage();
+}
+
+
 function assignTrainer(pokemonId,trainerId) {
 
   const pokemon =
@@ -14550,8 +15136,7 @@ function assignTrainer(pokemonId,trainerId) {
   }
 
   savePokemon();
-  displayPartyPokemonPage();
-  displayTrainerPokemonPage();
+  refreshPokemonManagementPages();
 }
 
 function deletePokemon(id) {
@@ -14562,8 +15147,7 @@ function deletePokemon(id) {
     ownedPokemon.filter(pokemon => pokemon.id !== id);
 
   savePokemon();
-  displayPartyPokemonPage();
-  displayTrainerPokemonPage();
+  refreshPokemonManagementPages();
 }
 
 
@@ -14782,11 +15366,20 @@ function openMoveManager(
         )
       : null;
 
-    lastPokemonManagementPage =
-      trainer &&
+    if (!trainer) {
+      lastPokemonManagementPage =
+        "unassignedPokemonPage";
+    }
+    else if (
       trainer.trainerType === "NPC"
-      ? "trainerPokemonPage"
-      : "partyPokemonPage";
+    ) {
+      lastPokemonManagementPage =
+        "trainerPokemonPage";
+    }
+    else {
+      lastPokemonManagementPage =
+        "partyPokemonPage";
+    }
   }
 
   showPage(
@@ -14795,6 +15388,7 @@ function openMoveManager(
 
   displayMoveManager();
 }
+
 
 function getActiveMovePokemon() {
 
@@ -15487,95 +16081,269 @@ function createTrainer() {
   showPage("trainersPage");
 }
 
+function renameTrainer(
+  trainerId
+) {
+
+  const trainer =
+    getTrainerById(
+      trainerId
+    );
+
+  const input =
+    document.getElementById(
+      "trainerNameEdit" +
+      trainerId
+    );
+
+  if (
+    !trainer ||
+    !input
+  ) {
+    return;
+  }
+
+  const newName =
+    input.value.trim();
+
+  if (!newName) {
+    alert(
+      "Trainer name cannot be blank."
+    );
+    return;
+  }
+
+  trainer.name =
+    newName;
+
+  saveTrainers();
+  displayTrainers();
+}
+
+
+function assignUnassignedPokemonToTrainer(
+  trainerId
+) {
+
+  const select =
+    document.getElementById(
+      "trainerAssignPokemon" +
+      trainerId
+    );
+
+  if (
+    !select ||
+    !select.value
+  ) {
+    alert(
+      "Select an unassigned Pokémon first."
+    );
+    return;
+  }
+
+  assignTrainer(
+    Number(select.value),
+    String(trainerId)
+  );
+
+  displayTrainers();
+}
+
+
 function displayTrainers() {
 
   const list =
-    document.getElementById("trainerList");
+    document.getElementById(
+      "trainerList"
+    );
 
   list.innerHTML = "";
 
   if (!trainers.length) {
-    list.innerHTML =
-      `<p class="empty-message">No trainers created yet.</p>`;
+    list.innerHTML = `
+      <p class="empty-message">
+        No trainers created yet.
+      </p>
+    `;
     return;
   }
 
-  trainers.forEach(function(trainer) {
+  const sortedTrainers =
+    [...trainers].sort(
+      function(a,b) {
 
-    const team =
-      ownedPokemon.filter(
-        pokemon =>
-          pokemon.trainerId === trainer.id
-      );
+        if (
+          a.trainerType !==
+          b.trainerType
+        ) {
+          return a.trainerType === "PC"
+          ? -1
+          : 1;
+        }
 
-    const card =
-      document.createElement("div");
+        return a.name.localeCompare(
+          b.name
+        );
+      }
+    );
 
-    card.className =
-      "card";
+  const unassigned =
+    ownedPokemon.filter(
+      pokemon =>
+        !getTrainerById(
+          pokemon.trainerId
+        )
+    ).sort(
+      function(a,b) {
+        return (
+          a.speciesNumber -
+          b.speciesNumber
+        );
+      }
+    );
 
-    let teamHTML = "";
+  sortedTrainers.forEach(
+    function(trainer) {
 
-    if (!team.length) {
+      const team =
+        getTrainerPokemon(
+          trainer.id
+        ).sort(
+          function(a,b) {
+            return (
+              a.speciesNumber -
+              b.speciesNumber
+            );
+          }
+        );
 
-      teamHTML =
-        `<p class="empty-message">No Pokémon assigned.</p>`;
+      const card =
+        document.createElement(
+          "div"
+        );
 
-    }
-    else {
+      card.className =
+        "card";
 
-      team.forEach(function(pokemon) {
-
-        teamHTML += `
-          <div class="team-member">
-            <strong>${getPokemonName(pokemon)}</strong>
-            — Level ${pokemon.level}
-          </div>
+      const teamHTML =
+        team.length
+        ? team.map(
+            pokemon => `
+              <div class="team-member">
+                <strong>
+                  #${String(pokemon.speciesNumber).padStart(3,"0")}
+                  ${getPokemonName(pokemon)}
+                </strong>
+                — Level ${pokemon.level}
+              </div>
+            `
+          ).join("")
+        : `
+          <p class="empty-message">
+            No Pokémon assigned.
+          </p>
         `;
-      });
+
+      const pcSelected =
+        trainer.trainerType === "PC"
+        ? "selected"
+        : "";
+
+      const npcSelected =
+        trainer.trainerType === "NPC"
+        ? "selected"
+        : "";
+
+      const unassignedOptions =
+        unassigned.length
+        ? `
+          <option value="">
+            Select Pokémon...
+          </option>
+          ${
+            unassigned.map(
+              pokemon => `
+                <option value="${pokemon.id}">
+                  #${String(pokemon.speciesNumber).padStart(3,"0")}
+                  ${getPokemonName(pokemon)}
+                  — Lv. ${pokemon.level}
+                </option>
+              `
+            ).join("")
+          }
+        `
+        : `
+          <option value="">
+            No unassigned Pokémon
+          </option>
+        `;
+
+      card.innerHTML = `
+        <h3>${trainer.name}</h3>
+
+        <div class="trainer-edit-row">
+          <div class="form-row" style="margin:0;">
+            <label>Edit Name</label>
+            <input
+              id="trainerNameEdit${trainer.id}"
+              type="text"
+              value="${trainer.name.replace(/"/g,"&quot;")}">
+          </div>
+
+          <button
+            class="small-button"
+            onclick="renameTrainer(${trainer.id})">
+            Save
+          </button>
+        </div>
+
+        <div class="form-row" style="margin-top:14px;">
+          <label>Trainer Type</label>
+          <select
+            onchange="changeTrainerType(${trainer.id},this.value)">
+            <option value="PC" ${pcSelected}>
+              Player Character (PC)
+            </option>
+            <option value="NPC" ${npcSelected}>
+              Non-Player Character (NPC)
+            </option>
+          </select>
+        </div>
+
+        <div class="trainer-team">
+          <strong>Owned Pokémon</strong>
+          ${teamHTML}
+        </div>
+
+        <div class="form-row" style="margin-top:14px;">
+          <label>Assign Unassigned Pokémon</label>
+          <select id="trainerAssignPokemon${trainer.id}">
+            ${unassignedOptions}
+          </select>
+        </div>
+
+        <button
+          class="small-button"
+          style="width:100%;"
+          ${unassigned.length ? "" : "disabled"}
+          onclick="assignUnassignedPokemonToTrainer(${trainer.id})">
+          Assign Pokémon
+        </button>
+
+        <button
+          class="delete-button"
+          onclick="deleteTrainer(${trainer.id})">
+          Delete Trainer
+        </button>
+      `;
+
+      list.appendChild(
+        card
+      );
     }
-
-    const pcSelected =
-      trainer.trainerType === "PC"
-      ? "selected"
-      : "";
-
-    const npcSelected =
-      trainer.trainerType === "NPC"
-      ? "selected"
-      : "";
-
-    card.innerHTML = `
-      <h3>${trainer.name}</h3>
-
-      <div class="form-row">
-        <label>Trainer Type</label>
-        <select
-          onchange="changeTrainerType(${trainer.id},this.value)">
-          <option value="PC" ${pcSelected}>
-            Player Character (PC)
-          </option>
-          <option value="NPC" ${npcSelected}>
-            Non-Player Character (NPC)
-          </option>
-        </select>
-      </div>
-
-      <div class="trainer-team">
-        <strong>Owned Pokémon</strong>
-        ${teamHTML}
-      </div>
-
-      <button
-        class="delete-button"
-        onclick="deleteTrainer(${trainer.id})">
-        Delete Trainer
-      </button>
-    `;
-
-    list.appendChild(card);
-  });
+  );
 }
+
 
 function changeTrainerType(
   trainerId,
