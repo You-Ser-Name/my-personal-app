@@ -1868,6 +1868,45 @@ select {
   }
 }
 
+
+/* =========================================================
+   MOBILE BATTLE HEADER + BOTTOM NAV
+   Pokédex intentionally untouched.
+========================================================= */
+@media (max-width:600px) {
+
+  #battlesPage > header {
+    min-height:72px !important;
+    padding:14px 12px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+  }
+
+  #battlesPage > header h1 {
+    font-size:28px !important;
+    line-height:1 !important;
+    margin:0 !important;
+  }
+
+  .battle-bottom-nav {
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:8px !important;
+    margin:10px 0 6px 0 !important;
+  }
+
+  .battle-bottom-nav .small-button {
+    width:100% !important;
+    min-height:38px !important;
+    height:auto !important;
+    padding:6px 8px !important;
+    margin:0 !important;
+    font-size:12px !important;
+    line-height:1 !important;
+  }
+}
+
 </style>
 
 
@@ -2282,8 +2321,6 @@ select {
   <header><h1>Battles</h1></header>
 
   <div class="page-content">
-    <button class="back-button" onclick="battleBack()">← Back</button>
-
     <div class="form-card" id="battleSetupCard">
       <h2 style="text-align:center;">Battle Setup</h2>
 
@@ -2340,13 +2377,6 @@ select {
 
     <div id="battleArea" style="display:none;">
 
-      <button
-        class="small-button"
-        style="display:block;margin:0 auto 12px auto;"
-        onclick="endBattle()">
-        End Battle
-      </button>
-
       <div id="battleArena" class="battle-arena"></div>
 
       <div id="battleSelectionArea">
@@ -2376,6 +2406,22 @@ select {
 
       
 
+    </div>
+
+    <div
+      id="battleBottomNav"
+      class="battle-bottom-nav">
+      <button
+        class="small-button"
+        onclick="battleBack()">
+        ← Back
+      </button>
+
+      <button
+        class="small-button"
+        onclick="endBattle()">
+        End Battle
+      </button>
     </div>
   </div>
 </div>
