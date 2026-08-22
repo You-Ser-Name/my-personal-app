@@ -1237,6 +1237,143 @@ select {
   }
 }
 
+
+/* Compact mobile Pokédex: designed to show about 2 x 3 cards per iPhone screen */
+@media (max-width:600px) {
+  #pokedexSection {
+    margin-top:14px !important;
+  }
+
+  #pokedexSection > h2 {
+    margin:4px 0 2px 0;
+    font-size:22px;
+  }
+
+  #pokedexSection > p {
+    margin:0 0 6px 0 !important;
+    font-size:10px !important;
+  }
+
+  #pokedexSection .form-row {
+    margin-bottom:8px !important;
+  }
+
+  #pokedexSection .form-row label {
+    font-size:13px;
+    margin-bottom:3px;
+  }
+
+  #pokedexSearchInput {
+    min-height:34px;
+    padding:6px 9px;
+    font-size:14px;
+  }
+
+  #pokemonList {
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0,1fr));
+    gap:7px;
+  }
+
+  #pokemonList .card {
+    margin:0;
+    padding:7px 7px 6px 7px;
+    border-radius:10px;
+    min-width:0;
+  }
+
+  #pokemonList .card h3 {
+    font-size:13px;
+    margin:0 0 3px 0;
+    line-height:1.05;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  #pokemonList .pokedex-artwork-wrap {
+    min-height:58px;
+    height:58px;
+    margin:0 0 3px 0;
+  }
+
+  #pokemonList .pokedex-artwork,
+  #pokemonList .pokedex-artwork-fallback {
+    width:58px;
+    height:58px;
+  }
+
+  #pokemonList .card > p {
+    font-size:10px;
+    line-height:1.08;
+    margin:2px 0;
+  }
+
+  #pokemonList .pokedex-base-stats-title {
+    font-size:10px;
+    margin:2px 0 1px 0;
+    line-height:1.05;
+  }
+
+  #pokemonList .stat-grid {
+    grid-template-columns:1fr 1fr;
+    gap:0 4px;
+    margin:0;
+  }
+
+  #pokemonList .stat-grid p {
+    font-size:9px;
+    line-height:1.05;
+    margin:1px 0;
+    white-space:nowrap;
+  }
+
+  #pokemonList .card > p:last-child {
+    font-size:9px;
+    line-height:1.05;
+    margin-top:2px;
+  }
+}
+
+
+.battle-control-card-label {
+  text-align:center;
+  font-weight:800;
+  font-size:16px;
+  margin:0 0 8px 0;
+}
+
+@media (max-width:600px) {
+  .battle-card {
+    padding:10px !important;
+  }
+
+  .battle-control-card-label {
+    font-size:14px;
+    margin-bottom:5px;
+  }
+
+  .battle-card .form-row {
+    margin-top:9px !important;
+    margin-bottom:8px !important;
+  }
+
+  .battle-card .battle-note {
+    margin:7px 0;
+    padding:8px;
+  }
+
+  .battle-card .small-button,
+  .battle-card .primary-button {
+    min-height:42px;
+  }
+
+  .battle-card h3 {
+    margin-top:12px !important;
+    margin-bottom:7px !important;
+  }
+}
+
 </style>
 
 
@@ -11490,19 +11627,8 @@ function buildBattleCardHTML(
     `;
 
   return `
-    <h2>${getPokemonName(pokemon)}</h2>
-
-    <p style="text-align:center;">
-      <strong>
-        ${trainer}
-      </strong>
-      <br>
-      Level ${pokemon.level}
-    </p>
-
-    <div class="battle-hp">
-      <strong>HP:</strong>
-      ${currentHP} / ${maxHP}
+    <div class="battle-control-card-label">
+      ${side === "A" ? "Your Pokémon Controls" : (pokemon.temporaryWild ? "Wild Pokémon Controls" : "Opponent Controls")}
     </div>
 
     ${getFaintedBattlePromptHTML(side)}
