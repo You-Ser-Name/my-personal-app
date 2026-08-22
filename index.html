@@ -2004,6 +2004,10 @@ select {
   }
 }
 
+
+/* V5 compact/focused controls */
+.compact-top-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;align-items:center;margin-bottom:8px}.compact-top-actions.three{grid-template-columns:repeat(3,minmax(0,1fr))}.compact-top-actions button{width:100%;margin:0!important;min-height:34px;padding:6px 8px}.pokedex-details{margin-top:3px}.pokedex-details summary{cursor:pointer;list-style:none;text-align:center;font-size:9px;font-weight:700;padding:3px 5px;border:1px solid #bbb;border-radius:5px;background:#f4f4f4;user-select:none}.pokedex-details summary::-webkit-details-marker{display:none}.pokedex-details[open] summary{margin-bottom:3px}.pokedex-details .stat-grid{margin-top:2px}.manual-override-box{margin-top:3px}.manual-override-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px;align-items:center;margin-top:4px}.manual-override-grid input{min-width:0;height:26px;padding:3px 5px;font-size:9px}.manual-override-grid button{min-height:26px!important;padding:3px 7px!important;margin:0!important;font-size:8px!important}.manual-pp-row{display:grid;grid-template-columns:minmax(0,1fr) 44px 36px;gap:3px;align-items:center;margin-top:3px;font-size:8px}.manual-pp-row input{width:100%;height:24px;padding:2px 3px;font-size:8px}.manual-pp-row button{min-height:24px!important;padding:2px 4px!important;margin:0!important;font-size:7px!important}.completed-trainer-note{font-size:11px;text-align:center;color:#666;margin:4px 0 10px}@media(max-width:600px){.compact-top-actions{gap:4px;margin-bottom:6px}.compact-top-actions button{min-height:29px;padding:4px 5px;font-size:9px}#pokemonList .pokedex-details p{margin:1px 0!important;font-size:7px!important;line-height:1.05!important}#pokemonList .pokedex-details .stat-grid{gap:0 3px!important}#pokemonList .pokedex-base-stats-title{margin:1px 0!important;font-size:7px!important}#pokemonList .pokedex-details summary{font-size:7px!important;padding:2px 3px!important;min-height:18px;line-height:1.1}}
+
 </style>
 
 
@@ -2041,43 +2045,20 @@ select {
   <header><h1>Pokémon</h1></header>
 
   <div class="page-content">
-    <button class="back-button" onclick="showPage('homePage')">← Back</button>
-    <br>
-
-    <button
-      class="section-button primary-button"
-      onclick="showPage('createPokemonPage')">
-      + Create Pokémon
-    </button>
-
-    <button
-      class="section-button"
-      onclick="showPage('partyPokemonPage')">
-      Party Pokémon
-    </button>
-
-    <button
-      class="section-button"
-      onclick="showPage('trainerPokemonPage')">
-      Trainer Pokémon
-    </button>
-
-    <button
-      class="section-button"
-      onclick="showPage('unassignedPokemonPage')">
-      Unassigned Pokémon
-    </button>
-
-    <button
-      id="viewPokedexButton"
-      class="section-button"
-      onclick="togglePokedex()">
-      View Pokédex
-    </button>
-
-    <div
-      id="pokedexSection"
-      style="display:none;margin-top:24px;">
+    <div id="pokemonDefaultControls">
+      <button class="back-button" onclick="showPage('homePage')">← Back</button>
+      <br>
+      <button class="section-button primary-button" onclick="showPage('createPokemonPage')">+ Create Pokémon</button>
+      <button class="section-button" onclick="showPage('partyPokemonPage')">Party Pokémon</button>
+      <button class="section-button" onclick="showPage('trainerPokemonPage')">Trainer Pokémon</button>
+      <button class="section-button" onclick="showPage('unassignedPokemonPage')">Unassigned Pokémon</button>
+      <button id="viewPokedexButton" class="section-button" onclick="togglePokedex()">View Pokédex</button>
+    </div>
+    <div id="pokedexTopControls" class="compact-top-actions" style="display:none;">
+      <button class="back-button" onclick="showPage('homePage')">← Back</button>
+      <button class="small-button" onclick="togglePokedex()">Hide Pokédex</button>
+    </div>
+    <div id="pokedexSection" style="display:none;margin-top:8px;">
       <h2>Pokédex</h2>
 
       <p style="text-align:center;font-size:12px;color:#666;margin-top:-6px;">
@@ -2299,20 +2280,28 @@ select {
   <header><h1>Trainers</h1></header>
 
   <div class="page-content">
-    <button class="back-button" onclick="showPage('homePage')">← Back</button>
-    <br>
-
-    <button
-      class="section-button primary-button"
-      onclick="showPage('createTrainerPage')">
-      + Create Trainer
-    </button>
-
+    <div class="compact-top-actions three">
+      <button class="back-button" onclick="showPage('homePage')">← Back</button>
+      <button class="primary-button" onclick="showPage('createTrainerPage')">+ Create Trainer</button>
+      <button class="small-button" onclick="showPage('completedTrainersPage')">Completed Trainers</button>
+    </div>
     <h2>Trainer List</h2>
     <div id="trainerList"></div>
   </div>
 </div>
 
+<!-- COMPLETED TRAINERS -->
+<div id="completedTrainersPage" style="display:none;">
+  <header><h1>Completed Trainers</h1></header>
+  <div class="page-content">
+    <div class="compact-top-actions">
+      <button class="back-button" onclick="showPage('trainersPage')">← Back</button>
+      <button class="primary-button" onclick="showPage('createTrainerPage')">+ Create Trainer</button>
+    </div>
+    <p class="completed-trainer-note">NPC trainers marked defeated or completed are hidden from the active trainer list and Battle Setup.</p>
+    <div id="completedTrainerList"></div>
+  </div>
+</div>
 
 <!-- CREATE TRAINER -->
 <div id="createTrainerPage" style="display:none;">
@@ -2393,20 +2382,14 @@ select {
         Pokémon beyond that limit must be stored in a trainer's PC and cannot be selected for battle.
       </p>
 
-      <h3
-        id="pokemonCenterStorageHeader"
-        style="text-align:center;margin-bottom:8px;">
-        Player Storage
-      </h3>
+      <div id="pokemonCenterSharedPartyArea"></div>
 
-      <div class="form-row">
+      <div class="form-row" style="margin-top:14px;">
         <label>Select Player Character</label>
-        <select
-          id="pokemonCenterTrainerSelect"
-          onchange="displayPokemonCenterStorage()">
-        </select>
+        <select id="pokemonCenterTrainerSelect" onchange="displayPokemonCenterStorage()"></select>
       </div>
 
+      <h3 id="pokemonCenterStorageHeader" style="text-align:center;margin-bottom:8px;">Player Storage</h3>
       <div id="pokemonCenterStorageArea"></div>
     </div>
   </div>
@@ -2514,11 +2497,7 @@ select {
         ← Back
       </button>
 
-      <button
-        class="small-button"
-        onclick="endBattle()">
-        End Battle
-      </button>
+      <button id="endBattleButton" class="small-button" style="display:none;" onclick="endBattle()">End Battle</button>
     </div>
   </div>
 </div>
@@ -2573,7 +2552,6 @@ select {
         Apply Level to All PC Pokémon
       </button>
 
-      <div id="pcLevelSummary" class="item-info"></div>
     </div>
   </div>
 </div>
@@ -5673,6 +5651,11 @@ const itemDatabase = [
 
 {name:"Repel",id:"repel",category:"Field Items",description:"Wards off wild Pokémon.",buyPrice:350,sellPrice:175},
 {name:"Super Repel",id:"super-repel",category:"Field Items",description:"Wards off wild Pokémon for longer.",buyPrice:500,sellPrice:250},
+{name:"Fire Stone",id:"fire-stone",category:"Evolution Items",description:"Used to evolve certain Pokémon.",buyPrice:null,sellPrice:null},
+{name:"Water Stone",id:"water-stone",category:"Evolution Items",description:"Used to evolve certain Pokémon.",buyPrice:null,sellPrice:null},
+{name:"Thunder Stone",id:"thunder-stone",category:"Evolution Items",description:"Used to evolve certain Pokémon.",buyPrice:null,sellPrice:null},
+{name:"Leaf Stone",id:"leaf-stone",category:"Evolution Items",description:"Used to evolve certain Pokémon.",buyPrice:null,sellPrice:null},
+{name:"Moon Stone",id:"moon-stone",category:"Evolution Items",description:"Used to evolve certain Pokémon.",buyPrice:null,sellPrice:null},
 
 {name:"X Accuracy",id:"x-accuracy",category:"Battle Items",description:"Temporarily boosts a Pokémon's accuracy by 2 stages.",buyPrice:950,sellPrice:475},
 {name:"X Attack",id:"x-attack",category:"Battle Items",description:"Temporarily boosts a Pokémon's Attack by 1 stage.",buyPrice:500,sellPrice:250},
@@ -7095,13 +7078,8 @@ function upgradeSavedData() {
       Trainers created before PC/NPC support are treated as PCs
       so existing campaigns continue to work naturally.
     */
-    if (
-      trainer.trainerType !== "PC" &&
-      trainer.trainerType !== "NPC"
-    ) {
-      trainer.trainerType = "PC";
-      trainerChanged = true;
-    }
+    if (trainer.trainerType !== "PC" && trainer.trainerType !== "NPC") {trainer.trainerType="PC";trainerChanged=true;}
+    if(typeof trainer.completed!=="boolean"){trainer.completed=false;trainerChanged=true;}
   });
 
   if (pokemonChanged) savePokemon();
@@ -7130,6 +7108,7 @@ function showPage(pageId) {
     "unassignedPokemonPage",
     "manageMovesPage",
     "trainersPage",
+    "completedTrainersPage",
     "createTrainerPage",
     "battlesPage",
     "pokemonCenterPage",
@@ -7147,25 +7126,12 @@ function showPage(pageId) {
     pageId === "pokemonPage"
   ) {
 
-    const pokedexSection =
-      document.getElementById(
-        "pokedexSection"
-      );
-
-    const pokedexButton =
-      document.getElementById(
-        "viewPokedexButton"
-      );
-
-    if (pokedexSection) {
-      pokedexSection.style.display =
-        "none";
-    }
-
-    if (pokedexButton) {
-      pokedexButton.textContent =
-        "View Pokédex";
-    }
+    const pokedexSection = document.getElementById("pokedexSection");
+    const defaultControls = document.getElementById("pokemonDefaultControls");
+    const pokedexTopControls = document.getElementById("pokedexTopControls");
+    if (pokedexSection) pokedexSection.style.display = "none";
+    if (defaultControls) defaultControls.style.display = "block";
+    if (pokedexTopControls) pokedexTopControls.style.display = "none";
 
     const pokedexSearch =
       document.getElementById(
@@ -7202,6 +7168,7 @@ function showPage(pageId) {
   if (pageId === "trainerPokemonPage") displayTrainerPokemonPage();
   if (pageId === "unassignedPokemonPage") displayUnassignedPokemonPage();
   if (pageId === "trainersPage") displayTrainers();
+  if (pageId === "completedTrainersPage") displayCompletedTrainers();
   if (pageId === "battlesPage") displayBattleSetup();
 
   if (
@@ -7235,47 +7202,13 @@ function showPage(pageId) {
 ========================================================= */
 
 function togglePokedex() {
-
-  const section =
-    document.getElementById(
-      "pokedexSection"
-    );
-
-  const button =
-    document.getElementById(
-      "viewPokedexButton"
-    );
-
-  if (
-    !section ||
-    !button
-  ) {
-    return;
-  }
-
-  const opening =
-    section.style.display ===
-    "none";
-
-  if (opening) {
-
-    section.style.display =
-      "block";
-
-    button.textContent =
-      "Hide Pokédex";
-
-    displayPokemonDatabase();
-
-  }
-  else {
-
-    section.style.display =
-      "none";
-
-    button.textContent =
-      "View Pokédex";
-  }
+  const section=document.getElementById("pokedexSection");
+  const normal=document.getElementById("pokemonDefaultControls");
+  const top=document.getElementById("pokedexTopControls");
+  if(!section||!normal||!top)return;
+  const opening=section.style.display==="none";
+  if(opening){normal.style.display="none";top.style.display="grid";section.style.display="block";displayPokemonDatabase();}
+  else{section.style.display="none";top.style.display="none";normal.style.display="block";}
 }
 
 
@@ -7534,23 +7467,14 @@ function displayPokemonDatabase() {
           ${pokemon.types.join(" / ")}
         </p>
 
-        <div class="pokedex-base-stats-title">
-          <strong>Base Stats</strong>
-        </div>
-
-        <div class="stat-grid">
-          <p><strong>HP:</strong> ${pokemon.baseStats.hp}</p>
-          <p><strong>Attack:</strong> ${pokemon.baseStats.attack}</p>
-          <p><strong>Defense:</strong> ${pokemon.baseStats.defense}</p>
-          <p><strong>Sp. Attack:</strong> ${pokemon.baseStats.specialAttack}</p>
-          <p><strong>Sp. Defense:</strong> ${pokemon.baseStats.specialDefense}</p>
-          <p><strong>Speed:</strong> ${pokemon.baseStats.speed}</p>
-        </div>
-
-        <p>
-          <strong>Evolution:</strong>
-          ${evolution}
-        </p>
+        <details class="pokedex-details">
+          <summary>Details</summary>
+          <div class="pokedex-base-stats-title"><strong>Base Stats</strong></div>
+          <div class="stat-grid">
+            <p><strong>HP:</strong> ${pokemon.baseStats.hp}</p><p><strong>Attack:</strong> ${pokemon.baseStats.attack}</p><p><strong>Defense:</strong> ${pokemon.baseStats.defense}</p><p><strong>Sp. Attack:</strong> ${pokemon.baseStats.specialAttack}</p><p><strong>Sp. Defense:</strong> ${pokemon.baseStats.specialDefense}</p><p><strong>Speed:</strong> ${pokemon.baseStats.speed}</p>
+          </div>
+          <p><strong>Evolution:</strong> ${evolution}</p>
+        </details>
       `;
 
       list.appendChild(
@@ -8200,165 +8124,21 @@ function populatePokemonCenterTrainerDropdown() {
 }
 
 function displayPokemonCenterStorage() {
-
-  const area =
-    document.getElementById(
-      "pokemonCenterStorageArea"
-    );
-
-  const header =
-    document.getElementById(
-      "pokemonCenterStorageHeader"
-    );
-
-  const select =
-    document.getElementById(
-      "pokemonCenterTrainerSelect"
-    );
-
-  if (!area || !select) {
-    return;
-  }
-
-  const sharedParty =
-    getSharedPartyPokemon();
-
-  const selectedTrainerId =
-    select.value;
-
-  const selectedTrainer =
-    trainers.find(
-      trainer =>
-        String(trainer.id) ===
-        String(selectedTrainerId)
-    );
-
-  if (header) {
-    header.textContent =
-      selectedTrainer
-      ? selectedTrainer.name +
-        " Storage"
-      : "Player Storage";
-  }
-
-  const selectedTrainerPokemon =
-    selectedTrainerId
-    ? getTrainerPokemon(
-        selectedTrainerId
-      )
-    : [];
-
-  const selectedParty =
-    selectedTrainerPokemon.filter(
-      pokemon =>
-        pokemon.storageLocation !==
-        "pc"
-    );
-
-  const selectedStored =
-    selectedTrainerPokemon.filter(
-      pokemon =>
-        pokemon.storageLocation ===
-        "pc"
-    );
-
-  const sharedPartyHTML =
-    sharedParty.length
-    ? sharedParty.map(
-        function(pokemon) {
-
-          const trainer =
-            getTrainerById(
-              pokemon.trainerId
-            );
-
-          return `
-            <div class="pokemon-storage-card">
-              <strong>
-                ${getPokemonName(pokemon)}
-              </strong>
-              — Lv. ${pokemon.level}
-              <br>
-              Trainer:
-              ${
-                trainer
-                ? trainer.name
-                : "Unassigned"
-              }
-              <br>
-              HP ${pokemon.currentHP}/${pokemon.stats.hp}
-
-              <button
-                class="small-button"
-                onclick="storePokemonInPC('${pokemon.id}')">
-                Store in PC
-              </button>
-            </div>
-          `;
-        }
-      ).join("")
-    : `
-        <p class="empty-message">
-          No Pokémon currently in the shared party.
-        </p>
-      `;
-
-  const trainerStoredHTML =
-    selectedStored.length
-    ? selectedStored.map(
-        function(pokemon) {
-
-          return `
-            <div class="pokemon-storage-card">
-              <strong>
-                ${getPokemonName(pokemon)}
-              </strong>
-              — Lv. ${pokemon.level}
-              <br>
-              HP ${pokemon.currentHP}/${pokemon.stats.hp}
-
-              <button
-                class="small-button"
-                ${
-                  sharedParty.length >= 6
-                  ? "disabled"
-                  : ""
-                }
-                onclick="withdrawPokemonFromPC('${pokemon.id}')">
-                Add to Shared Party
-              </button>
-            </div>
-          `;
-        }
-      ).join("")
-    : `
-        <p class="empty-message">
-          No Pokémon from this trainer are stored in PC.
-        </p>
-      `;
-
-  area.innerHTML = `
-    <div class="storage-count">
-      Shared Party:
-      ${sharedParty.length} / 6
-    </div>
-
-    <div class="pokemon-storage-section">
-      <h3>Shared Party Pokémon</h3>
-      ${sharedPartyHTML}
-    </div>
-
-    <div class="pokemon-storage-section">
-      <h3>
-        ${
-          selectedTrainer
-          ? selectedTrainer.name + "'s PC Storage"
-          : "PC Storage"
-        }
-      </h3>
-      ${trainerStoredHTML}
-    </div>
-  `;
+  const sharedArea=document.getElementById("pokemonCenterSharedPartyArea");
+  const area=document.getElementById("pokemonCenterStorageArea");
+  const header=document.getElementById("pokemonCenterStorageHeader");
+  const select=document.getElementById("pokemonCenterTrainerSelect");
+  if(!sharedArea||!area||!select)return;
+  const sharedParty=getSharedPartyPokemon();
+  const selectedTrainerId=select.value;
+  const selectedTrainer=trainers.find(t=>String(t.id)===String(selectedTrainerId));
+  if(header)header.textContent=selectedTrainer?selectedTrainer.name+" Storage":"Player Storage";
+  const selectedTrainerPokemon=selectedTrainerId?getTrainerPokemon(selectedTrainerId):[];
+  const selectedStored=selectedTrainerPokemon.filter(p=>p.storageLocation==="pc");
+  const sharedPartyHTML=sharedParty.length?sharedParty.map(p=>{const t=getTrainerById(p.trainerId);return `<div class="pokemon-storage-card"><strong>${getPokemonName(p)}</strong> — Lv. ${p.level}<br>Trainer: ${t?t.name:"Unassigned"}<br>HP ${p.currentHP}/${p.stats.hp}<button class="small-button" onclick="storePokemonInPC('${p.id}')">Store in PC</button></div>`}).join(""):`<p class="empty-message">No Pokémon currently in the shared party.</p>`;
+  const storedHTML=selectedStored.length?selectedStored.map(p=>`<div class="pokemon-storage-card"><strong>${getPokemonName(p)}</strong> — Lv. ${p.level}<br>HP ${p.currentHP}/${p.stats.hp}<button class="small-button" ${sharedParty.length>=6?"disabled":""} onclick="withdrawPokemonFromPC('${p.id}')">Add to Shared Party</button></div>`).join(""):`<p class="empty-message">No Pokémon from this trainer are stored in PC.</p>`;
+  sharedArea.innerHTML=`<div class="storage-count">Shared Party: ${sharedParty.length} / 6</div><div class="pokemon-storage-section"><h3>Shared Party Pokémon</h3>${sharedPartyHTML}</div>`;
+  area.innerHTML=`<div class="pokemon-storage-section">${storedHTML}</div>`;
 }
 
 
@@ -10719,63 +10499,7 @@ function battleBack() {
 }
 
 
-function endBattle(force = false) {
-
-  if (
-    !force &&
-    !confirm(
-      "End this battle?"
-    )
-  ) {
-    return;
-  }
-
-  battleUndoHistory = [];
-
-  battleOpenSections.A.Stats = false;
-  battleOpenSections.A.Stages = false;
-  battleOpenSections.B.Stats = false;
-  battleOpenSections.B.Stages = false;
-
-  activeBattlePokemonAId = null;
-  activeBattlePokemonBId = null;
-  activeWildBattlePokemon = null;
-  selectedBattleMove = null;
-  lastBattleEffectMessage = "";
-
-  resetBattleTemporaryState();
-
-  const battleArea =
-    document.getElementById(
-      "battleArea"
-    );
-
-  if (battleArea) {
-    battleArea.style.display =
-      "none";
-  }
-
-  const setupCard =
-    document.getElementById(
-      "battleSetupCard"
-    );
-
-  if (setupCard) {
-    setupCard.style.display =
-      "block";
-  }
-
-  populateBattlePokemonDropdowns();
-
-  const details =
-    document.getElementById(
-      "battleMoveDetails"
-    );
-
-  if (details) {
-    details.innerHTML = "";
-  }
-}
+function endBattle(force=false){if(!force&&!confirm("End this battle?"))return;battleUndoHistory=[];battleOpenSections.A.Stats=false;battleOpenSections.A.Stages=false;battleOpenSections.B.Stats=false;battleOpenSections.B.Stages=false;activeBattlePokemonAId=null;activeBattlePokemonBId=null;activeWildBattlePokemon=null;selectedBattleMove=null;lastBattleEffectMessage="";resetBattleTemporaryState();const details=document.getElementById("battleMoveDetails");if(details)details.innerHTML="";updateBattleEndButtonVisibility();showPage("homePage");}
 
 
 function runFromBattle(
@@ -11235,17 +10959,7 @@ function getTrainerNameForPokemon(
 
 
 function getBattleOpponentNPCTrainers() {
-
-  return trainers.filter(
-    trainer =>
-      trainer.trainerType === "NPC" &&
-      ownedPokemon.some(
-        pokemon =>
-          pokemon.trainerId ===
-            trainer.id &&
-          pokemon.currentHP > 0
-      )
-  );
+  return trainers.filter(trainer=>trainer.trainerType==="NPC"&&!trainer.completed&&ownedPokemon.some(p=>p.trainerId===trainer.id&&p.currentHP>0));
 }
 
 
@@ -11757,6 +11471,8 @@ function displayBattleOpponentPokemonOptions() {
 }
 
 
+function updateBattleEndButtonVisibility(){const button=document.getElementById("endBattleButton");if(!button)return;const active=activeBattlePokemonAId!==null&&activeBattlePokemonBId!==null;button.style.display=active?"block":"none";}
+
 function displayBattleSetup() {
 
   const selectA =
@@ -11931,6 +11647,7 @@ function displayBattleSetup() {
   }
 
   displayBattleOpponentPokemonOptions();
+  updateBattleEndButtonVisibility();
 
   if (
     activeBattlePokemonAId !== null &&
@@ -12389,13 +12106,6 @@ function buildBattleCardHTML(
       : ""
     }
 
-    <button
-      class="small-button"
-      style="width:100%;margin:10px 0 0 0;"
-      onclick="setBattleHPFull('${side}')">
-      Restore Full HP
-    </button>
-
     <div class="form-row" style="margin-top:15px;">
       <label>Major Status</label>
       <select
@@ -12467,35 +12177,12 @@ function buildBattleCardHTML(
       : ""
     }
 
-    <button
-      class="small-button battle-collapse-button"
-      onclick="toggleBattleSection('${side}','Stats')">
-      Stats
-    </button>
-
-    <div
-      id="battleStats${side}"
-      class="battle-collapsible">
-    <div class="stat-grid">
-      <p><strong>Attack:</strong> ${pokemon.stats.attack}</p>
-      <p><strong>Defense:</strong> ${pokemon.stats.defense}</p>
-      <p><strong>Special:</strong> ${pokemon.stats.specialAttack}</p>
-      <p><strong>Speed:</strong> ${pokemon.stats.speed}</p>
-      <p><strong>Effective Attack:</strong> ${effectiveAttack}</p>
-      <p><strong>Effective Defense:</strong> ${effectiveDefense}</p>
-      <p><strong>Effective Special:</strong> ${effectiveSpecial}</p>
-      <p><strong>Effective Speed:</strong> ${effectiveSpeed}</p>
-      <p><strong>Type:</strong> ${
-        (
-          pokemonDatabase.find(
-            p =>
-              p.number ===
-              pokemon.speciesNumber
-          ) || {types:[]}
-        ).types.join(" / ")
-      }</p>
-    </div>
-
+    <button class="small-button battle-collapse-button" onclick="toggleBattleSection('${side}','Stats')">Manual Override</button>
+    <div id="battleStats${side}" class="battle-collapsible manual-override-box">
+      <div class="stat-grid"><p><strong>Attack:</strong> ${pokemon.stats.attack}</p><p><strong>Defense:</strong> ${pokemon.stats.defense}</p><p><strong>Special:</strong> ${pokemon.stats.specialAttack}</p><p><strong>Speed:</strong> ${pokemon.stats.speed}</p><p><strong>Eff. Attack:</strong> ${effectiveAttack}</p><p><strong>Eff. Defense:</strong> ${effectiveDefense}</p><p><strong>Eff. Special:</strong> ${effectiveSpecial}</p><p><strong>Eff. Speed:</strong> ${effectiveSpeed}</p><p><strong>Type:</strong> ${(pokemonDatabase.find(p=>p.number===pokemon.speciesNumber)||{types:[]}).types.join(" / ")}</p></div>
+      <button class="small-button" style="width:100%;margin:4px 0 0 0;" onclick="setBattleHPFull('${side}')">Restore Full HP</button>
+      <div class="manual-override-grid"><input id="manualHP${side}" type="number" min="0" max="${maxHP}" value="${currentHP}" aria-label="Set HP value"><button class="small-button" onclick="setBattleHPValue('${side}')">Set HP</button></div>
+      ${pokemon.moves&&pokemon.moves.length?`<div style="margin-top:5px;font-size:8px;font-weight:700;">Set Move PP</div>${pokemon.moves.map((moveName,i)=>`<div class="manual-pp-row"><span>${moveName} (${getMoveCurrentPP(pokemon,moveName)}/${getMoveMaxPP(moveName)})</span><input id="manualPP${side}${i}" type="number" min="0" max="${getMoveMaxPP(moveName)}" value="${getMoveCurrentPP(pokemon,moveName)}"><button class="small-button" onclick="setBattleMovePPValue('${side}',${i})">Set</button></div>`).join("")}`:`<div class="battle-note">No learned moves to override PP.</div>`}
     </div>
 
     <button
@@ -12829,6 +12516,7 @@ function updateBattlePersistentHP() {
 
 function displayBattle() {
 
+  updateBattleEndButtonVisibility();
   updateBattlePersistentHP();
 
   const pokemonA =
@@ -12957,6 +12645,9 @@ function setBattleHPFull(
   displayBattle();
 }
 
+
+function setBattleHPValue(side){const pokemon=getBattlePokemon(side),input=document.getElementById("manualHP"+side);if(!pokemon||!input)return;const value=Number(input.value);if(!Number.isFinite(value))return;pokemon.currentHP=Math.max(0,Math.min(pokemon.stats.hp,Math.floor(value)));savePokemon();displayBattle();}
+function setBattleMovePPValue(side,moveIndex){const pokemon=getBattlePokemon(side);if(!pokemon||!Array.isArray(pokemon.moves))return;const moveName=pokemon.moves[moveIndex];if(!moveName)return;const input=document.getElementById("manualPP"+side+moveIndex);if(!input)return;const value=Number(input.value);if(!Number.isFinite(value))return;if(!pokemon.movePP||typeof pokemon.movePP!=="object")pokemon.movePP={};pokemon.movePP[moveName]=Math.max(0,Math.min(getMoveMaxPP(moveName),Math.floor(value)));savePokemon();displayBattle();}
 
 function setBattleStatus(
   side,
@@ -14184,64 +13875,7 @@ function getSpecialFixedDamage(
   return null;
 }
 
-function updateBattleDamagePreview() {
-
-  const preview =
-    document.getElementById(
-      "battleDamagePreview"
-    );
-
-  const input =
-    document.getElementById(
-      "battleDamageRoll"
-    );
-
-  if (
-    !preview ||
-    !input ||
-    !selectedBattleMove
-  ) {
-    return;
-  }
-
-  const roll =
-    Number(
-      input.value
-    );
-
-  if (
-    !Number.isInteger(roll) ||
-    roll < 1 ||
-    roll > 20
-  ) {
-    preview.textContent =
-      "Enter a d20 roll to preview damage.";
-    return;
-  }
-
-  const normal =
-    calculateBattleDamage(
-      false
-    );
-
-  const critical =
-    calculateBattleDamage(
-      true
-    );
-
-  if (
-    !normal ||
-    !critical
-  ) {
-    return;
-  }
-
-  preview.innerHTML =
-    "Hit Damage: " +
-    normal.damage +
-    " &nbsp; | &nbsp; Crit Damage: " +
-    critical.damage;
-}
+function updateBattleDamagePreview(){const preview=document.getElementById("battleDamagePreview"),input=document.getElementById("battleDamageRoll");if(!preview||!input||!selectedBattleMove)return;const roll=Number(input.value);if(!Number.isInteger(roll)||roll<1||roll>20){preview.textContent="Enter a d20 roll to preview damage.";return;}const normal=calculateBattleDamage(false),critical=calculateBattleDamage(true);if(!normal||!critical)return;const defender=getBattlePokemon(normal.defenderSide);const hp=defender?Math.max(0,defender.currentHP):0;const n=Math.max(0,hp-normal.damage),c=Math.max(0,hp-critical.damage);preview.innerHTML="Hit: "+normal.damage+" damage ("+(n===0?"KO":n+" HP left")+")<br>Crit: "+critical.damage+" damage ("+(c===0?"KO":c+" HP left")+")";}
 
 
 function calculateBattleDamage(
@@ -16457,98 +16091,12 @@ function adjustPCPokemonLevel(
 }
 
 function displayCampaignPage() {
-
-  const display =
-    document.getElementById(
-      "pcPokemonLevelDisplay"
-    );
-
-  const input =
-    document.getElementById(
-      "pcPokemonLevelInput"
-    );
-
-  const summary =
-    document.getElementById(
-      "pcLevelSummary"
-    );
-
-  if (
-    !display ||
-    !input ||
-    !summary
-  ) {
-    return;
-  }
-
-  display.textContent =
-    pcPokemonLevel;
-
-  input.value =
-    pcPokemonLevel;
-
-  const pcTrainers =
-    trainers.filter(
-      trainer =>
-        trainer.trainerType === "PC"
-    );
-
-  const pcPokemon =
-    ownedPokemon.filter(
-      pokemon =>
-        isPCTrainer(
-          pokemon.trainerId
-        )
-    );
-
-  const npcPokemon =
-    ownedPokemon.filter(
-      pokemon => {
-
-        const trainer =
-          getTrainerById(
-            pokemon.trainerId
-          );
-
-        return !!trainer &&
-          trainer.trainerType === "NPC";
-      }
-    );
-
-  const unassigned =
-    ownedPokemon.filter(
-      pokemon =>
-        pokemon.trainerId === null ||
-        !getTrainerById(
-          pokemon.trainerId
-        )
-    );
-
-  summary.innerHTML = `
-    <strong>PC Trainers:</strong>
-    ${pcTrainers.length}
-    <br>
-
-    <strong>PC Pokémon:</strong>
-    ${pcPokemon.length}
-    — all managed at Level
-    ${pcPokemonLevel}
-    <br>
-
-    <strong>Shared Party:</strong>
-    ${getSharedPartyPokemon().length} / 6
-    <br>
-
-    <strong>NPC Pokémon:</strong>
-    ${npcPokemon.length}
-    — unaffected
-    <br>
-
-    <strong>Unassigned Pokémon:</strong>
-    ${unassigned.length}
-    — unaffected
-  `;
+  const display=document.getElementById("pcPokemonLevelDisplay");
+  const input=document.getElementById("pcPokemonLevelInput");
+  if(!display||!input)return;
+  display.textContent=pcPokemonLevel; input.value=pcPokemonLevel;
 }
+
 
 function populateCreatePokemonTrainerDropdown() {
 
@@ -17071,24 +16619,11 @@ function getEvolutionOptions(
 }
 
 
-function canEvolvePokemon(
-  pokemon,
-  option
-) {
+function getEvolutionStoneItemId(option){if(!option||option.method!=="stone")return null;return {"Fire Stone":"fire-stone","Water Stone":"water-stone","Thunder Stone":"thunder-stone","Leaf Stone":"leaf-stone","Moon Stone":"moon-stone"}[option.label]||null;}
+function getPokemonOwnerForEvolution(pokemon){if(!pokemon||pokemon.trainerId===null||pokemon.trainerId===undefined)return null;return getTrainerById(pokemon.trainerId);}
+function getEvolutionStoneInventoryEntry(pokemon,option){const trainer=getPokemonOwnerForEvolution(pokemon),itemId=getEvolutionStoneItemId(option);if(!trainer||!itemId||!Array.isArray(trainer.inventory))return null;return trainer.inventory.find(e=>e.itemId===itemId&&Number(e.quantity)>0)||null;}
 
-  if (
-    option.method === "level"
-  ) {
-    return pokemon.level >=
-      option.level;
-  }
-
-  /*
-    Stone and trade evolutions remain manual.
-    The app assumes the DM has confirmed the requirement.
-  */
-  return true;
-}
+function canEvolvePokemon(pokemon,option){if(option.method==="level")return pokemon.level>=option.level;if(option.method==="stone")return Boolean(getEvolutionStoneInventoryEntry(pokemon,option));return true;}
 
 
 function buildEvolutionHTML(
@@ -17148,7 +16683,7 @@ function buildEvolutionHTML(
             class="evolution-option locked-button"
             disabled>
             🔒 ${target.name}
-            — ${option.label}
+            — ${option.method === "stone" ? option.label + " required in trainer inventory" : option.label}
           </button>
         `;
 
@@ -17205,9 +16740,7 @@ function evolvePokemon(
     )
   ) {
 
-    alert(
-      "This Pokémon has not reached the required evolution level."
-    );
+    alert(option.method === "stone" ? "The Pokémon's trainer does not have the required " + option.label + " in their inventory." : "This Pokémon has not reached the required evolution level.");
 
     return;
   }
@@ -17236,13 +16769,7 @@ function evolvePokemon(
   let requirementNote =
     option.label;
 
-  if (
-    option.method === "stone"
-  ) {
-    requirementNote =
-      option.label +
-      " — confirm the stone has been used";
-  }
+  if(option.method==="stone"){const owner=getPokemonOwnerForEvolution(pokemon);requirementNote=option.label+" — 1 will be consumed from "+(owner?owner.name+"'s inventory":"the trainer inventory");}
 
   if (
     option.method === "trade"
@@ -17269,6 +16796,8 @@ function evolvePokemon(
   if (!confirmed) {
     return;
   }
+
+  if(option.method==="stone"){const owner=getPokemonOwnerForEvolution(pokemon);const stone=getEvolutionStoneInventoryEntry(pokemon,option);if(!owner||!stone){alert("The required "+option.label+" is no longer available.");return;}stone.quantity-=1;if(stone.quantity<=0)owner.inventory=owner.inventory.filter(entry=>entry!==stone);saveTrainers();}
 
   pokemon.speciesNumber =
     newSpecies.number;
@@ -18940,7 +18469,8 @@ function createTrainer() {
       ? "NPC"
       : "PC",
     money:0,
-    inventory:[]
+    inventory:[],
+    completed:false
   });
 
   saveTrainers();
@@ -19042,7 +18572,7 @@ function displayTrainers() {
   }
 
   const sortedTrainers =
-    [...trainers].sort(
+    trainers.filter(trainer=>!(trainer.trainerType==="NPC"&&trainer.completed)).sort(
       function(a,b) {
 
         if (
@@ -19203,11 +18733,8 @@ function displayTrainers() {
           Assign Pokémon
         </button>
 
-        <button
-          class="delete-button"
-          onclick="deleteTrainer(${trainer.id})">
-          Delete Trainer
-        </button>
+        ${trainer.trainerType === "NPC" ? `<button class="small-button" style="width:100%;margin-top:8px;" onclick="setTrainerCompleted(${trainer.id},true)">Mark Defeated / Completed</button>` : ""}
+        <button class="delete-button" onclick="deleteTrainer(${trainer.id})">Delete Trainer</button>
       `;
 
       list.appendChild(
@@ -19217,6 +18744,10 @@ function displayTrainers() {
   );
 }
 
+
+function setTrainerCompleted(trainerId,completed){const trainer=getTrainerById(trainerId);if(!trainer||trainer.trainerType!=="NPC")return;trainer.completed=Boolean(completed);saveTrainers();if(trainer.completed)displayTrainers();else displayCompletedTrainers();}
+
+function displayCompletedTrainers(){const list=document.getElementById("completedTrainerList");if(!list)return;list.innerHTML="";const done=trainers.filter(t=>t.trainerType==="NPC"&&t.completed).sort((a,b)=>a.name.localeCompare(b.name));if(!done.length){list.innerHTML=`<p class="empty-message">No defeated or completed NPC trainers.</p>`;return;}done.forEach(trainer=>{const team=getTrainerPokemon(trainer.id).sort((a,b)=>a.speciesNumber-b.speciesNumber);const teamHTML=team.length?team.map(p=>`<div class="team-member"><strong>#${String(p.speciesNumber).padStart(3,"0")} ${getPokemonName(p)}</strong> — Level ${p.level}</div>`).join(""):`<p class="empty-message">No Pokémon assigned.</p>`;const card=document.createElement("div");card.className="card";card.innerHTML=`<h3>${trainer.name}</h3><div class="trainer-team"><strong>Owned Pokémon</strong>${teamHTML}</div><button class="primary-button" style="width:100%;margin-top:8px;" onclick="setTrainerCompleted(${trainer.id},false)">Return to Active Trainers</button><button class="delete-button" onclick="deleteTrainer(${trainer.id});displayCompletedTrainers();">Delete Trainer</button>`;list.appendChild(card);});}
 
 function changeTrainerType(
   trainerId,
@@ -19230,10 +18761,8 @@ function changeTrainerType(
 
   if (!trainer) return;
 
-  trainer.trainerType =
-    trainerType === "NPC"
-    ? "NPC"
-    : "PC";
+  trainer.trainerType = trainerType === "NPC" ? "NPC" : "PC";
+  if(trainer.trainerType==="PC")trainer.completed=false;
 
   /*
     If a trainer becomes a PC, immediately synchronize
@@ -19842,7 +19371,7 @@ displayPokemonDatabase();
    APP VERSION CHECK
    Checks GitHub Pages directly, bypassing browser caches.
 ========================================================= */
-const APP_VERSION = "2026-08-21-04";
+const APP_VERSION = "2026-08-22-05";
 const APP_VERSION_STORAGE_KEY = "pokemonCampaignAppVersion";
 
 async function checkForAppUpdate() {
