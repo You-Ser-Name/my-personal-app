@@ -1117,6 +1117,126 @@ select {
   }
 }
 
+
+.battle-arena {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  align-items:start;
+  max-width:900px;
+  margin:0 auto 14px auto;
+}
+
+.battle-arena-side {
+  background:white;
+  border-radius:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.14);
+  padding:10px;
+  text-align:center;
+  min-width:0;
+}
+
+.battle-arena-name {
+  font-weight:800;
+  font-size:18px;
+  line-height:1.15;
+  margin-bottom:4px;
+}
+
+.battle-arena-owner {
+  font-size:13px;
+  color:#555;
+  margin-bottom:2px;
+}
+
+.battle-arena-level {
+  font-size:13px;
+  color:#555;
+  margin-bottom:4px;
+}
+
+.battle-arena-image-wrap {
+  height:130px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:2px 0 4px 0;
+}
+
+.battle-arena-image {
+  width:130px;
+  height:130px;
+  object-fit:contain;
+  display:block;
+}
+
+.battle-arena-image-fallback {
+  width:110px;
+  height:110px;
+  border-radius:10px;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:#f1f1f1;
+  color:#666;
+  font-size:12px;
+}
+
+.battle-arena-hp {
+  font-size:17px;
+  font-weight:800;
+  margin-top:4px;
+}
+
+.battle-arena-status {
+  font-size:12px;
+  margin-top:3px;
+  color:#555;
+}
+
+@media (max-width:600px) {
+  .battle-arena {
+    gap:6px;
+    margin-bottom:10px;
+  }
+
+  .battle-arena-side {
+    padding:7px 5px;
+    border-radius:11px;
+  }
+
+  .battle-arena-name {
+    font-size:15px;
+  }
+
+  .battle-arena-owner,
+  .battle-arena-level {
+    font-size:11px;
+  }
+
+  .battle-arena-image-wrap {
+    height:96px;
+  }
+
+  .battle-arena-image {
+    width:96px;
+    height:96px;
+  }
+
+  .battle-arena-image-fallback {
+    width:80px;
+    height:80px;
+  }
+
+  .battle-arena-hp {
+    font-size:14px;
+  }
+
+  .battle-arena-status {
+    font-size:11px;
+  }
+}
+
 </style>
 
 
@@ -1596,7 +1716,7 @@ select {
         End Battle
       </button>
 
-      <div id="battlePersistentHP" class="battle-persistent-hp"></div>
+      <div id="battleArena" class="battle-arena"></div>
 
       <div id="battleSelectionArea">
 
@@ -6503,7 +6623,7 @@ function handleBattleArtworkError(
   const fallback =
     image.parentElement
       ? image.parentElement.querySelector(
-          ".battle-artwork-fallback"
+          ".battle-artwork-fallback, .battle-arena-image-fallback"
         )
       : null;
 
@@ -11186,19 +11306,6 @@ function buildBattleCardHTML(
       pokemon
     );
 
-  const species =
-    pokemonDatabase.find(
-      entry =>
-        entry.number ===
-        pokemon.speciesNumber
-    );
-
-  const artworkURL =
-    species
-    ? getPokemonFandomArtworkURL(
-        species
-      )
-    : "";
 
   const currentHP =
     Math.max(
@@ -11384,27 +11491,6 @@ function buildBattleCardHTML(
 
   return `
     <h2>${getPokemonName(pokemon)}</h2>
-
-    <div class="battle-artwork-wrap">
-      ${
-        artworkURL
-        ? `
-          <img
-            class="battle-artwork"
-            src="${artworkURL}"
-            alt="${pokemon.speciesName || getPokemonName(pokemon)}"
-            loading="eager"
-            referrerpolicy="no-referrer"
-            onerror="handleBattleArtworkError(this)">
-        `
-        : ""
-      }
-
-      <div
-        class="battle-artwork-fallback">
-        Artwork unavailable
-      </div>
-    </div>
 
     <p style="text-align:center;">
       <strong>
@@ -11715,14 +11801,100 @@ function toggleBattleVolatileStatus(
 }
 
 
-function updateBattlePersistentHP() {
+function buildBattleArenaSideHTML(
+  pokemon,
+  side
+) {
 
-  const bar =
-    document.getElementById(
-      "battlePersistentHP"
+  if (!pokemon) {
+    return `
+      <div class="battle-arena-side">
+        <div class="battle-arena-name">
+          No Active Pokémon
+        </div>
+      </div>
+    `;
+  }
+
+  const species =
+    pokemonDatabase.find(
+      entry =>
+        entry.number ===
+        pokemon.speciesNumber
     );
 
-  if (!bar) {
+  const artworkURL =
+    species
+    ? getPokemonFandomArtworkURL(
+        species
+      )
+    : "";
+
+  const owner =
+    getTrainerNameForPokemon(
+      pokemon
+    );
+
+  const status =
+    pokemon.status &&
+    pokemon.status !== "None"
+    ? pokemon.status
+    : "No Status";
+
+  return `
+    <div class="battle-arena-side">
+      <div class="battle-arena-name">
+        ${getPokemonName(pokemon)}
+      </div>
+
+      <div class="battle-arena-owner">
+        ${owner}
+      </div>
+
+      <div class="battle-arena-level">
+        Level ${pokemon.level}
+      </div>
+
+      <div class="battle-arena-image-wrap">
+        ${
+          artworkURL
+          ? `
+            <img
+              class="battle-arena-image"
+              src="${artworkURL}"
+              alt="${pokemon.speciesName || getPokemonName(pokemon)}"
+              loading="eager"
+              referrerpolicy="no-referrer"
+              onerror="handleBattleArtworkError(this)">
+          `
+          : ""
+        }
+
+        <div class="battle-arena-image-fallback">
+          Artwork unavailable
+        </div>
+      </div>
+
+      <div class="battle-arena-hp">
+        HP ${Math.max(0,pokemon.currentHP)}/${pokemon.stats.hp}
+      </div>
+
+      <div class="battle-arena-status">
+        ${status}
+      </div>
+    </div>
+  `;
+}
+
+
+function updateBattlePersistentHP() {
+
+  const arena =
+    document.getElementById(
+      "battleArena"
+    );
+
+  if (!arena) {
     return;
   }
 
@@ -11737,22 +11909,21 @@ function updateBattlePersistentHP() {
     );
 
   if (!a || !b) {
-    bar.innerHTML = "";
+    arena.innerHTML = "";
     return;
   }
 
-  bar.innerHTML = `
-    <div class="battle-hp-chip">
-      ${getPokemonName(a)}
-      — HP ${Math.max(0,a.currentHP)}/${a.stats.hp}
-    </div>
-
-    <div class="battle-hp-chip">
-      ${getPokemonName(b)}
-      — HP ${Math.max(0,b.currentHP)}/${b.stats.hp}
-    </div>
-  `;
+  arena.innerHTML =
+    buildBattleArenaSideHTML(
+      a,
+      "A"
+    ) +
+    buildBattleArenaSideHTML(
+      b,
+      "B"
+    );
 }
+
 
 
 function displayBattle() {
