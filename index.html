@@ -1778,6 +1778,59 @@ select {
   }
 }
 
+
+@media (max-width:600px) {
+
+  #battleMoveDetails {
+    margin-top:8px !important;
+  }
+
+  #battleMoveDetails > h3:first-child {
+    margin-top:2px !important;
+  }
+}
+
+
+/* =========================================================
+   COMBINED BATTLE LAYOUT
+   The legacy battle cards are retained in the DOM for battle
+   state/logic, but should never be visually displayed.
+   The battle arena above is now the single visible renderer.
+========================================================= */
+#battleSelectionArea .battle-grid {
+  display:none !important;
+}
+
+/* Keep the combined battle arena in two columns on desktop too. */
+.battle-arena {
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  align-items:start;
+}
+
+/* Desktop combined controls should stay reasonably compact. */
+@media (min-width:601px) {
+  .battle-arena-side {
+    padding:12px;
+  }
+
+  .battle-arena-controls {
+    margin-top:8px;
+    text-align:left;
+  }
+
+  .battle-arena-controls .battle-control-card-label {
+    display:none;
+  }
+
+  .battle-arena-controls .battle-note {
+    margin:7px 0;
+  }
+
+  .battle-arena-controls .battle-side-actions {
+    margin-top:8px;
+  }
+}
+
 </style>
 
 
@@ -9186,21 +9239,61 @@ function updateBattlePhaseUI() {
       "battleMoveDetails"
     );
 
-  if (!selectionArea || !details) {
+  const arena =
+    document.getElementById(
+      "battleArena"
+    );
+
+  if (
+    !selectionArea ||
+    !details
+  ) {
     return;
   }
 
-  if (battlePhase === "resolution") {
-    selectionArea.style.display = "none";
-    details.style.display = "block";
+  if (
+    battlePhase ===
+    "resolution"
+  ) {
+
+    /*
+      Resolution is its own screen/view.
+      Hide both the Pokémon arena and move-selection controls
+      so the current acting Pokémon's attack is the only
+      battle content shown.
+    */
+    selectionArea.style.display =
+      "none";
+
+    if (arena) {
+      arena.style.display =
+        "none";
+    }
+
+    details.style.display =
+      "block";
   }
   else {
-    selectionArea.style.display = "block";
-    details.style.display = "none";
+
+    /*
+      Return to the normal side-by-side Pokémon selection view
+      at the start of the next turn or when backing out.
+    */
+    if (arena) {
+      arena.style.display =
+        "grid";
+    }
+
+    selectionArea.style.display =
+      "block";
+
+    details.style.display =
+      "none";
 
     updateConfirmMovesButton();
   }
 }
+
 
 
 function confirmBattleMoves() {
@@ -9268,6 +9361,23 @@ function confirmBattleMoves() {
 
   updateBattlePhaseUI();
   displaySelectedBattleMove();
+
+  requestAnimationFrame(
+    function() {
+
+      const details =
+        document.getElementById(
+          "battleMoveDetails"
+        );
+
+      if (details) {
+        details.scrollIntoView({
+          behavior:"auto",
+          block:"start"
+        });
+      }
+    }
+  );
 }
 
 
