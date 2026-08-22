@@ -1922,6 +1922,67 @@ select {
   }
 }
 
+
+/* =========================================================
+   MOBILE BATTLE STAT STAGES — extra compact
+   Pokédex intentionally untouched.
+========================================================= */
+@media (max-width:600px) {
+
+  .battle-arena-controls .battle-stage-grid {
+    gap:1px !important;
+    margin:2px 0 !important;
+  }
+
+  .battle-arena-controls .stage-control {
+    grid-template-columns:minmax(0,1fr) 20px 18px 20px !important;
+    gap:1px !important;
+    min-height:24px !important;
+    padding:1px 3px !important;
+    margin:0 !important;
+    border-radius:5px !important;
+  }
+
+  .battle-arena-controls .stage-control strong {
+    font-size:7px !important;
+    line-height:.95 !important;
+  }
+
+  .battle-arena-controls .effective-stat {
+    font-size:6px !important;
+    line-height:.95 !important;
+    margin-top:0 !important;
+  }
+
+  .battle-arena-controls .stage-control button {
+    width:20px !important;
+    min-width:20px !important;
+    height:20px !important;
+    min-height:20px !important;
+    padding:0 !important;
+    margin:0 !important;
+    border-radius:50% !important;
+    font-size:11px !important;
+    line-height:20px !important;
+  }
+
+  .battle-arena-controls .stage-value {
+    width:18px !important;
+    min-width:18px !important;
+    font-size:7px !important;
+    line-height:1 !important;
+  }
+
+  .battle-arena-controls
+  .battle-collapsible
+  > .small-button[onclick*="resetBattleStages"] {
+    min-height:23px !important;
+    padding:3px !important;
+    margin:2px 0 1px 0 !important;
+    font-size:7px !important;
+  }
+}
+
 </style>
 
 
@@ -8684,6 +8745,53 @@ function getGen1AccuracyStageMultiplier(
 }
 
 
+const battleOpenSections = {
+  A:{
+    Stats:false,
+    Stages:false
+  },
+  B:{
+    Stats:false,
+    Stages:false
+  }
+};
+
+
+function restoreBattleOpenSections() {
+
+  ["A","B"].forEach(
+    function(side) {
+
+      ["Stats","Stages"].forEach(
+        function(sectionName) {
+
+          const id =
+            sectionName === "Stats"
+            ? "battleStats" + side
+            : "battleStages" + side;
+
+          const section =
+            document.getElementById(
+              id
+            );
+
+          if (section) {
+            section.style.display =
+              battleOpenSections[
+                side
+              ][
+                sectionName
+              ]
+              ? "block"
+              : "none";
+          }
+        }
+      );
+    }
+  );
+}
+
+
 function changeBattleStage(
   side,
   stat,
@@ -10603,6 +10711,11 @@ function endBattle(force = false) {
 
   battleUndoHistory = [];
 
+  battleOpenSections.A.Stats = false;
+  battleOpenSections.A.Stages = false;
+  battleOpenSections.B.Stats = false;
+  battleOpenSections.B.Stages = false;
+
   activeBattlePokemonAId = null;
   activeBattlePokemonBId = null;
   activeWildBattlePokemon = null;
@@ -12412,6 +12525,25 @@ function toggleBattleSection(
   sectionName
 ) {
 
+  if (
+    !battleOpenSections[
+      side
+    ]
+  ) {
+    return;
+  }
+
+  battleOpenSections[
+    side
+  ][
+    sectionName
+  ] =
+    !battleOpenSections[
+      side
+    ][
+      sectionName
+    ];
+
   const id =
     sectionName === "Stats"
     ? "battleStats" + side
@@ -12422,19 +12554,18 @@ function toggleBattleSection(
       id
     );
 
-  if (!section) {
-    return;
+  if (section) {
+    section.style.display =
+      battleOpenSections[
+        side
+      ][
+        sectionName
+      ]
+      ? "block"
+      : "none";
   }
-
-  const isOpen =
-    section.style.display ===
-    "block";
-
-  section.style.display =
-    isOpen
-    ? "none"
-    : "block";
 }
+
 
 
 function battleStatusOptionsHTML(
@@ -12744,6 +12875,8 @@ function displayBattle() {
     so its enabled/disabled state must be refreshed every time.
   */
   updateBattlePhaseUI();
+
+  restoreBattleOpenSections();
 
   if (
     battlePhase ===
