@@ -1792,42 +1792,79 @@ select {
 
 
 /* =========================================================
-   COMBINED BATTLE LAYOUT
-   The legacy battle cards are retained in the DOM for battle
-   state/logic, but should never be visually displayed.
-   The battle arena above is now the single visible renderer.
+   MOBILE BATTLE STAT STAGES FIX
+   Keep every stage control inside its own Pokémon column.
 ========================================================= */
-#battleSelectionArea .battle-grid {
-  display:none !important;
-}
+@media (max-width:600px) {
 
-/* Keep the combined battle arena in two columns on desktop too. */
-.battle-arena {
-  grid-template-columns:repeat(2, minmax(0,1fr));
-  align-items:start;
-}
-
-/* Desktop combined controls should stay reasonably compact. */
-@media (min-width:601px) {
-  .battle-arena-side {
-    padding:12px;
+  .battle-arena-controls .battle-stage-grid {
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:3px !important;
+    margin:4px 0 !important;
+    width:100% !important;
   }
 
-  .battle-arena-controls {
-    margin-top:8px;
-    text-align:left;
+  .battle-arena-controls .stage-control {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 25px 22px 25px !important;
+    gap:2px !important;
+    align-items:center !important;
+    width:100% !important;
+    min-width:0 !important;
+    padding:3px 4px !important;
+    border-radius:6px !important;
+    box-sizing:border-box !important;
   }
 
-  .battle-arena-controls .battle-control-card-label {
-    display:none;
+  .battle-arena-controls .stage-control > div:first-child {
+    min-width:0 !important;
+    overflow:hidden !important;
   }
 
-  .battle-arena-controls .battle-note {
-    margin:7px 0;
+  .battle-arena-controls .stage-control strong {
+    display:block !important;
+    font-size:8px !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
   }
 
-  .battle-arena-controls .battle-side-actions {
-    margin-top:8px;
+  .battle-arena-controls .effective-stat {
+    font-size:7px !important;
+    line-height:1 !important;
+    margin-top:1px !important;
+    white-space:nowrap !important;
+  }
+
+  .battle-arena-controls .stage-control button {
+    width:25px !important;
+    min-width:25px !important;
+    height:25px !important;
+    min-height:25px !important;
+    padding:0 !important;
+    margin:0 !important;
+    border-radius:50% !important;
+    font-size:13px !important;
+    line-height:25px !important;
+  }
+
+  .battle-arena-controls .stage-value {
+    min-width:22px !important;
+    width:22px !important;
+    text-align:center !important;
+    font-size:8px !important;
+    line-height:1 !important;
+  }
+
+  .battle-arena-controls
+  .battle-collapsible
+  > .small-button[onclick*="resetBattleStages"] {
+    min-height:27px !important;
+    height:auto !important;
+    font-size:8px !important;
+    line-height:1 !important;
+    padding:4px !important;
+    margin:4px 0 2px 0 !important;
   }
 }
 
