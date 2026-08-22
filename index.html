@@ -1374,6 +1374,188 @@ select {
   }
 }
 
+
+/* =========================================================
+   MOBILE BATTLE CONTROLS — compact 2-column layout
+   Pokédex styles intentionally untouched.
+========================================================= */
+@media (max-width:600px) {
+
+  /* Keep the two control cards directly beneath the two arena Pokémon. */
+  #battleSelectionArea .battle-grid {
+    display:grid !important;
+    grid-template-columns:repeat(2, minmax(0,1fr)) !important;
+    gap:6px !important;
+    align-items:start !important;
+  }
+
+  #battleSelectionArea .battle-card {
+    min-width:0 !important;
+    padding:7px 5px !important;
+    border-radius:10px !important;
+    box-shadow:0 2px 6px rgba(0,0,0,.12) !important;
+  }
+
+  .battle-control-card-label {
+    font-size:11px !important;
+    line-height:1.05 !important;
+    margin:0 0 5px 0 !important;
+  }
+
+  /* General text/spacing reductions inside each battle control card. */
+  #battleSelectionArea .battle-card h3 {
+    font-size:12px !important;
+    line-height:1.05 !important;
+    margin:7px 0 4px 0 !important;
+  }
+
+  #battleSelectionArea .battle-card p,
+  #battleSelectionArea .battle-card label,
+  #battleSelectionArea .battle-card strong,
+  #battleSelectionArea .battle-card span {
+    line-height:1.08 !important;
+  }
+
+  #battleSelectionArea .battle-card .form-row {
+    margin:5px 0 !important;
+  }
+
+  #battleSelectionArea .battle-card .form-row label {
+    display:block;
+    font-size:10px !important;
+    margin:0 0 2px 0 !important;
+  }
+
+  #battleSelectionArea .battle-card select,
+  #battleSelectionArea .battle-card input {
+    min-height:29px !important;
+    height:29px !important;
+    font-size:11px !important;
+    padding:3px 5px !important;
+  }
+
+  /* Restore HP becomes a small utility control. */
+  #battleSelectionArea .battle-card > .small-button:first-of-type {
+    min-height:30px !important;
+    height:auto !important;
+    font-size:10px !important;
+    padding:5px 4px !important;
+    margin:3px 0 5px 0 !important;
+  }
+
+  /* Temporary Conditions box. */
+  #battleSelectionArea .battle-card .battle-note {
+    margin:5px 0 !important;
+    padding:5px !important;
+    border-radius:7px !important;
+    font-size:10px !important;
+    line-height:1.08 !important;
+  }
+
+  #battleSelectionArea .battle-card .battle-note > strong {
+    font-size:10px !important;
+  }
+
+  #battleSelectionArea .battle-card .battle-note > div {
+    gap:4px !important;
+    margin-top:4px !important;
+  }
+
+  /* Stats / Stages collapsed controls. */
+  #battleSelectionArea .battle-card .battle-collapse-button {
+    min-height:30px !important;
+    font-size:10px !important;
+    padding:4px !important;
+    margin:4px 0 !important;
+  }
+
+  #battleSelectionArea .battle-card .battle-collapsible {
+    font-size:9px !important;
+  }
+
+  #battleSelectionArea .battle-card .stat-grid {
+    gap:1px 4px !important;
+  }
+
+  #battleSelectionArea .battle-card .stat-grid p {
+    font-size:9px !important;
+    margin:1px 0 !important;
+    line-height:1.03 !important;
+  }
+
+  #battleSelectionArea .battle-card .battle-stage-grid {
+    gap:3px !important;
+  }
+
+  /* Learned Moves heading. */
+  #battleSelectionArea .battle-card h3[style*="margin-top:20px"] {
+    font-size:11px !important;
+    margin:6px 0 4px 0 !important;
+  }
+
+  /* Move buttons: much shorter and smaller. */
+  #battleSelectionArea .battle-card .move-button,
+  #battleSelectionArea .battle-card .battle-move-button,
+  #battleSelectionArea .battle-card button[onclick*="selectBattleMove"] {
+    min-height:32px !important;
+    padding:5px 6px !important;
+    margin:3px 0 !important;
+    font-size:10px !important;
+    line-height:1.05 !important;
+  }
+
+  #battleSelectionArea .battle-card button[onclick*="selectBattleMove"] span {
+    font-size:9px !important;
+  }
+
+  /* Bottom action controls: still beneath moves, but compact. */
+  #battleSelectionArea .battle-card .battle-side-actions {
+    gap:4px !important;
+    margin-top:5px !important;
+  }
+
+  #battleSelectionArea .battle-card .battle-side-actions .small-button {
+    min-height:32px !important;
+    padding:4px 3px !important;
+    font-size:9px !important;
+    line-height:1.02 !important;
+  }
+
+  #battleSelectionArea .battle-card .battle-action-panel {
+    margin-top:5px !important;
+    padding:5px !important;
+    font-size:9px !important;
+  }
+
+  #battleSelectionArea .battle-card .battle-action-panel strong {
+    font-size:10px !important;
+  }
+
+  #battleSelectionArea .battle-card .battle-action-panel .primary-button {
+    min-height:30px !important;
+    font-size:9px !important;
+    padding:4px !important;
+    margin-top:4px !important;
+  }
+
+  /* Flee-only wild control. */
+  #battleSelectionArea .battle-card .battle-side-actions[style*="grid-template-columns:1fr"] .small-button {
+    min-height:32px !important;
+    font-size:10px !important;
+  }
+
+  /* Keep Confirm Moves compact below both columns. */
+  #battleSelectionArea .battle-selection-actions {
+    margin-top:7px !important;
+  }
+
+  #battleSelectionArea #confirmMovesButton {
+    min-height:38px !important;
+    font-size:12px !important;
+    padding:6px 8px !important;
+  }
+}
+
 </style>
 
 
