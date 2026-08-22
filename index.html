@@ -10523,7 +10523,7 @@ function battleBack() {
 }
 
 
-function endBattle(force=false){if(!force&&!confirm("End this battle?"))return;battleUndoHistory=[];battleOpenSections.A.Stats=false;battleOpenSections.A.Stages=false;battleOpenSections.B.Stats=false;battleOpenSections.B.Stages=false;activeBattlePokemonAId=null;activeBattlePokemonBId=null;activeWildBattlePokemon=null;selectedBattleMove=null;lastBattleEffectMessage="";resetBattleTemporaryState();const details=document.getElementById("battleMoveDetails");if(details)details.innerHTML="";updateBattleEndButtonVisibility();showPage("homePage");}
+function endBattle(force=false){if(!force&&!confirm("End this battle?"))return;battleUndoHistory=[];battleOpenSections.A.Stats=false;battleOpenSections.A.Stages=false;battleOpenSections.B.Stats=false;battleOpenSections.B.Stages=false;activeBattlePokemonAId=null;activeBattlePokemonBId=null;activeWildBattlePokemon=null;selectedBattleMove=null;lastBattleEffectMessage="";battlePhase="selection";resetBattleTemporaryState();const details=document.getElementById("battleMoveDetails");if(details)details.innerHTML="";updateBattleEndButtonVisibility();showPage("homePage");}
 
 
 function runFromBattle(
@@ -11686,10 +11686,22 @@ function displayBattleSetup() {
         "battleArea"
       );
 
+    const setupCard =
+      document.getElementById(
+        "battleSetupCard"
+      );
+
     if (battleArea) {
       battleArea.style.display =
         "none";
     }
+
+    if (setupCard) {
+      setupCard.style.display =
+        "block";
+    }
+
+    updateBattleEndButtonVisibility();
   }
 }
 
@@ -19395,7 +19407,7 @@ displayPokemonDatabase();
    APP VERSION CHECK
    Checks GitHub Pages directly, bypassing browser caches.
 ========================================================= */
-const APP_VERSION = "2026-08-22-07";
+const APP_VERSION = "2026-08-22-08";
 const APP_VERSION_STORAGE_KEY = "pokemonCampaignAppVersion";
 
 async function checkForAppUpdate() {
