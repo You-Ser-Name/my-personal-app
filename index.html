@@ -917,6 +917,43 @@ select {
   }
 }
 
+
+.backup-history-item {
+  background:#f4f4f4;
+  border-radius:10px;
+  padding:11px;
+  margin:8px 0;
+}
+
+.backup-history-top {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.backup-history-meta {
+  font-size:12px;
+  color:#666;
+  line-height:1.45;
+  margin-top:4px;
+}
+
+.backup-history-actions {
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  margin-top:10px;
+}
+
+.backup-warning {
+  background:#fff4df;
+  border-radius:8px;
+  padding:10px;
+  margin-top:10px;
+  line-height:1.45;
+}
+
 </style>
 
 
@@ -944,6 +981,7 @@ select {
     <button onclick="showPage('battlesPage')">Battles</button>
     <button onclick="showPage('campaignPage')">Campaign</button>
     <button onclick="showPage('pokemonCenterPage')">Poké Center</button>
+    <button onclick="showPage('backupPage')">Backup & Restore</button>
   </div>
 </div>
 
@@ -1475,6 +1513,86 @@ select {
       </button>
 
       <div id="pcLevelSummary" class="item-info"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- BACKUP & RESTORE -->
+<div id="backupPage" style="display:none;">
+  <header><h1>Backup & Restore</h1></header>
+
+  <div class="page-content">
+    <button class="back-button" onclick="showPage('homePage')">← Back</button>
+
+    <div class="form-card">
+      <h2 style="text-align:center;">Manual Backup</h2>
+
+      <p style="text-align:center;line-height:1.5;">
+        Export your complete campaign to a JSON backup file.
+        Keep this file somewhere outside the app so it remains available
+        even if browser data is cleared or the app is reinstalled.
+      </p>
+
+      <button
+        class="primary-button"
+        style="width:100%;"
+        onclick="exportCampaignBackup()">
+        Export Campaign Backup
+      </button>
+
+      <div
+        id="backupExportResult"
+        class="battle-note"
+        style="display:none;text-align:center;margin-top:12px;">
+      </div>
+    </div>
+
+    <div class="form-card">
+      <h2 style="text-align:center;">Restore Backup File</h2>
+
+      <p style="text-align:center;line-height:1.5;">
+        Select a backup JSON file previously exported from this app.
+        Restoring replaces the campaign currently stored on this device.
+      </p>
+
+      <input
+        id="backupImportFile"
+        type="file"
+        accept=".json,application/json"
+        style="margin-bottom:12px;">
+
+      <button
+        class="primary-button"
+        style="width:100%;"
+        onclick="importCampaignBackupFromFile()">
+        Restore Selected Backup
+      </button>
+
+      <div
+        id="backupImportResult"
+        class="battle-note"
+        style="display:none;text-align:center;margin-top:12px;">
+      </div>
+    </div>
+
+    <div class="form-card">
+      <h2 style="text-align:center;">Automatic Backups</h2>
+
+      <p style="text-align:center;line-height:1.5;">
+        The app keeps a rolling set of automatic snapshots on this device
+        before saved campaign data is replaced. These survive normal
+        index.html updates, but not clearing Safari/site data.
+      </p>
+
+      <button
+        class="small-button"
+        style="width:100%;margin-bottom:12px;"
+        onclick="createManualLocalSnapshot()">
+        Create Snapshot Now
+      </button>
+
+      <div id="automaticBackupList"></div>
     </div>
   </div>
 </div>
@@ -4494,6 +4612,854 @@ function loadData(key) {
   }
 }
 
+const CAMPAIGN_BACKUP_FORMAT =
+  "pokemon-campaign-backup";
+
+const CAMPAIGN_BACKUP_VERSION =
+  1;
+
+const AUTOMATIC_BACKUP_KEY =
+  "pokemonCampaignAutoBackups";
+
+const MAX_AUTOMATIC_BACKUPS =
+  12;
+
+
+function safelyParseJSON(
+  value,
+  fallback
+) {
+
+  try {
+    return JSON.parse(
+      value
+    );
+  }
+  catch (error) {
+    return fallback;
+  }
+}
+
+
+function readPersistedCampaignRaw() {
+
+  return {
+    ownedPokemon:
+      localStorage.getItem(
+        "ownedPokemon"
+      ),
+    trainers:
+      localStorage.getItem(
+        "trainers"
+      ),
+    pcPokemonLevel:
+      localStorage.getItem(
+        "pcPokemonLevel"
+      )
+  };
+}
+
+
+function rawCampaignHasData(
+  raw
+) {
+
+  return Boolean(
+    raw &&
+    (
+      raw.ownedPokemon !== null ||
+      raw.trainers !== null ||
+      raw.pcPokemonLevel !== null
+    )
+  );
+}
+
+
+function getRawCampaignSignature(
+  raw
+) {
+
+  return JSON.stringify([
+    raw
+    ? raw.ownedPokemon
+    : null,
+    raw
+    ? raw.trainers
+    : null,
+    raw
+    ? raw.pcPokemonLevel
+    : null
+  ]);
+}
+
+
+function loadAutomaticBackups() {
+
+  const saved =
+    safelyParseJSON(
+      localStorage.getItem(
+        AUTOMATIC_BACKUP_KEY
+      ),
+      []
+    );
+
+  return Array.isArray(
+    saved
+  )
+    ? saved
+    : [];
+}
+
+
+function saveAutomaticBackups(
+  backups
+) {
+
+  try {
+    localStorage.setItem(
+      AUTOMATIC_BACKUP_KEY,
+      JSON.stringify(
+        backups.slice(
+          0,
+          MAX_AUTOMATIC_BACKUPS
+        )
+      )
+    );
+
+    return true;
+  }
+  catch (error) {
+
+    console.error(
+      "Unable to save automatic backup history:",
+      error
+    );
+
+    return false;
+  }
+}
+
+
+function createAutomaticBackupFromStorage(
+  reason = "Automatic snapshot",
+  force = false
+) {
+
+  const raw =
+    readPersistedCampaignRaw();
+
+  if (
+    !rawCampaignHasData(
+      raw
+    )
+  ) {
+    return false;
+  }
+
+  const signature =
+    getRawCampaignSignature(
+      raw
+    );
+
+  const backups =
+    loadAutomaticBackups();
+
+  if (
+    !force &&
+    backups.length &&
+    backups[0].signature ===
+      signature
+  ) {
+    return false;
+  }
+
+  const now =
+    new Date();
+
+  backups.unshift({
+    id:
+      now.getTime().toString() +
+      "-" +
+      Math.random()
+        .toString(36)
+        .slice(2,8),
+    createdAt:
+      now.toISOString(),
+    reason:
+      reason,
+    signature:
+      signature,
+    raw:
+      raw
+  });
+
+  return saveAutomaticBackups(
+    backups
+  );
+}
+
+
+function createManualLocalSnapshot() {
+
+  const created =
+    createAutomaticBackupFromStorage(
+      "Manual snapshot",
+      true
+    );
+
+  displayAutomaticBackups();
+
+  alert(
+    created
+    ? "Local snapshot created."
+    : "There is no saved campaign data to snapshot yet."
+  );
+}
+
+
+function getCurrentCampaignBackupObject() {
+
+  return {
+    format:
+      CAMPAIGN_BACKUP_FORMAT,
+    version:
+      CAMPAIGN_BACKUP_VERSION,
+    createdAt:
+      new Date()
+        .toISOString(),
+    data:{
+      ownedPokemon:
+        Array.isArray(
+          ownedPokemon
+        )
+        ? ownedPokemon
+        : [],
+      trainers:
+        Array.isArray(
+          trainers
+        )
+        ? trainers
+        : [],
+      pcPokemonLevel:
+        Number.isInteger(
+          pcPokemonLevel
+        )
+        ? pcPokemonLevel
+        : 5
+    }
+  };
+}
+
+
+function validateImportedCampaignBackup(
+  backup
+) {
+
+  if (
+    !backup ||
+    typeof backup !==
+      "object"
+  ) {
+    return {
+      valid:false,
+      message:
+        "This file is not a valid campaign backup."
+    };
+  }
+
+  /*
+    Preferred current backup format.
+  */
+  if (
+    backup.format ===
+      CAMPAIGN_BACKUP_FORMAT &&
+    backup.data &&
+    typeof backup.data ===
+      "object"
+  ) {
+
+    if (
+      !Array.isArray(
+        backup.data.ownedPokemon
+      ) ||
+      !Array.isArray(
+        backup.data.trainers
+      )
+    ) {
+      return {
+        valid:false,
+        message:
+          "The backup is missing Pokémon or trainer data."
+      };
+    }
+
+    const level =
+      Number(
+        backup.data.pcPokemonLevel
+      );
+
+    if (
+      !Number.isInteger(
+        level
+      ) ||
+      level < 1 ||
+      level > 100
+    ) {
+      return {
+        valid:false,
+        message:
+          "The backup contains an invalid PC Pokémon level."
+      };
+    }
+
+    return {
+      valid:true,
+      data:{
+        ownedPokemon:
+          backup.data.ownedPokemon,
+        trainers:
+          backup.data.trainers,
+        pcPokemonLevel:
+          level
+      }
+    };
+  }
+
+  /*
+    Also accept a simple legacy object containing the three
+    saved-data fields directly.
+  */
+  if (
+    Array.isArray(
+      backup.ownedPokemon
+    ) &&
+    Array.isArray(
+      backup.trainers
+    )
+  ) {
+
+    const level =
+      Number(
+        backup.pcPokemonLevel
+      );
+
+    if (
+      Number.isInteger(
+        level
+      ) &&
+      level >= 1 &&
+      level <= 100
+    ) {
+      return {
+        valid:true,
+        data:{
+          ownedPokemon:
+            backup.ownedPokemon,
+          trainers:
+            backup.trainers,
+          pcPokemonLevel:
+            level
+        }
+      };
+    }
+  }
+
+  return {
+    valid:false,
+    message:
+      "This JSON file does not match a supported campaign backup format."
+  };
+}
+
+
+function exportCampaignBackup() {
+
+  const backup =
+    getCurrentCampaignBackupObject();
+
+  const json =
+    JSON.stringify(
+      backup,
+      null,
+      2
+    );
+
+  const blob =
+    new Blob(
+      [json],
+      {
+        type:
+          "application/json"
+      }
+    );
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+  const link =
+    document.createElement(
+      "a"
+    );
+
+  const timestamp =
+    new Date()
+      .toISOString()
+      .replace(
+        /[:.]/g,
+        "-"
+      );
+
+  link.href =
+    url;
+
+  link.download =
+    "pokemon-campaign-backup-" +
+    timestamp +
+    ".json";
+
+  document.body.appendChild(
+    link
+  );
+
+  link.click();
+
+  link.remove();
+
+  setTimeout(
+    function() {
+      URL.revokeObjectURL(
+        url
+      );
+    },
+    1000
+  );
+
+  const result =
+    document.getElementById(
+      "backupExportResult"
+    );
+
+  if (result) {
+    result.style.display =
+      "block";
+
+    result.textContent =
+      "Backup created. Save the JSON file somewhere you can find later.";
+  }
+
+  /*
+    Also keep a matching local snapshot.
+  */
+  createAutomaticBackupFromStorage(
+    "Manual file export",
+    true
+  );
+
+  displayAutomaticBackups();
+}
+
+
+function persistImportedCampaignData(
+  data
+) {
+
+  localStorage.setItem(
+    "ownedPokemon",
+    JSON.stringify(
+      data.ownedPokemon
+    )
+  );
+
+  localStorage.setItem(
+    "trainers",
+    JSON.stringify(
+      data.trainers
+    )
+  );
+
+  localStorage.setItem(
+    "pcPokemonLevel",
+    String(
+      data.pcPokemonLevel
+    )
+  );
+}
+
+
+function restoreValidatedCampaignData(
+  data,
+  sourceLabel
+) {
+
+  const confirmed =
+    confirm(
+      "Restore " +
+      sourceLabel +
+      "?\n\n" +
+      "This will replace the campaign currently saved on this device. " +
+      "A local safety snapshot of your current campaign will be created first."
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  createAutomaticBackupFromStorage(
+    "Before restore",
+    true
+  );
+
+  persistImportedCampaignData(
+    data
+  );
+
+  alert(
+    "Campaign restored successfully. The app will now reload."
+  );
+
+  window.location.reload();
+}
+
+
+function importCampaignBackupFromFile() {
+
+  const input =
+    document.getElementById(
+      "backupImportFile"
+    );
+
+  const result =
+    document.getElementById(
+      "backupImportResult"
+    );
+
+  if (
+    !input ||
+    !input.files ||
+    !input.files.length
+  ) {
+    alert(
+      "Select a backup JSON file first."
+    );
+    return;
+  }
+
+  const file =
+    input.files[0];
+
+  const reader =
+    new FileReader();
+
+  reader.onload =
+    function() {
+
+      let parsed;
+
+      try {
+        parsed =
+          JSON.parse(
+            reader.result
+          );
+      }
+      catch (error) {
+
+        if (result) {
+          result.style.display =
+            "block";
+
+          result.textContent =
+            "The selected file is not valid JSON.";
+        }
+
+        return;
+      }
+
+      const validation =
+        validateImportedCampaignBackup(
+          parsed
+        );
+
+      if (
+        !validation.valid
+      ) {
+
+        if (result) {
+          result.style.display =
+            "block";
+
+          result.textContent =
+            validation.message;
+        }
+
+        return;
+      }
+
+      restoreValidatedCampaignData(
+        validation.data,
+        file.name
+      );
+    };
+
+  reader.onerror =
+    function() {
+
+      if (result) {
+        result.style.display =
+          "block";
+
+        result.textContent =
+          "The backup file could not be read.";
+      }
+    };
+
+  reader.readAsText(
+    file
+  );
+}
+
+
+function getAutomaticBackupSummary(
+  snapshot
+) {
+
+  const raw =
+    snapshot &&
+    snapshot.raw
+    ? snapshot.raw
+    : {};
+
+  const pokemon =
+    safelyParseJSON(
+      raw.ownedPokemon,
+      []
+    );
+
+  const backupTrainers =
+    safelyParseJSON(
+      raw.trainers,
+      []
+    );
+
+  return {
+    pokemonCount:
+      Array.isArray(
+        pokemon
+      )
+      ? pokemon.length
+      : 0,
+    trainerCount:
+      Array.isArray(
+        backupTrainers
+      )
+      ? backupTrainers.length
+      : 0,
+    level:
+      Number(
+        raw.pcPokemonLevel
+      ) || 5
+  };
+}
+
+
+function restoreAutomaticBackup(
+  snapshotId
+) {
+
+  const snapshot =
+    loadAutomaticBackups()
+      .find(
+        item =>
+          item.id ===
+          snapshotId
+      );
+
+  if (
+    !snapshot ||
+    !snapshot.raw
+  ) {
+    alert(
+      "That automatic backup could not be found."
+    );
+    return;
+  }
+
+  const pokemon =
+    safelyParseJSON(
+      snapshot.raw.ownedPokemon,
+      []
+    );
+
+  const backupTrainers =
+    safelyParseJSON(
+      snapshot.raw.trainers,
+      []
+    );
+
+  const level =
+    Number(
+      snapshot.raw.pcPokemonLevel
+    );
+
+  if (
+    !Array.isArray(
+      pokemon
+    ) ||
+    !Array.isArray(
+      backupTrainers
+    ) ||
+    !Number.isInteger(
+      level
+    ) ||
+    level < 1 ||
+    level > 100
+  ) {
+    alert(
+      "That automatic backup is invalid and cannot be restored."
+    );
+    return;
+  }
+
+  restoreValidatedCampaignData(
+    {
+      ownedPokemon:
+        pokemon,
+      trainers:
+        backupTrainers,
+      pcPokemonLevel:
+        level
+    },
+    "the selected automatic backup"
+  );
+}
+
+
+function deleteAutomaticBackup(
+  snapshotId
+) {
+
+  const confirmed =
+    confirm(
+      "Delete this automatic backup?"
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const backups =
+    loadAutomaticBackups()
+      .filter(
+        item =>
+          item.id !==
+          snapshotId
+      );
+
+  saveAutomaticBackups(
+    backups
+  );
+
+  displayAutomaticBackups();
+}
+
+
+function formatBackupTimestamp(
+  value
+) {
+
+  const date =
+    new Date(
+      value
+    );
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return "Unknown time";
+  }
+
+  return date.toLocaleString();
+}
+
+
+function displayAutomaticBackups() {
+
+  const list =
+    document.getElementById(
+      "automaticBackupList"
+    );
+
+  if (!list) {
+    return;
+  }
+
+  const backups =
+    loadAutomaticBackups();
+
+  if (!backups.length) {
+
+    list.innerHTML = `
+      <p class="empty-message">
+        No automatic backups yet.
+      </p>
+    `;
+
+    return;
+  }
+
+  list.innerHTML =
+    backups.map(
+      function(snapshot) {
+
+        const summary =
+          getAutomaticBackupSummary(
+            snapshot
+          );
+
+        return `
+          <div class="backup-history-item">
+            <div class="backup-history-top">
+              <div>
+                <strong>
+                  ${formatBackupTimestamp(snapshot.createdAt)}
+                </strong>
+
+                <div class="backup-history-meta">
+                  ${snapshot.reason || "Automatic snapshot"}
+                  <br>
+                  ${summary.trainerCount} Trainers
+                  •
+                  ${summary.pokemonCount} Pokémon
+                  •
+                  PC Level ${summary.level}
+                </div>
+              </div>
+            </div>
+
+            <div class="backup-history-actions">
+              <button
+                class="small-button"
+                onclick="restoreAutomaticBackup('${snapshot.id}')">
+                Restore
+              </button>
+
+              <button
+                class="delete-button"
+                style="margin:0;"
+                onclick="deleteAutomaticBackup('${snapshot.id}')">
+                Delete
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    ).join("");
+}
+
+
 let ownedPokemon = loadData("ownedPokemon");
 let trainers = loadData("trainers");
 
@@ -4521,6 +5487,11 @@ let pcPokemonLevel =
   loadPCPokemonLevel();
 
 function savePCPokemonLevel() {
+
+  createAutomaticBackupFromStorage(
+    "Before PC level save"
+  );
+
   localStorage.setItem(
     "pcPokemonLevel",
     String(pcPokemonLevel)
@@ -4528,11 +5499,31 @@ function savePCPokemonLevel() {
 }
 
 function savePokemon() {
-  localStorage.setItem("ownedPokemon", JSON.stringify(ownedPokemon));
+
+  createAutomaticBackupFromStorage(
+    "Before Pokémon save"
+  );
+
+  localStorage.setItem(
+    "ownedPokemon",
+    JSON.stringify(
+      ownedPokemon
+    )
+  );
 }
 
 function saveTrainers() {
-  localStorage.setItem("trainers", JSON.stringify(trainers));
+
+  createAutomaticBackupFromStorage(
+    "Before trainer save"
+  );
+
+  localStorage.setItem(
+    "trainers",
+    JSON.stringify(
+      trainers
+    )
+  );
 }
 
 
@@ -4653,6 +5644,10 @@ function upgradeSavedData() {
   if (trainerChanged) saveTrainers();
 }
 
+createAutomaticBackupFromStorage(
+  "Before app data upgrade"
+);
+
 upgradeSavedData();
 
 
@@ -4675,6 +5670,7 @@ function showPage(pageId) {
     "battlesPage",
     "pokemonCenterPage",
     "campaignPage",
+    "backupPage",
     "inventoryPage",
     "trainerInventoryPage"
   ].forEach(function(id) {
@@ -4762,6 +5758,7 @@ function showPage(pageId) {
     populatePokemonCenterTrainerDropdown();
   }
   if (pageId === "campaignPage") displayCampaignPage();
+  if (pageId === "backupPage") displayAutomaticBackups();
   if (pageId === "inventoryPage") displayInventoryTrainerList();
 }
 
