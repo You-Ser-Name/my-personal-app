@@ -1107,7 +1107,7 @@ select {
         <input id="hpEV" type="number" min="0" value="0">
 
         <span>Attack</span>
-        <input id="attackIV" type="number" min="0" value="8">
+        <input id="attackIV" type="number" min="0" value="9">
         <input id="attackEV" type="number" min="0" value="0">
 
         <span>Defense</span>
@@ -1526,19 +1526,26 @@ select {
     <button class="back-button" onclick="showPage('homePage')">← Back</button>
 
     <div class="form-card">
-      <h2 style="text-align:center;">Manual Backup</h2>
+      <h2 style="text-align:center;">Backup Files</h2>
 
       <p style="text-align:center;line-height:1.5;">
-        Export your complete campaign to a JSON backup file.
-        Keep this file somewhere outside the app so it remains available
-        even if browser data is cleared or the app is reinstalled.
+        Export your complete campaign as a JSON file. On iPhone or iPad,
+        use <strong>Share / Save to Files</strong> if you want to place the
+        backup directly in the Files app.
       </p>
 
       <button
         class="primary-button"
+        style="width:100%;margin-bottom:10px;"
+        onclick="shareCampaignBackup()">
+        Share / Save Backup to Files
+      </button>
+
+      <button
+        class="small-button"
         style="width:100%;"
         onclick="exportCampaignBackup()">
-        Export Campaign Backup
+        Download Backup
       </button>
 
       <div
@@ -1546,14 +1553,14 @@ select {
         class="battle-note"
         style="display:none;text-align:center;margin-top:12px;">
       </div>
-    </div>
 
-    <div class="form-card">
-      <h2 style="text-align:center;">Restore Backup File</h2>
+      <hr style="margin:20px 0;">
 
-      <p style="text-align:center;line-height:1.5;">
-        Select a backup JSON file previously exported from this app.
-        Restoring replaces the campaign currently stored on this device.
+      <h3>Restore Backup File</h3>
+
+      <p style="line-height:1.5;">
+        Select a JSON backup file from Files. Restoring replaces the campaign
+        currently stored on this device after first creating a safety snapshot.
       </p>
 
       <input
@@ -1577,22 +1584,42 @@ select {
     </div>
 
     <div class="form-card">
-      <h2 style="text-align:center;">Automatic Backups</h2>
+      <details open>
+        <summary style="font-size:20px;font-weight:bold;cursor:pointer;">
+          Manual Backups
+        </summary>
 
-      <p style="text-align:center;line-height:1.5;">
-        The app keeps a rolling set of automatic snapshots on this device
-        before saved campaign data is replaced. These survive normal
-        index.html updates, but not clearing Safari/site data.
-      </p>
+        <p style="line-height:1.5;">
+          Manual snapshots are saved inside the app when you export or when
+          you press Create Manual Snapshot. The app keeps only the newest
+          12 manual snapshots.
+        </p>
 
-      <button
-        class="small-button"
-        style="width:100%;margin-bottom:12px;"
-        onclick="createManualLocalSnapshot()">
-        Create Snapshot Now
-      </button>
+        <button
+          class="small-button"
+          style="width:100%;margin-bottom:12px;"
+          onclick="createManualLocalSnapshot()">
+          Create Manual Snapshot
+        </button>
 
-      <div id="automaticBackupList"></div>
+        <div id="manualBackupList"></div>
+      </details>
+    </div>
+
+    <div class="form-card">
+      <details>
+        <summary style="font-size:20px;font-weight:bold;cursor:pointer;">
+          Automatic Backups
+        </summary>
+
+        <p style="line-height:1.5;">
+          Automatic snapshots are created before important saved data is
+          replaced. The app keeps only the newest 12 automatic snapshots.
+          Older automatic snapshots are removed automatically.
+        </p>
+
+        <div id="automaticBackupList"></div>
+      </details>
     </div>
   </div>
 </div>
@@ -4621,7 +4648,13 @@ const CAMPAIGN_BACKUP_VERSION =
 const AUTOMATIC_BACKUP_KEY =
   "pokemonCampaignAutoBackups";
 
+const MANUAL_BACKUP_KEY =
+  "pokemonCampaignManualBackups";
+
 const MAX_AUTOMATIC_BACKUPS =
+  12;
+
+const MAX_MANUAL_BACKUPS =
   12;
 
 
@@ -4690,6 +4723,99 @@ function getRawCampaignSignature(
     ? raw.pcPokemonLevel
     : null
   ]);
+}
+
+
+function loadManualBackups() {
+
+  const saved =
+    safelyParseJSON(
+      localStorage.getItem(
+        MANUAL_BACKUP_KEY
+      ),
+      []
+    );
+
+  return Array.isArray(
+    saved
+  )
+    ? saved
+    : [];
+}
+
+
+function saveManualBackups(
+  backups
+) {
+
+  try {
+    localStorage.setItem(
+      MANUAL_BACKUP_KEY,
+      JSON.stringify(
+        backups.slice(
+          0,
+          MAX_MANUAL_BACKUPS
+        )
+      )
+    );
+
+    return true;
+  }
+  catch (error) {
+
+    console.error(
+      "Unable to save manual backup history:",
+      error
+    );
+
+    return false;
+  }
+}
+
+
+function createManualBackupFromStorage(
+  reason = "Manual snapshot"
+) {
+
+  const raw =
+    readPersistedCampaignRaw();
+
+  if (
+    !rawCampaignHasData(
+      raw
+    )
+  ) {
+    return false;
+  }
+
+  const now =
+    new Date();
+
+  const backups =
+    loadManualBackups();
+
+  backups.unshift({
+    id:
+      now.getTime().toString() +
+      "-" +
+      Math.random()
+        .toString(36)
+        .slice(2,8),
+    createdAt:
+      now.toISOString(),
+    reason:
+      reason,
+    signature:
+      getRawCampaignSignature(
+        raw
+      ),
+    raw:
+      raw
+  });
+
+  return saveManualBackups(
+    backups
+  );
 }
 
 
@@ -4802,16 +4928,15 @@ function createAutomaticBackupFromStorage(
 function createManualLocalSnapshot() {
 
   const created =
-    createAutomaticBackupFromStorage(
-      "Manual snapshot",
-      true
+    createManualBackupFromStorage(
+      "Manual snapshot"
     );
 
-  displayAutomaticBackups();
+  displayManualBackups();
 
   alert(
     created
-    ? "Local snapshot created."
+    ? "Manual snapshot created."
     : "There is no saved campaign data to snapshot yet."
   );
 }
@@ -4972,7 +5097,7 @@ function validateImportedCampaignBackup(
 }
 
 
-function exportCampaignBackup() {
+function getCampaignBackupFileData() {
 
   const backup =
     getCurrentCampaignBackupObject();
@@ -4984,9 +5109,134 @@ function exportCampaignBackup() {
       2
     );
 
+  const timestamp =
+    new Date()
+      .toISOString()
+      .replace(
+        /[:.]/g,
+        "-"
+      );
+
+  const filename =
+    "pokemon-campaign-backup-" +
+    timestamp +
+    ".json";
+
+  return {
+    json:
+      json,
+    filename:
+      filename
+  };
+}
+
+
+function showBackupExportResult(
+  message
+) {
+
+  const result =
+    document.getElementById(
+      "backupExportResult"
+    );
+
+  if (result) {
+    result.style.display =
+      "block";
+
+    result.textContent =
+      message;
+  }
+}
+
+
+async function shareCampaignBackup() {
+
+  const fileData =
+    getCampaignBackupFileData();
+
+  const file =
+    new File(
+      [fileData.json],
+      fileData.filename,
+      {
+        type:
+          "application/json"
+      }
+    );
+
+  /*
+    iOS Safari / installed PWAs can normally use the native
+    Share Sheet. From there the user can choose "Save to Files"
+    and pick Downloads or another folder.
+  */
+  if (
+    navigator.share &&
+    (
+      !navigator.canShare ||
+      navigator.canShare({
+        files:[
+          file
+        ]
+      })
+    )
+  ) {
+
+    try {
+
+      await navigator.share({
+        title:
+          "Pokémon Campaign Backup",
+        text:
+          "Pokémon campaign backup",
+        files:[
+          file
+        ]
+      });
+
+      createManualBackupFromStorage(
+        "Shared / saved backup file"
+      );
+
+      displayManualBackups();
+
+      showBackupExportResult(
+        "Backup shared successfully. If you chose Save to Files, it is now stored in the folder you selected."
+      );
+
+      return;
+    }
+    catch (error) {
+
+      if (
+        error &&
+        error.name === "AbortError"
+      ) {
+        return;
+      }
+
+      console.error(
+        "Share failed:",
+        error
+      );
+    }
+  }
+
+  /*
+    Fallback for browsers that cannot share files.
+  */
+  exportCampaignBackup();
+}
+
+
+function exportCampaignBackup() {
+
+  const fileData =
+    getCampaignBackupFileData();
+
   const blob =
     new Blob(
-      [json],
+      [fileData.json],
       {
         type:
           "application/json"
@@ -5003,21 +5253,11 @@ function exportCampaignBackup() {
       "a"
     );
 
-  const timestamp =
-    new Date()
-      .toISOString()
-      .replace(
-        /[:.]/g,
-        "-"
-      );
-
   link.href =
     url;
 
   link.download =
-    "pokemon-campaign-backup-" +
-    timestamp +
-    ".json";
+    fileData.filename;
 
   document.body.appendChild(
     link
@@ -5036,28 +5276,15 @@ function exportCampaignBackup() {
     1000
   );
 
-  const result =
-    document.getElementById(
-      "backupExportResult"
-    );
-
-  if (result) {
-    result.style.display =
-      "block";
-
-    result.textContent =
-      "Backup created. Save the JSON file somewhere you can find later.";
-  }
-
-  /*
-    Also keep a matching local snapshot.
-  */
-  createAutomaticBackupFromStorage(
-    "Manual file export",
-    true
+  createManualBackupFromStorage(
+    "Downloaded backup file"
   );
 
-  displayAutomaticBackups();
+  displayManualBackups();
+
+  showBackupExportResult(
+    "Backup download started. On iPhone, if the file opens in a viewer instead of appearing in Files, use Share → Save to Files."
+  );
 }
 
 
@@ -5260,6 +5487,182 @@ function getAutomaticBackupSummary(
         raw.pcPokemonLevel
       ) || 5
   };
+}
+
+
+function restoreManualBackup(
+  snapshotId
+) {
+
+  const snapshot =
+    loadManualBackups()
+      .find(
+        item =>
+          item.id ===
+          snapshotId
+      );
+
+  if (
+    !snapshot ||
+    !snapshot.raw
+  ) {
+    alert(
+      "That manual backup could not be found."
+    );
+    return;
+  }
+
+  const pokemon =
+    safelyParseJSON(
+      snapshot.raw.ownedPokemon,
+      []
+    );
+
+  const backupTrainers =
+    safelyParseJSON(
+      snapshot.raw.trainers,
+      []
+    );
+
+  const level =
+    Number(
+      snapshot.raw.pcPokemonLevel
+    );
+
+  if (
+    !Array.isArray(
+      pokemon
+    ) ||
+    !Array.isArray(
+      backupTrainers
+    ) ||
+    !Number.isInteger(
+      level
+    ) ||
+    level < 1 ||
+    level > 100
+  ) {
+    alert(
+      "That manual backup is invalid and cannot be restored."
+    );
+    return;
+  }
+
+  restoreValidatedCampaignData(
+    {
+      ownedPokemon:
+        pokemon,
+      trainers:
+        backupTrainers,
+      pcPokemonLevel:
+        level
+    },
+    "the selected manual backup"
+  );
+}
+
+
+function deleteManualBackup(
+  snapshotId
+) {
+
+  const confirmed =
+    confirm(
+      "Delete this manual backup?"
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const backups =
+    loadManualBackups()
+      .filter(
+        item =>
+          item.id !==
+          snapshotId
+      );
+
+  saveManualBackups(
+    backups
+  );
+
+  displayManualBackups();
+}
+
+
+function displayManualBackups() {
+
+  const list =
+    document.getElementById(
+      "manualBackupList"
+    );
+
+  if (!list) {
+    return;
+  }
+
+  const backups =
+    loadManualBackups();
+
+  if (!backups.length) {
+
+    list.innerHTML = `
+      <p class="empty-message">
+        No manual backups yet.
+      </p>
+    `;
+
+    return;
+  }
+
+  list.innerHTML =
+    backups.map(
+      function(snapshot) {
+
+        const summary =
+          getAutomaticBackupSummary(
+            snapshot
+          );
+
+        return `
+          <div class="backup-history-item">
+            <div class="backup-history-top">
+              <div>
+                <strong>
+                  ${formatBackupTimestamp(snapshot.createdAt)}
+                </strong>
+
+                <div class="backup-history-meta">
+                  ${snapshot.reason || "Manual snapshot"}
+                  <br>
+                  ${summary.trainerCount} Trainers
+                  •
+                  ${summary.pokemonCount} Pokémon
+                  •
+                  PC Level ${summary.level}
+                </div>
+              </div>
+            </div>
+
+            <div class="backup-history-actions">
+              <button
+                class="small-button"
+                onclick="restoreManualBackup('${snapshot.id}')">
+                Restore
+              </button>
+
+              <button
+                class="delete-button"
+                style="margin:0;"
+                onclick="deleteManualBackup('${snapshot.id}')">
+                Delete
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    ).join("");
 }
 
 
@@ -5758,7 +6161,10 @@ function showPage(pageId) {
     populatePokemonCenterTrainerDropdown();
   }
   if (pageId === "campaignPage") displayCampaignPage();
-  if (pageId === "backupPage") displayAutomaticBackups();
+  if (pageId === "backupPage") {
+    displayManualBackups();
+    displayAutomaticBackups();
+  }
   if (pageId === "inventoryPage") displayInventoryTrainerList();
 }
 
