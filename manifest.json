@@ -1,19 +1,20 @@
 {
-  "name": "My Personal App",
-  "short_name": "My App",
+  "name": "Pokémon Campaign Manager",
+  "short_name": "Pokémon Campaign",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#f5f5f7",
-  "theme_color": "#f5f5f7",
+  "background_color": "#ffffff",
+  "theme_color": "#d91c00",
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
