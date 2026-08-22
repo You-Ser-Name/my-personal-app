@@ -8746,6 +8746,30 @@ function buildStageControlHTML(
 }
 
 
+function getMoveMaxPP(
+  moveName
+) {
+
+  const move =
+    moveDatabase[
+      moveName
+    ];
+
+  if (
+    !move ||
+    !Number.isFinite(
+      Number(move.pp)
+    )
+  ) {
+    return 0;
+  }
+
+  return Number(
+    move.pp
+  );
+}
+
+
 function getMoveCurrentPP(
   pokemon,
   moveName
@@ -19371,7 +19395,7 @@ displayPokemonDatabase();
    APP VERSION CHECK
    Checks GitHub Pages directly, bypassing browser caches.
 ========================================================= */
-const APP_VERSION = "2026-08-22-05";
+const APP_VERSION = "2026-08-22-07";
 const APP_VERSION_STORAGE_KEY = "pokemonCampaignAppVersion";
 
 async function checkForAppUpdate() {
