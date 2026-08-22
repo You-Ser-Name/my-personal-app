@@ -954,6 +954,169 @@ select {
   line-height:1.45;
 }
 
+
+.pokedex-artwork-wrap {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:140px;
+  margin:2px 0 8px 0;
+}
+
+.pokedex-artwork {
+  width:132px;
+  height:132px;
+  object-fit:contain;
+  display:block;
+}
+
+.pokedex-artwork-fallback {
+  width:132px;
+  height:132px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-size:12px;
+  color:#666;
+  background:#f1f1f1;
+  padding:8px;
+}
+
+@media (max-width:600px) {
+  .pokedex-artwork-wrap {
+    min-height:118px;
+  }
+
+  .pokedex-artwork,
+  .pokedex-artwork-fallback {
+    width:112px;
+    height:112px;
+  }
+}
+
+
+.owned-pokemon-summary {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+}
+
+.owned-pokemon-thumb-wrap {
+  flex:0 0 auto;
+  width:58px;
+  height:58px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.owned-pokemon-thumb {
+  width:58px;
+  height:58px;
+  object-fit:contain;
+  display:block;
+}
+
+.owned-pokemon-thumb-fallback {
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-size:11px;
+  color:#666;
+  background:#f1f1f1;
+}
+
+.owned-pokemon-summary-main {
+  min-width:0;
+  flex:1 1 auto;
+}
+
+.owned-pokemon-summary-main .pokemon-compact-name {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+@media (max-width:600px) {
+  .owned-pokemon-thumb-wrap,
+  .owned-pokemon-thumb {
+    width:52px;
+    height:52px;
+  }
+
+  .owned-pokemon-thumb-fallback {
+    width:48px;
+    height:48px;
+  }
+
+  .owned-pokemon-summary {
+    gap:8px;
+  }
+}
+
+
+.battle-artwork-wrap {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:170px;
+  margin:4px 0 8px 0;
+}
+
+.battle-artwork {
+  width:170px;
+  height:170px;
+  object-fit:contain;
+  display:block;
+}
+
+.battle-artwork-fallback {
+  width:150px;
+  height:150px;
+  border-radius:14px;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  background:#f1f1f1;
+  color:#666;
+  font-size:13px;
+  padding:10px;
+}
+
+.battle-card h2 {
+  margin-bottom:4px;
+}
+
+.battle-card .battle-hp {
+  margin-top:8px;
+}
+
+@media (max-width:600px) {
+  .battle-artwork-wrap {
+    min-height:130px;
+    margin:2px 0 6px 0;
+  }
+
+  .battle-artwork {
+    width:135px;
+    height:135px;
+  }
+
+  .battle-artwork-fallback {
+    width:120px;
+    height:120px;
+  }
+}
+
 </style>
 
 
@@ -1029,6 +1192,10 @@ select {
       id="pokedexSection"
       style="display:none;margin-top:24px;">
       <h2>Pokédex</h2>
+
+      <p style="text-align:center;font-size:12px;color:#666;margin-top:-6px;">
+        Pokémon artwork loaded from Pokémon Wiki / Fandom.
+      </p>
 
       <div class="form-row" style="max-width:520px;margin:0 auto 14px auto;">
         <label>Search Pokédex</label>
@@ -6218,6 +6385,137 @@ function togglePokedex() {
 }
 
 
+function getPokemonFandomArtworkFilename(
+  pokemon
+) {
+
+  const number =
+    String(
+      pokemon.number
+    ).padStart(
+      4,
+      "0"
+    );
+
+  /*
+    Pokémon Wiki's file naming guidance omits the gender
+    symbols from Nidoran filenames.
+  */
+  let artworkName =
+    pokemon.name
+      .replace(
+        /[♀♂]/g,
+        ""
+      );
+
+  return (
+    number +
+    artworkName +
+    ".png"
+  );
+}
+
+
+function getPokemonFandomArtworkURL(
+  pokemon
+) {
+
+  const filename =
+    getPokemonFandomArtworkFilename(
+      pokemon
+    );
+
+  /*
+    Fandom's Special:Redirect/file endpoint resolves the
+    current uploaded version of the named artwork file.
+  */
+  return (
+    "https://pokemon.fandom.com/wiki/" +
+    "Special:Redirect/file/" +
+    encodeURIComponent(
+      filename
+    )
+  );
+}
+
+
+function handlePokedexArtworkError(
+  image
+) {
+
+  if (!image) {
+    return;
+  }
+
+  image.style.display =
+    "none";
+
+  const fallback =
+    image.parentElement
+      ? image.parentElement.querySelector(
+          ".pokedex-artwork-fallback"
+        )
+      : null;
+
+  if (fallback) {
+    fallback.style.display =
+      "flex";
+  }
+}
+
+
+function handleOwnedPokemonArtworkError(
+  image
+) {
+
+  if (!image) {
+    return;
+  }
+
+  image.style.display =
+    "none";
+
+  const fallback =
+    image.parentElement
+      ? image.parentElement.querySelector(
+          ".owned-pokemon-thumb-fallback"
+        )
+      : null;
+
+  if (fallback) {
+    fallback.style.display =
+      "flex";
+  }
+}
+
+
+function handleBattleArtworkError(
+  image
+) {
+
+  if (!image) {
+    return;
+  }
+
+  image.style.display =
+    "none";
+
+  const fallback =
+    image.parentElement
+      ? image.parentElement.querySelector(
+          ".battle-artwork-fallback"
+        )
+      : null;
+
+  if (fallback) {
+    fallback.style.display =
+      "flex";
+  }
+}
+
+
+
+
 function displayPokemonDatabase() {
 
   const list =
@@ -6300,6 +6598,11 @@ function displayPokemonDatabase() {
           "0"
         );
 
+      const artworkURL =
+        getPokemonFandomArtworkURL(
+          pokemon
+        );
+
       const evolution =
         pokemon.evolutionText
         ? pokemon.evolutionText
@@ -6315,6 +6618,22 @@ function displayPokemonDatabase() {
           #${number}
           ${pokemon.name}
         </h3>
+
+        <div class="pokedex-artwork-wrap">
+          <img
+            class="pokedex-artwork"
+            src="${artworkURL}"
+            alt="${pokemon.name}"
+            loading="lazy"
+            referrerpolicy="no-referrer"
+            onerror="handlePokedexArtworkError(this)">
+
+          <div
+            class="pokedex-artwork-fallback"
+            style="display:none;">
+            Artwork unavailable
+          </div>
+        </div>
 
         <p>
           <strong>Type:</strong>
@@ -10867,6 +11186,20 @@ function buildBattleCardHTML(
       pokemon
     );
 
+  const species =
+    pokemonDatabase.find(
+      entry =>
+        entry.number ===
+        pokemon.speciesNumber
+    );
+
+  const artworkURL =
+    species
+    ? getPokemonFandomArtworkURL(
+        species
+      )
+    : "";
+
   const currentHP =
     Math.max(
       0,
@@ -11051,6 +11384,27 @@ function buildBattleCardHTML(
 
   return `
     <h2>${getPokemonName(pokemon)}</h2>
+
+    <div class="battle-artwork-wrap">
+      ${
+        artworkURL
+        ? `
+          <img
+            class="battle-artwork"
+            src="${artworkURL}"
+            alt="${pokemon.speciesName || getPokemonName(pokemon)}"
+            loading="eager"
+            referrerpolicy="no-referrer"
+            onerror="handleBattleArtworkError(this)">
+        `
+        : ""
+      }
+
+      <div
+        class="battle-artwork-fallback">
+        Artwork unavailable
+      </div>
+    </div>
 
     <p style="text-align:center;">
       <strong>
@@ -15926,6 +16280,20 @@ function buildCompactPokemonRowHTML(
     !owner ||
     owner.trainerType === "PC";
 
+  const species =
+    pokemonDatabase.find(
+      entry =>
+        entry.number ===
+        pokemon.speciesNumber
+    );
+
+  const artworkURL =
+    species
+    ? getPokemonFandomArtworkURL(
+        species
+      )
+    : "";
+
   const evolutionReady =
     pokemonHasAvailableEvolution(
       pokemon
@@ -15999,40 +16367,68 @@ function buildCompactPokemonRowHTML(
   return `
     <details class="pokemon-compact-row">
       <summary>
-        <span class="pokemon-compact-name">
-          ${getPokemonName(pokemon)}
-          ${
-            evolutionReady
-            ? `
-              <span
-                class="evolution-ready-icon"
-                title="Evolution available"
-                aria-label="Evolution available">
-                ↑
-              </span>
-            `
-            : ""
-          }
-        </span>
+        <span class="owned-pokemon-summary">
 
-        <span class="pokemon-compact-meta">
-          <span>
-            Lv. ${pokemon.level}
+          <span class="owned-pokemon-thumb-wrap">
+            ${
+              artworkURL
+              ? `
+                <img
+                  class="owned-pokemon-thumb"
+                  src="${artworkURL}"
+                  alt="${pokemon.speciesName || getPokemonName(pokemon)}"
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                  onerror="handleOwnedPokemonArtworkError(this)">
+              `
+              : ""
+            }
+
+            <span class="owned-pokemon-thumb-fallback">
+              No image
+            </span>
           </span>
 
-          <span>
-            HP ${pokemon.currentHP}/${pokemon.stats.hp}
+          <span class="owned-pokemon-summary-main">
+
+            <span class="pokemon-compact-name">
+              ${getPokemonName(pokemon)}
+              ${
+                evolutionReady
+                ? `
+                  <span
+                    class="evolution-ready-icon"
+                    title="Evolution available"
+                    aria-label="Evolution available">
+                    ↑
+                  </span>
+                `
+                : ""
+              }
+            </span>
+
+            <span class="pokemon-compact-meta">
+              <span>
+                Lv. ${pokemon.level}
+              </span>
+
+              <span>
+                HP ${pokemon.currentHP}/${pokemon.stats.hp}
+              </span>
+
+              ${
+                showLocationBadge
+                ? `
+                  <span class="pokemon-location-badge">
+                    ${location}
+                  </span>
+                `
+                : ""
+              }
+            </span>
+
           </span>
 
-          ${
-            showLocationBadge
-            ? `
-              <span class="pokemon-location-badge">
-                ${location}
-              </span>
-            `
-            : ""
-          }
         </span>
       </summary>
 
