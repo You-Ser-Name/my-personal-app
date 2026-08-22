@@ -2035,7 +2035,7 @@ select {
       font-weight:bold;
       background:#fff3cd;
       border-radius:8px;">
-    AUTO-UPDATE TEST: VERSION 1
+    AUTO-UPDATE TEST: VERSION 2
   </div>
 
   <div class="menu">
@@ -19849,6 +19849,83 @@ displayPokemonDatabase();
 
 </script>
 
+
+
+<script>
+/* =========================================================
+   APP VERSION CHECK
+   Checks GitHub Pages directly, bypassing browser caches.
+========================================================= */
+const APP_VERSION = "2026-08-21-02";
+const APP_VERSION_STORAGE_KEY = "pokemonCampaignAppVersion";
+
+async function checkForAppUpdate() {
+  try {
+    const response = await fetch(
+      "./version.json?t=" + Date.now(),
+      {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache"
+        }
+      }
+    );
+
+    if (!response.ok) {
+      return;
+    }
+
+    const data = await response.json();
+    const latestVersion = String(data.version || "");
+
+    if (
+      latestVersion &&
+      latestVersion !== APP_VERSION
+    ) {
+      /*
+        The running HTML is older than GitHub.
+        Use a unique query string to force a fresh navigation
+        without deleting/reinstalling the Home Screen app.
+      */
+      const url =
+        new URL("./", window.location.href);
+
+      url.searchParams.set(
+        "appv",
+        latestVersion
+      );
+
+      window.location.replace(
+        url.toString()
+      );
+
+      return;
+    }
+
+    localStorage.setItem(
+      APP_VERSION_STORAGE_KEY,
+      APP_VERSION
+    );
+  }
+  catch (error) {
+    /*
+      Offline is expected sometimes. Do nothing so the cached
+      app continues working normally.
+    */
+    console.log(
+      "App update check skipped:",
+      error
+    );
+  }
+}
+
+window.addEventListener(
+  "load",
+  function() {
+    checkForAppUpdate();
+  }
+);
+</script>
 
 <script>
 if ("serviceWorker" in navigator) {
