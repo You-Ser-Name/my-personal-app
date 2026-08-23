@@ -13054,25 +13054,18 @@ function getTrainerNameForPokemon(
 
 
 function getBattleOpponentNPCTrainers() {
+  /*
+    Battle Setup should show EVERY active NPC trainer.
+    The only NPC trainers excluded are trainers that are currently marked
+    defeated/completed. Once a trainer is re-enabled from Completed Trainers,
+    trainer.completed becomes false and they immediately return to this list.
+
+    Do not filter this list by the HP of the trainer's Pokémon. Team health is
+    handled separately when choosing the opponent Pokémon, and route trainers
+    are restored when they are re-enabled.
+  */
   return trainers.filter(function(trainer) {
-    if (trainer.trainerType !== "NPC") {
-      return false;
-    }
-
-    /*
-      Defeated/completed trainers stay completely out of Battle Setup.
-      They can only return after the user explicitly re-enables them from
-      the Completed Trainers page.
-    */
-    if (trainer.completed) {
-      return false;
-    }
-
-    return ownedPokemon.some(
-      pokemon =>
-        pokemon.trainerId === trainer.id &&
-        pokemon.currentHP > 0
-    );
+    return trainer.trainerType === "NPC" && !trainer.completed;
   });
 }
 
