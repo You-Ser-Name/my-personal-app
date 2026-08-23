@@ -1,4 +1,4 @@
-const CACHE_NAME = "pokemon-campaign-v4";
+const CACHE_NAME = "pokemon-campaign-v5";
 const RUNTIME_CACHE = "pokemon-campaign-runtime-v1";
 
 const CORE_ASSETS = [
@@ -46,10 +46,28 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  const url = new URL(request.url);
+
   /*
-    PAGE LOADS:
-    Always try GitHub first so index.html updates automatically.
-    If there is no internet connection, use the cached app instead.
+    version.json must always come directly from GitHub.
+    Never serve an old cached copy.
+  */
+  if (
+    url.origin === self.location.origin &&
+    url.pathname.endsWith("/version.json")
+  ) {
+    event.respondWith(
+      fetch(request, {
+        cache: "no-store"
+      })
+    );
+    return;
+  }
+
+  /*
+    Page loads:
+    Try GitHub first so the newest index.html is used.
+    Fall back to the cached app if offline.
   */
   if (request.mode === "navigate") {
     event.respondWith(
@@ -76,93 +94,61 @@ self.addEventListener("fetch", event => {
   }
 
   /*
-    APP FILES:
-    Use the cached file immediately, while checking for a newer
-    copy in the background.
+    Same-origin app files:
+    Use cached copy immediately while refreshing it
+    in the background.
   */
-  if (
-    new URL(request.url).origin ===
-    self.location.origin
-  ) {
+  if (url.origin === self.location.origin) {
     event.respondWith(
-      caches
-        .match(request)
-        .then(cachedResponse => {
+      caches.match(request).then(cachedResponse => {
+        const networkFetch =
+          fetch(request)
+            .then(response => {
+              if (response && response.ok) {
+                const copy = response.clone();
 
-          const networkFetch =
-            fetch(request)
-              .then(response => {
+                caches
+                  .open(CACHE_NAME)
+                  .then(cache =>
+                    cache.put(request, copy)
+                  );
+              }
 
-                if (
-                  response &&
-                  response.ok
-                ) {
-                  const copy =
-                    response.clone();
+              return response;
+            })
+            .catch(() => cachedResponse);
 
-                  caches
-                    .open(CACHE_NAME)
-                    .then(cache =>
-                      cache.put(
-                        request,
-                        copy
-                      )
-                    );
-                }
-
-                return response;
-              })
-              .catch(
-                () => cachedResponse
-              );
-
-          return (
-            cachedResponse ||
-            networkFetch
-          );
-        })
+        return cachedResponse || networkFetch;
+      })
     );
 
     return;
   }
 
   /*
-    POKÉMON IMAGES:
-    Save images after they have been loaded once so previously
-    viewed Pokémon artwork can still appear while offline.
+    External Pokémon artwork:
+    Cache images after they load successfully.
   */
-  if (
-    request.destination === "image"
-  ) {
+  if (request.destination === "image") {
     event.respondWith(
-      caches
-        .match(request)
-        .then(cachedResponse => {
+      caches.match(request).then(cachedResponse => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
 
-          if (cachedResponse) {
-            return cachedResponse;
-          }
+        return fetch(request)
+          .then(response => {
+            const copy = response.clone();
 
-          return fetch(request)
-            .then(response => {
+            caches
+              .open(RUNTIME_CACHE)
+              .then(cache =>
+                cache.put(request, copy)
+              );
 
-              const copy =
-                response.clone();
-
-              caches
-                .open(
-                  RUNTIME_CACHE
-                )
-                .then(cache =>
-                  cache.put(
-                    request,
-                    copy
-                  )
-                );
-
-              return response;
-            });
-        })
+            return response;
+          });
+      })
     );
   }
 });
