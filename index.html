@@ -2182,8 +2182,9 @@ select {
 .kanto-hotspot {
   position:absolute;
   transform:translate(-50%,-50%);
-  border:1px solid rgba(255,255,255,.0);
-  background:rgba(255,255,255,.0);
+  border:0;
+  outline:0;
+  background:transparent;
   border-radius:10px;
   cursor:pointer;
   padding:0;
@@ -2192,12 +2193,18 @@ select {
   min-height:24px;
   box-shadow:none;
   z-index:2;
+  appearance:none;
+  -webkit-appearance:none;
+  -webkit-tap-highlight-color:transparent;
 }
 
 .kanto-hotspot:active,
+.kanto-hotspot:focus,
+.kanto-hotspot:focus-visible,
 .kanto-hotspot.selected {
+  border:0;
+  outline:0;
   background:transparent;
-  border-color:transparent;
   box-shadow:none;
 }
 
@@ -7689,15 +7696,6 @@ function renderKantoHotspots() {
             location.id
           );
         };
-
-      if (
-        selectedKantoLocationId ===
-        location.id
-      ) {
-        button.classList.add(
-          "selected"
-        );
-      }
 
       layer.appendChild(
         button
@@ -20239,7 +20237,7 @@ displayPokemonDatabase();
    APP VERSION CHECK
    Checks GitHub Pages directly, bypassing browser caches.
 ========================================================= */
-const APP_VERSION = "2026-08-22-13";
+const APP_VERSION = "2026-08-22-14";
 const APP_VERSION_STORAGE_KEY = "pokemonCampaignAppVersion";
 
 async function checkForAppUpdate() {
