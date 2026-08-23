@@ -20237,7 +20237,7 @@ displayPokemonDatabase();
    APP VERSION CHECK
    Checks GitHub Pages directly, bypassing browser caches.
 ========================================================= */
-const APP_VERSION = "2026-08-22-14";
+const APP_VERSION = "2026-08-22-15";
 const APP_VERSION_STORAGE_KEY = "pokemonCampaignAppVersion";
 
 async function checkForAppUpdate() {
@@ -20261,12 +20261,11 @@ async function checkForAppUpdate() {
 
     if (
       latestVersion &&
-      latestVersion !== APP_VERSION
+      latestVersion > APP_VERSION
     ) {
       /*
-        The running HTML is older than GitHub.
-        Use a unique query string to force a fresh navigation
-        without deleting/reinstalling the Home Screen app.
+        Only reload when GitHub reports a genuinely newer version.
+        An older cached version.json must never trigger a reload loop.
       */
       const url =
         new URL("./", window.location.href);
@@ -20314,7 +20313,7 @@ if ("serviceWorker" in navigator) {
     try {
       const registration =
         await navigator.serviceWorker.register(
-          "./service-worker.js"
+          "./service-worker.js?v=5"
         );
 
       /*
