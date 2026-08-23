@@ -2655,7 +2655,7 @@ select {
 .gym-badge-card .small-button {
   width: 100%;
   min-height: 0;
-  margin-top: 4px;
+  margin-top: 5px;
   padding: 5px 2px;
   border-radius: 8px;
   font-size: 9px;
@@ -8611,9 +8611,6 @@ function displayGymBadgeProgress() {
           alt="${info.badge}">
         <div class="gym-badge-name">${info.badge.replace(" Badge","")}</div>
         <div class="gym-badge-city">${info.city.replace(" City","")}</div>
-        <div class="gym-badge-status ${completed ? "earned" : ""}">
-          ${completed ? "✓ Earned" : "Locked"}
-        </div>
         <button
           class="small-button"
           type="button"
