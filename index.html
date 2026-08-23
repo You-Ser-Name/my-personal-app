@@ -2196,9 +2196,9 @@ select {
 
 .kanto-hotspot:active,
 .kanto-hotspot.selected {
-  background:rgba(255,255,255,.22);
-  border-color:rgba(255,255,255,.95);
-  box-shadow:0 0 0 2px rgba(0,0,0,.15);
+  background:transparent;
+  border-color:transparent;
+  box-shadow:none;
 }
 
 .kanto-hotspot.city {
@@ -20239,7 +20239,7 @@ displayPokemonDatabase();
    APP VERSION CHECK
    Checks GitHub Pages directly, bypassing browser caches.
 ========================================================= */
-const APP_VERSION = "2026-08-22-12";
+const APP_VERSION = "2026-08-22-13";
 const APP_VERSION_STORAGE_KEY = "pokemonCampaignAppVersion";
 
 async function checkForAppUpdate() {
