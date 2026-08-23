@@ -2436,6 +2436,63 @@ select {
   }
 }
 
+
+
+/* =========================================================
+   KANTO LOCAL NAVIGATION CONFIRMATION V22
+========================================================= */
+.kanto-nav-confirmation {
+  margin-top:7px;
+  padding:10px;
+  border-radius:10px;
+  background:#fff;
+  box-shadow:0 2px 10px rgba(0,0,0,.15);
+  text-align:left;
+}
+.kanto-nav-confirmation-title {
+  font-size:18px;
+  font-weight:800;
+  text-align:center;
+  margin-bottom:4px;
+}
+.kanto-nav-confirmation-subtitle {
+  font-size:11px;
+  color:#666;
+  text-align:center;
+  margin-bottom:8px;
+}
+.kanto-nav-confirmation-actions {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:5px;
+}
+.kanto-nav-confirmation-actions button {
+  width:100%;
+  margin:0 !important;
+}
+.kanto-nav-confirmation-status {
+  margin-top:6px;
+  font-size:10px;
+  font-weight:700;
+  text-align:center;
+}
+.kanto-nav-confirmation-cancel {
+  width:100%;
+  margin:6px 0 0 0 !important;
+}
+@media (max-width:600px) {
+  .kanto-nav-confirmation { padding:7px; }
+  .kanto-nav-confirmation-title { font-size:15px; }
+  .kanto-nav-confirmation-subtitle,
+  .kanto-nav-confirmation-status { font-size:9px; }
+  .kanto-nav-confirmation-actions button,
+  .kanto-nav-confirmation-cancel {
+    min-height:30px !important;
+    padding:4px 6px !important;
+    font-size:9px !important;
+  }
+}
+
 </style>
 
 
@@ -2448,6 +2505,7 @@ select {
 <meta name="apple-mobile-web-app-title" content="Pokémon Campaign">
 
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
+<!-- KANTO APP BUILD v22: local navigation confirmations fixed -->
 </head>
 
 <body>
@@ -8257,61 +8315,6 @@ function installKantoGymButtons() {
   });
 }
 
-
-/* =========================================================
-   KANTO LOCAL NAVIGATION CONFIRMATION V21
-========================================================= */
-.kanto-nav-confirmation {
-  margin-top:7px;
-  padding:10px;
-  border-radius:10px;
-  background:#fff;
-  box-shadow:0 2px 10px rgba(0,0,0,.15);
-  text-align:left;
-}
-.kanto-nav-confirmation-title {
-  font-size:18px;
-  font-weight:800;
-  text-align:center;
-  margin-bottom:4px;
-}
-.kanto-nav-confirmation-subtitle {
-  font-size:11px;
-  color:#666;
-  text-align:center;
-  margin-bottom:8px;
-}
-.kanto-nav-confirmation-actions {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:5px;
-}
-.kanto-nav-confirmation-actions button {
-  width:100%;
-  margin:0 !important;
-}
-.kanto-nav-confirmation-status {
-  margin-top:6px;
-  font-size:10px;
-  font-weight:700;
-  text-align:center;
-}
-.kanto-nav-confirmation-cancel {
-  width:100%;
-  margin:6px 0 0 0 !important;
-}
-@media (max-width:600px) {
-  .kanto-nav-confirmation { padding:7px; }
-  .kanto-nav-confirmation-title { font-size:15px; }
-  .kanto-nav-confirmation-subtitle,
-  .kanto-nav-confirmation-status { font-size:9px; }
-  .kanto-nav-confirmation-actions button,
-  .kanto-nav-confirmation-cancel {
-    min-height:30px !important;
-    padding:4px 6px !important;
-    font-size:9px !important;
-  }
-}
 
 /* =========================================================
    KANTO MAP NAVIGATION + LOCAL CONNECTION HOTSPOTS V20
