@@ -2574,6 +2574,97 @@ select {
     font-size:10px !important;
   }
 }
+
+/* =========================================================
+   CAMPAIGN PROGRESS / GYM BADGES V32
+========================================================= */
+.campaign-progress-card {
+  margin-top: 16px;
+}
+
+.gym-badge-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.gym-badge-card {
+  background: #fff;
+  border: 1px solid #dedede;
+  border-radius: 16px;
+  padding: 12px 10px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+}
+
+.gym-badge-image {
+  display: block;
+  width: min(100%, 132px);
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  margin: 0 auto 7px;
+}
+
+.gym-badge-name {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.gym-badge-city {
+  margin-top: 3px;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.gym-badge-status {
+  margin-top: 7px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.gym-badge-status.earned {
+  color: #188038;
+}
+
+.gym-badge-card .small-button {
+  width: 100%;
+  margin-top: 8px;
+  padding: 9px 7px;
+  font-size: 13px;
+}
+
+.gym-progress-summary {
+  text-align: center;
+  font-weight: 800;
+  margin-top: 6px;
+}
+
+.gym-page-progress-card {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.danger-zone-card {
+  border: 2px solid #c62828;
+}
+
+.danger-button {
+  width: 100%;
+  background: #c62828 !important;
+  color: #fff !important;
+  border-color: #c62828 !important;
+  font-weight: 800;
+}
+
+@media (min-width: 700px) {
+  .gym-badge-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 </style>
 
 
@@ -2620,6 +2711,18 @@ select {
       <p>Checks the currently deployed GitHub Pages app, clears app caches, and reloads the newest copy without needing a version-file change.</p>
       <button class="primary-button" style="width:100%;" type="button" onclick="refreshAppFromGitHub(this)">Refresh App from GitHub</button>
       <div id="githubRefreshStatus" style="margin-top:10px;font-weight:700;text-align:center;"></div>
+    </div>
+
+    <div class="card danger-zone-card" style="margin-top:14px;">
+      <h2 style="margin-top:0;color:#b71c1c;">Reset Campaign</h2>
+      <p style="line-height:1.5;">
+        Permanently erase all saved campaign data on this device and return the app
+        to a brand-new campaign: Pokémon, trainers, completed trainers, inventories,
+        money, battle/encounter state, visited/completed map locations, gym badges,
+        local backup snapshots, and campaign level.
+      </p>
+      <p style="font-weight:800;">Export a backup first if you may want this campaign again.</p>
+      <button class="danger-button" type="button" onclick="resetCampaignToNewInstall()">Reset All Campaign Data</button>
     </div>
   </div>
 </div>
@@ -2988,6 +3091,11 @@ select {
     <div class="kanto-town-map-shell">
       <img id="kantoGymPageImage" class="kanto-town-map-image" src="" alt="Kanto gym map" draggable="false">
     </div>
+    <div class="form-card gym-page-progress-card">
+      <div id="kantoGymProgressStatus" style="font-weight:800;margin-bottom:10px;">Gym not completed</div>
+      <button id="kantoGymCompleteButton" class="primary-button" style="width:100%;" onclick="toggleCurrentKantoGymCompleted()">Mark Gym Completed</button>
+    </div>
+
     <div class="kanto-town-bottom-nav">
       <button id="kantoGymTownBackButton" class="back-button" onclick="returnFromKantoGymPage()">← Back to City</button>
       <button class="back-button" onclick="showPage('kantoMapPage')">← Back to Kanto Map</button>
@@ -3465,6 +3573,12 @@ select {
   <div class="page-content">
     <button class="back-button" onclick="showPage('homePage')">← Back</button>
 
+    <div class="form-card campaign-progress-card">
+      <h2 style="text-align:center;margin-top:0;">Campaign Progress</h2>
+      <div id="gymProgressSummary" class="gym-progress-summary">0 / 8 Gym Badges Earned</div>
+      <div id="gymBadgeGrid" class="gym-badge-grid"></div>
+    </div>
+
     <div class="form-card">
       <h2 style="text-align:center;">PC Pokémon Level</h2>
 
@@ -3525,7 +3639,7 @@ select {
       <p style="text-align:center;line-height:1.5;">
         Export your complete campaign as a JSON file, including Pokémon,
         trainers, inventories, money, completed trainers, encounter/reward
-        state, PC level, and Kanto route/town visited/completed progress.
+        state, PC level, Kanto route/town visited/completed progress, and gym badge progress.
         On iPhone or iPad, use <strong>Share / Save to Files</strong> if you
         want to place the backup directly in the Files app.
       </p>
@@ -3587,7 +3701,7 @@ select {
 
         <p style="line-height:1.5;">
           Manual snapshots include the same campaign/progress data as exported
-          backups, including Kanto map progress and completed route encounters.
+          backups, including Kanto map progress, gym badges, and completed route encounters.
           The app keeps only the newest 12 manual snapshots.
         </p>
 
@@ -8414,6 +8528,101 @@ const kantoGymPageByTown = {
   "fuchsia-city": {title:"Fuchsia City Gym", image:"./assets/maps/fuchsia-city-gym.jpg", townPage:"fuchsiaCityPage"}
 };
 
+const kantoGymBadges = [
+  {id:"pewter", city:"Pewter City", gymKey:"gym-pewter-city", badge:"Boulder Badge", color:"./assets/badges/boulder-badge.png", gray:"./assets/badges/boulder-badge-gray.png"},
+  {id:"cerulean", city:"Cerulean City", gymKey:"gym-cerulean-city", badge:"Cascade Badge", color:"./assets/badges/cascade-badge.png", gray:"./assets/badges/cascade-badge-gray.png"},
+  {id:"vermilion", city:"Vermilion City", gymKey:"gym-vermilion-city", badge:"Thunder Badge", color:"./assets/badges/thunder-badge.png", gray:"./assets/badges/thunder-badge-gray.png"},
+  {id:"celadon", city:"Celadon City", gymKey:"gym-celadon-city", badge:"Rainbow Badge", color:"./assets/badges/rainbow-badge.png", gray:"./assets/badges/rainbow-badge-gray.png"},
+  {id:"fuchsia", city:"Fuchsia City", gymKey:"gym-fuchsia-city", badge:"Soul Badge", color:"./assets/badges/soul-badge.png", gray:"./assets/badges/soul-badge-gray.png"},
+  {id:"saffron", city:"Saffron City", gymKey:"gym-saffron-city", badge:"Marsh Badge", color:"./assets/badges/marsh-badge.png", gray:"./assets/badges/marsh-badge-gray.png"},
+  {id:"cinnabar", city:"Cinnabar Island", gymKey:"gym-cinnabar-island", badge:"Volcano Badge", color:"./assets/badges/volcano-badge.png", gray:"./assets/badges/volcano-badge-gray.png"},
+  {id:"viridian", city:"Viridian City", gymKey:"gym-viridian-city", badge:"Earth Badge", color:"./assets/badges/earth-badge.png", gray:"./assets/badges/earth-badge-gray.png"}
+];
+
+let currentKantoGymLocationId = null;
+
+function getKantoGymCompleted(gymKey) {
+  return !!getKantoLocationProgress(gymKey).completed;
+}
+
+function setKantoGymCompleted(gymKey, completed) {
+  const progress = getKantoMapProgress();
+  const state = progress[gymKey] || {visited:false,completed:false};
+  state.completed = !!completed;
+  if (state.completed) state.visited = true;
+  progress[gymKey] = state;
+  saveKantoMapProgress(progress);
+
+  updateCurrentKantoGymStatus();
+  displayGymBadgeProgress();
+}
+
+function toggleGymBadgeCompletion(gymKey) {
+  setKantoGymCompleted(gymKey, !getKantoGymCompleted(gymKey));
+}
+
+function displayGymBadgeProgress() {
+  const grid = document.getElementById("gymBadgeGrid");
+  const summary = document.getElementById("gymProgressSummary");
+  if (!grid) return;
+
+  let earned = 0;
+
+  grid.innerHTML = kantoGymBadges.map(function(info) {
+    const completed = getKantoGymCompleted(info.gymKey);
+    if (completed) earned += 1;
+
+    return `
+      <div class="gym-badge-card">
+        <img
+          class="gym-badge-image"
+          src="${completed ? info.color : info.gray}"
+          alt="${info.badge}">
+        <div class="gym-badge-name">${info.badge}</div>
+        <div class="gym-badge-city">${info.city}</div>
+        <div class="gym-badge-status ${completed ? "earned" : ""}">
+          ${completed ? "Earned ✓" : "Not earned"}
+        </div>
+        <button
+          class="small-button"
+          type="button"
+          onclick="toggleGymBadgeCompletion('${info.gymKey}')">
+          ${completed ? "Mark Gym Incomplete" : "Mark Gym Completed"}
+        </button>
+      </div>
+    `;
+  }).join("");
+
+  if (summary) {
+    summary.textContent = earned + " / " + kantoGymBadges.length + " Gym Badges Earned";
+  }
+}
+
+function updateCurrentKantoGymStatus() {
+  const status = document.getElementById("kantoGymProgressStatus");
+  const button = document.getElementById("kantoGymCompleteButton");
+  if (!currentKantoGymLocationId) {
+    if (status) status.textContent = "Gym not completed";
+    if (button) button.textContent = "Mark Gym Completed";
+    return;
+  }
+
+  const gymKey = "gym-" + currentKantoGymLocationId;
+  const completed = getKantoGymCompleted(gymKey);
+
+  if (status) {
+    status.textContent = completed ? "Gym completed ✓ • Badge earned" : "Gym not completed • Badge not earned";
+  }
+  if (button) {
+    button.textContent = completed ? "Mark Gym Incomplete" : "Mark Gym Completed";
+  }
+}
+
+function toggleCurrentKantoGymCompleted() {
+  if (!currentKantoGymLocationId) return;
+  toggleGymBadgeCompletion("gym-" + currentKantoGymLocationId);
+}
+
 let currentKantoRouteLocationId = null;
 let currentKantoGymTownPage = "kantoMapPage";
 
@@ -8478,6 +8687,7 @@ function openKantoGymPage(townLocationId) {
   const info = kantoGymPageByTown[townLocationId];
   if (!info) return;
 
+  currentKantoGymLocationId = townLocationId;
   currentKantoGymTownPage = info.townPage || "kantoMapPage";
 
   const title = document.getElementById("kantoGymPageTitle");
@@ -8492,6 +8702,7 @@ function openKantoGymPage(townLocationId) {
   if (backButton) backButton.textContent = "← Back to " + info.title.replace(" Gym", "");
 
   showPage("kantoGymPage");
+  updateCurrentKantoGymStatus();
 }
 
 function returnFromKantoGymPage() {
@@ -18501,8 +18712,11 @@ function adjustPCPokemonLevel(
 function displayCampaignPage() {
   const display=document.getElementById("pcPokemonLevelDisplay");
   const input=document.getElementById("pcPokemonLevelInput");
-  if(!display||!input)return;
-  display.textContent=pcPokemonLevel; input.value=pcPokemonLevel;
+  if(display && input) {
+    display.textContent=pcPokemonLevel;
+    input.value=pcPokemonLevel;
+  }
+  displayGymBadgeProgress();
 }
 
 
@@ -21864,6 +22078,41 @@ function removeInventoryItem(itemId) {
 ========================================================= */
 
 displayPokemonDatabase();
+
+/* =========================================================
+   RESET CAMPAIGN DATA V32
+========================================================= */
+function resetCampaignToNewInstall() {
+  const first = window.confirm(
+    "Reset ALL campaign data on this device?\\n\\n" +
+    "This deletes Pokémon, trainers, inventories, money, completed trainers, " +
+    "route/town progress, gym badges, local backup snapshots, and campaign settings.\\n\\n" +
+    "This cannot be undone unless you exported a backup."
+  );
+
+  if (!first) return;
+
+  const second = window.confirm(
+    "Final confirmation: erase this campaign and return to a brand-new install?"
+  );
+
+  if (!second) return;
+
+  try {
+    localStorage.clear();
+    sessionStorage.clear();
+  }
+  catch (error) {
+    console.warn("Could not completely clear browser storage.", error);
+  }
+
+  window.location.replace(
+    window.location.pathname +
+    "?reset=" +
+    Date.now()
+  );
+}
+
 installKantoGymButtons();
 
 
