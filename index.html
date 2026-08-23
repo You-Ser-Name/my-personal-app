@@ -2147,6 +2147,190 @@ select {
   }
 }
 
+
+/* =========================================================
+   KANTO INTERACTIVE MAP V11
+========================================================= */
+
+#kantoMapPage .page-content {
+  max-width:1200px;
+  margin:0 auto;
+  padding:8px;
+}
+
+#kantoMapPage .kanto-map-shell {
+  position:relative;
+  width:100%;
+  overflow:hidden;
+  border-radius:10px;
+  background:#0b75bc;
+  box-shadow:0 3px 12px rgba(0,0,0,.18);
+}
+
+#kantoMapPage .kanto-map-image {
+  width:100%;
+  height:auto;
+  display:block;
+}
+
+#kantoMapPage .kanto-hotspot-layer {
+  position:absolute;
+  inset:0;
+  pointer-events:auto;
+}
+
+.kanto-hotspot {
+  position:absolute;
+  transform:translate(-50%,-50%);
+  border:1px solid rgba(255,255,255,.0);
+  background:rgba(255,255,255,.0);
+  border-radius:10px;
+  cursor:pointer;
+  padding:0;
+  margin:0;
+  min-width:28px;
+  min-height:24px;
+  box-shadow:none;
+  z-index:2;
+}
+
+.kanto-hotspot:active,
+.kanto-hotspot.selected {
+  background:rgba(255,255,255,.26);
+  border-color:rgba(255,255,255,.9);
+}
+
+.kanto-hotspot.city {
+  min-width:72px;
+  min-height:34px;
+}
+
+.kanto-hotspot.landmark {
+  min-width:62px;
+  min-height:30px;
+}
+
+.kanto-hotspot.route {
+  min-width:30px;
+  min-height:28px;
+  border-radius:50%;
+}
+
+.kanto-location-panel {
+  margin-top:8px;
+  padding:10px;
+  border-radius:10px;
+  background:#fff;
+  box-shadow:0 2px 10px rgba(0,0,0,.15);
+}
+
+.kanto-location-panel-header {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:8px;
+}
+
+.kanto-location-panel-header button {
+  min-width:34px !important;
+  width:34px !important;
+  min-height:30px !important;
+  margin:0 !important;
+  padding:3px !important;
+}
+
+.kanto-location-type {
+  font-size:10px;
+  font-weight:800;
+  text-transform:uppercase;
+  color:#666;
+}
+
+.kanto-location-name {
+  font-size:20px;
+  font-weight:800;
+  line-height:1.05;
+}
+
+.kanto-location-description {
+  margin-top:5px;
+  font-size:12px;
+  line-height:1.3;
+}
+
+.kanto-location-actions {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:5px;
+  margin-top:8px;
+}
+
+.kanto-location-actions button {
+  width:100%;
+  margin:0 !important;
+}
+
+.kanto-location-status {
+  margin-top:6px;
+  text-align:center;
+  font-size:10px;
+  font-weight:700;
+}
+
+.kanto-bottom-back {
+  width:100%;
+  margin-top:8px !important;
+}
+
+@media (max-width:600px) {
+
+  #kantoMapPage .page-content {
+    padding:6px;
+  }
+
+  .kanto-hotspot {
+    min-width:30px;
+    min-height:28px;
+  }
+
+  .kanto-hotspot.city {
+    min-width:62px;
+    min-height:32px;
+  }
+
+  .kanto-hotspot.landmark {
+    min-width:54px;
+    min-height:28px;
+  }
+
+  .kanto-hotspot.route {
+    min-width:28px;
+    min-height:28px;
+  }
+
+  .kanto-location-panel {
+    padding:7px;
+    margin-top:6px;
+  }
+
+  .kanto-location-name {
+    font-size:16px;
+  }
+
+  .kanto-location-type,
+  .kanto-location-description,
+  .kanto-location-status {
+    font-size:9px;
+  }
+
+  .kanto-location-actions button,
+  .kanto-bottom-back {
+    min-height:30px !important;
+    padding:4px 6px !important;
+    font-size:9px !important;
+  }
+}
+
 </style>
 
 
@@ -2186,16 +2370,9 @@ select {
 
   <div class="page-content">
 
-    <button
-      class="back-button"
-      onclick="showPage('homePage')">
-      ← Back
-    </button>
-
     <div
       id="kantoMapShell"
-      class="kanto-map-shell"
-      style="margin-top:8px;">
+      class="kanto-map-shell">
 
       <img
         id="kantoMainMap"
@@ -2206,11 +2383,66 @@ select {
 
       <div
         id="kantoHotspotLayer"
-        class="kanto-hotspot-layer"
-        aria-hidden="true">
+        class="kanto-hotspot-layer">
       </div>
 
     </div>
+
+    <div
+      id="kantoLocationPanel"
+      class="kanto-location-panel"
+      style="display:none;">
+
+      <div class="kanto-location-panel-header">
+        <div>
+          <div
+            id="kantoLocationType"
+            class="kanto-location-type">
+          </div>
+
+          <div
+            id="kantoLocationName"
+            class="kanto-location-name">
+          </div>
+        </div>
+
+        <button
+          class="small-button"
+          onclick="closeKantoLocationPanel()">
+          ✕
+        </button>
+      </div>
+
+      <div
+        id="kantoLocationDescription"
+        class="kanto-location-description">
+      </div>
+
+      <div class="kanto-location-actions">
+        <button
+          class="small-button"
+          onclick="toggleKantoVisited()">
+          Mark Visited
+        </button>
+
+        <button
+          class="small-button"
+          onclick="toggleKantoCompleted()">
+          Mark Completed
+        </button>
+      </div>
+
+      <div
+        id="kantoLocationStatus"
+        class="kanto-location-status">
+      </div>
+    </div>
+
+    <button
+      class="back-button kanto-bottom-back"
+      onclick="showPage('homePage')">
+      ← Back
+    </button>
 
   </div>
 </div>
@@ -7273,6 +7505,424 @@ upgradeSavedData();
    NAVIGATION
 ========================================================= */
 
+
+const KANTO_MAP_PROGRESS_KEY =
+  "pokemonCampaignKantoMapProgress";
+
+let selectedKantoLocationId =
+  null;
+
+const kantoMapLocations = [
+  /* Cities / towns */
+  {id:"pallet-town",name:"Pallet Town",type:"City / Town",x:15.0,y:63.4,w:10,h:6},
+  {id:"viridian-city",name:"Viridian City",type:"City / Town",x:15.0,y:51.5,w:11,h:7},
+  {id:"pewter-city",name:"Pewter City",type:"City / Town",x:24.8,y:27.3,w:10,h:7},
+  {id:"cerulean-city",name:"Cerulean City",type:"City / Town",x:57.0,y:18.8,w:11,h:7},
+  {id:"vermilion-city",name:"Vermilion City",type:"City / Town",x:53.0,y:54.7,w:12,h:7},
+  {id:"lavender-town",name:"Lavender Town",type:"City / Town",x:91.3,y:39.4,w:11,h:7},
+  {id:"celadon-city",name:"Celadon City",type:"City / Town",x:43.7,y:34.6,w:12,h:7},
+  {id:"saffron-city",name:"Saffron City",type:"City / Town",x:59.2,y:36.6,w:12,h:7},
+  {id:"fuchsia-city",name:"Fuchsia City",type:"City / Town",x:71.8,y:74.6,w:12,h:7},
+  {id:"cinnabar-island",name:"Cinnabar Island",type:"City / Town",x:6.7,y:88.0,w:11,h:7},
+  {id:"indigo-plateau",name:"Indigo Plateau",type:"Landmark",x:13.5,y:13.2,w:12,h:8},
+
+  /* Major landmarks / buildings */
+  {id:"pokemon-league",name:"Pokémon League",type:"Building / Landmark",x:13.6,y:16.4,w:10,h:5},
+  {id:"victory-road",name:"Victory Road",type:"Cave / Landmark",x:13.5,y:23.0,w:10,h:5},
+  {id:"viridian-forest",name:"Viridian Forest",type:"Landmark",x:19.2,y:42.7,w:10,h:7},
+  {id:"mt-moon",name:"Mt. Moon",type:"Cave",x:33.4,y:23.8,w:9,h:6},
+  {id:"cerulean-cave",name:"Cerulean Cave",type:"Cave",x:65.2,y:10.7,w:9,h:6},
+  {id:"bills-house",name:"Bill's House",type:"Building",x:90.4,y:9.0,w:10,h:6},
+  {id:"rock-tunnel",name:"Rock Tunnel",type:"Cave",x:81.4,y:24.9,w:9,h:6},
+  {id:"power-plant",name:"Power Plant",type:"Landmark",x:80.1,y:33.6,w:9,h:7},
+  {id:"pokemon-tower",name:"Pokémon Tower",type:"Building",x:92.5,y:49.2,w:9,h:7},
+  {id:"digletts-cave",name:"Diglett's Cave",type:"Cave",x:77.8,y:57.0,w:9,h:6},
+  {id:"ss-anne",name:"S.S. Anne",type:"Landmark",x:59.6,y:65.3,w:9,h:7},
+  {id:"safari-zone",name:"Safari Zone",type:"Landmark",x:53.4,y:72.5,w:11,h:7},
+  {id:"game-corner",name:"Game Corner",type:"Building",x:43.0,y:44.8,w:9,h:5},
+  {id:"silph-co",name:"Silph Co.",type:"Building",x:64.0,y:45.6,w:8,h:5},
+  {id:"fighting-dojo",name:"Fighting Dojo",type:"Building",x:64.5,y:48.0,w:9,h:5},
+  {id:"cycling-road",name:"Cycling Road",type:"Landmark",x:42.5,y:58.5,w:9,h:7},
+  {id:"seafoam-islands",name:"Seafoam Islands",type:"Cave / Landmark",x:31.7,y:92.2,w:10,h:7},
+  {id:"pokemon-mansion",name:"Pokémon Mansion",type:"Building",x:6.7,y:92.2,w:10,h:5},
+
+  /* Routes 1–25 */
+  {id:"route-1",name:"Route 1",type:"Route",x:15.0,y:57.6,w:4,h:5},
+  {id:"route-2-south",name:"Route 2",type:"Route",x:24.8,y:46.8,w:4,h:5},
+  {id:"route-2-north",name:"Route 2",type:"Route",x:13.7,y:36.0,w:4,h:5},
+  {id:"route-3",name:"Route 3",type:"Route",x:32.6,y:27.8,w:4,h:5},
+  {id:"route-4",name:"Route 4",type:"Route",x:42.1,y:20.7,w:4,h:5},
+  {id:"route-5",name:"Route 5",type:"Route",x:57.3,y:29.6,w:4,h:5},
+  {id:"route-6",name:"Route 6",type:"Route",x:58.4,y:48.2,w:4,h:5},
+  {id:"route-7",name:"Route 7",type:"Route",x:51.1,y:40.9,w:4,h:5},
+  {id:"route-8",name:"Route 8",type:"Route",x:70.4,y:40.8,w:4,h:5},
+  {id:"route-9",name:"Route 9",type:"Route",x:91.2,y:26.1,w:4,h:5},
+  {id:"route-10",name:"Route 10",type:"Route",x:93.0,y:31.6,w:4,h:5},
+  {id:"route-11",name:"Route 11",type:"Route",x:69.0,y:54.8,w:4,h:5},
+  {id:"route-12",name:"Route 12",type:"Route",x:94.3,y:53.0,w:4,h:5},
+  {id:"route-13-east",name:"Route 13",type:"Route",x:92.0,y:63.0,w:4,h:5},
+  {id:"route-13-south",name:"Route 13",type:"Route",x:78.4,y:86.4,w:4,h:5},
+  {id:"route-14-east",name:"Route 14",type:"Route",x:87.4,y:69.6,w:4,h:5},
+  {id:"route-14-south",name:"Route 14",type:"Route",x:63.7,y:86.3,w:4,h:5},
+  {id:"route-15",name:"Route 15",type:"Route",x:84.8,y:76.3,w:4,h:5},
+  {id:"route-16",name:"Route 16",type:"Route",x:31.0,y:39.5,w:4,h:5},
+  {id:"route-17",name:"Route 17",type:"Route",x:42.4,y:51.7,w:4,h:5},
+  {id:"route-18",name:"Route 18",type:"Route",x:48.0,y:64.7,w:4,h:5},
+  {id:"route-19",name:"Route 19",type:"Route",x:48.6,y:93.3,w:4,h:5},
+  {id:"route-20",name:"Route 20",type:"Route",x:25.0,y:87.7,w:4,h:5},
+  {id:"route-21",name:"Route 21",type:"Route",x:11.8,y:74.3,w:4,h:5},
+  {id:"route-22",name:"Route 22",type:"Route",x:6.8,y:50.2,w:4,h:5},
+  {id:"route-23",name:"Route 23",type:"Route",x:13.5,y:27.7,w:4,h:5},
+  {id:"route-24",name:"Route 24",type:"Route",x:57.1,y:10.0,w:4,h:5},
+  {id:"route-25",name:"Route 25",type:"Route",x:74.1,y:15.0,w:4,h:5}
+];
+
+
+function getKantoMapProgress() {
+
+  try {
+    const raw =
+      localStorage.getItem(
+        KANTO_MAP_PROGRESS_KEY
+      );
+
+    return raw
+      ? JSON.parse(raw)
+      : {};
+  }
+  catch (error) {
+    return {};
+  }
+}
+
+
+function saveKantoMapProgress(
+  progress
+) {
+
+  localStorage.setItem(
+    KANTO_MAP_PROGRESS_KEY,
+    JSON.stringify(progress)
+  );
+}
+
+
+function getKantoLocationProgress(
+  locationId
+) {
+
+  const progress =
+    getKantoMapProgress();
+
+  return progress[
+    locationId
+  ] || {
+    visited:false,
+    completed:false
+  };
+}
+
+
+function renderKantoHotspots() {
+
+  const layer =
+    document.getElementById(
+      "kantoHotspotLayer"
+    );
+
+  if (!layer) {
+    return;
+  }
+
+  layer.innerHTML = "";
+
+  kantoMapLocations.forEach(
+    function(location) {
+
+      const button =
+        document.createElement(
+          "button"
+        );
+
+      const typeClass =
+        location.type === "Route"
+        ? "route"
+        : (
+            location.type.includes(
+              "City"
+            )
+            ? "city"
+            : "landmark"
+          );
+
+      button.className =
+        "kanto-hotspot " +
+        typeClass;
+
+      button.style.left =
+        location.x + "%";
+
+      button.style.top =
+        location.y + "%";
+
+      button.style.width =
+        (location.w || 5) +
+        "%";
+
+      button.style.height =
+        (location.h || 5) +
+        "%";
+
+      button.setAttribute(
+        "aria-label",
+        location.name
+      );
+
+      button.title =
+        location.name;
+
+      button.onclick =
+        function(event) {
+          event.stopPropagation();
+          selectKantoLocation(
+            location.id
+          );
+        };
+
+      if (
+        selectedKantoLocationId ===
+        location.id
+      ) {
+        button.classList.add(
+          "selected"
+        );
+      }
+
+      layer.appendChild(
+        button
+      );
+    }
+  );
+}
+
+
+function selectKantoLocation(
+  locationId
+) {
+
+  const location =
+    kantoMapLocations.find(
+      item =>
+        item.id ===
+        locationId
+    );
+
+  if (!location) {
+    return;
+  }
+
+  selectedKantoLocationId =
+    locationId;
+
+  const panel =
+    document.getElementById(
+      "kantoLocationPanel"
+    );
+
+  const name =
+    document.getElementById(
+      "kantoLocationName"
+    );
+
+  const type =
+    document.getElementById(
+      "kantoLocationType"
+    );
+
+  const description =
+    document.getElementById(
+      "kantoLocationDescription"
+    );
+
+  if (
+    !panel ||
+    !name ||
+    !type ||
+    !description
+  ) {
+    return;
+  }
+
+  name.textContent =
+    location.name;
+
+  type.textContent =
+    location.type;
+
+  description.textContent =
+    "Selected from the Kanto campaign map. We can add location-specific maps, trainers, encounters, shops, buildings, notes, and other interactions here.";
+
+  panel.style.display =
+    "block";
+
+  updateKantoLocationStatus();
+  renderKantoHotspots();
+
+  panel.scrollIntoView({
+    behavior:"smooth",
+    block:"nearest"
+  });
+}
+
+
+function closeKantoLocationPanel() {
+
+  selectedKantoLocationId =
+    null;
+
+  const panel =
+    document.getElementById(
+      "kantoLocationPanel"
+    );
+
+  if (panel) {
+    panel.style.display =
+      "none";
+  }
+
+  renderKantoHotspots();
+}
+
+
+function updateKantoLocationStatus() {
+
+  if (!selectedKantoLocationId) {
+    return;
+  }
+
+  const state =
+    getKantoLocationProgress(
+      selectedKantoLocationId
+    );
+
+  const status =
+    document.getElementById(
+      "kantoLocationStatus"
+    );
+
+  const panel =
+    document.getElementById(
+      "kantoLocationPanel"
+    );
+
+  if (!status || !panel) {
+    return;
+  }
+
+  const buttons =
+    panel.querySelectorAll(
+      ".kanto-location-actions button"
+    );
+
+  if (buttons[0]) {
+    buttons[0].textContent =
+      state.visited
+      ? "Visited ✓"
+      : "Mark Visited";
+  }
+
+  if (buttons[1]) {
+    buttons[1].textContent =
+      state.completed
+      ? "Completed ✓"
+      : "Mark Completed";
+  }
+
+  status.textContent =
+    (
+      state.visited
+      ? "Visited"
+      : "Not visited"
+    ) +
+    " • " +
+    (
+      state.completed
+      ? "Completed"
+      : "Not completed"
+    );
+}
+
+
+function toggleKantoVisited() {
+
+  if (!selectedKantoLocationId) {
+    return;
+  }
+
+  const progress =
+    getKantoMapProgress();
+
+  const state =
+    progress[
+      selectedKantoLocationId
+    ] || {
+      visited:false,
+      completed:false
+    };
+
+  state.visited =
+    !state.visited;
+
+  progress[
+    selectedKantoLocationId
+  ] =
+    state;
+
+  saveKantoMapProgress(
+    progress
+  );
+
+  updateKantoLocationStatus();
+}
+
+
+function toggleKantoCompleted() {
+
+  if (!selectedKantoLocationId) {
+    return;
+  }
+
+  const progress =
+    getKantoMapProgress();
+
+  const state =
+    progress[
+      selectedKantoLocationId
+    ] || {
+      visited:false,
+      completed:false
+    };
+
+  state.completed =
+    !state.completed;
+
+  if (state.completed) {
+    state.visited = true;
+  }
+
+  progress[
+    selectedKantoLocationId
+  ] =
+    state;
+
+  saveKantoMapProgress(
+    progress
+  );
+
+  updateKantoLocationStatus();
+}
+
+
 function showPage(pageId) {
 
   [
@@ -7346,6 +7996,10 @@ function showPage(pageId) {
   if (pageId === "unassignedPokemonPage") displayUnassignedPokemonPage();
   if (pageId === "trainersPage") displayTrainers();
   if (pageId === "completedTrainersPage") displayCompletedTrainers();
+  if (pageId === "kantoMapPage") {
+    closeKantoLocationPanel();
+    renderKantoHotspots();
+  }
   if (pageId === "battlesPage") displayBattleSetup();
 
   if (
@@ -19584,7 +20238,7 @@ displayPokemonDatabase();
    APP VERSION CHECK
    Checks GitHub Pages directly, bypassing browser caches.
 ========================================================= */
-const APP_VERSION = "2026-08-22-10";
+const APP_VERSION = "2026-08-22-11";
 const APP_VERSION_STORAGE_KEY = "pokemonCampaignAppVersion";
 
 async function checkForAppUpdate() {
