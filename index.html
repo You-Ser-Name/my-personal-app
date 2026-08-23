@@ -3236,7 +3236,7 @@ select {
       <button class="back-button" onclick="showPage('trainersPage')">← Back</button>
       <button class="primary-button" onclick="showPage('createTrainerPage')">+ Create Trainer</button>
     </div>
-    <p class="completed-trainer-note">NPC trainers marked defeated or completed are hidden from the active trainer list and Battle Setup.</p>
+    <p class="completed-trainer-note">Defeated/completed NPC trainers stay here and are unavailable in Battle Setup until you explicitly re-enable them. Re-enabled route trainers can award their full prize again.</p>
     <div id="completedTrainerList"></div>
   </div>
 </div>
@@ -13054,7 +13054,26 @@ function getTrainerNameForPokemon(
 
 
 function getBattleOpponentNPCTrainers() {
-  return trainers.filter(trainer=>trainer.trainerType==="NPC"&&!trainer.completed&&ownedPokemon.some(p=>p.trainerId===trainer.id&&p.currentHP>0));
+  return trainers.filter(function(trainer) {
+    if (trainer.trainerType !== "NPC") {
+      return false;
+    }
+
+    /*
+      Defeated/completed trainers stay completely out of Battle Setup.
+      They can only return after the user explicitly re-enables them from
+      the Completed Trainers page.
+    */
+    if (trainer.completed) {
+      return false;
+    }
+
+    return ownedPokemon.some(
+      pokemon =>
+        pokemon.trainerId === trainer.id &&
+        pokemon.currentHP > 0
+    );
+  });
 }
 
 
@@ -20991,9 +21010,104 @@ function displayTrainers() {
 }
 
 
-function setTrainerCompleted(trainerId,completed){const trainer=getTrainerById(trainerId);if(!trainer||trainer.trainerType!=="NPC")return;trainer.completed=Boolean(completed);saveTrainers();if(trainer.completed)displayTrainers();else displayCompletedTrainers();}
+function setTrainerCompleted(trainerId,completed){
+  const trainer=getTrainerById(trainerId);
+  if(!trainer||trainer.trainerType!=="NPC")return;
+  trainer.completed=Boolean(completed);
+  saveTrainers();
+  if(trainer.completed)displayTrainers();
+  else displayCompletedTrainers();
+}
 
-function displayCompletedTrainers(){const list=document.getElementById("completedTrainerList");if(!list)return;list.innerHTML="";const done=trainers.filter(t=>t.trainerType==="NPC"&&t.completed).sort((a,b)=>a.name.localeCompare(b.name));if(!done.length){list.innerHTML=`<p class="empty-message">No defeated or completed NPC trainers.</p>`;return;}done.forEach(trainer=>{const team=getTrainerPokemon(trainer.id).sort((a,b)=>a.speciesNumber-b.speciesNumber);const teamHTML=team.length?team.map(p=>`<div class="team-member"><strong>#${String(p.speciesNumber).padStart(3,"0")} ${getPokemonName(p)}</strong> — Level ${p.level}</div>`).join(""):`<p class="empty-message">No Pokémon assigned.</p>`;const card=document.createElement("div");card.className="card";card.innerHTML=`<h3>${trainer.name}</h3><div class="trainer-team"><strong>Owned Pokémon</strong>${teamHTML}</div><button class="primary-button" style="width:100%;margin-top:8px;" onclick="setTrainerCompleted(${trainer.id},false)">Return to Active Trainers</button><button class="delete-button" onclick="deleteTrainer(${trainer.id});displayCompletedTrainers();">Delete Trainer</button>`;list.appendChild(card);});}
+function reenableCompletedTrainer(trainerId){
+  const trainer=getTrainerById(trainerId);
+  if(!trainer||trainer.trainerType!=="NPC")return;
+
+  const team=getTrainerPokemon(trainer.id);
+
+  team.forEach(function(pokemon){
+    if(pokemon.stats&&Number.isFinite(Number(pokemon.stats.hp))){
+      pokemon.currentHP=Number(pokemon.stats.hp);
+    }
+    pokemon.status="None";
+
+    if(Array.isArray(pokemon.moves)){
+      pokemon.movePP=pokemon.movePP&&typeof pokemon.movePP==="object"&&!Array.isArray(pokemon.movePP)
+        ? pokemon.movePP
+        : {};
+      pokemon.moves.forEach(function(moveName){
+        if(moveDatabase[moveName]){
+          pokemon.movePP[moveName]=moveDatabase[moveName].pp;
+        }
+      });
+    }
+  });
+
+  /*
+    Re-enabling a defeated trainer starts a fresh rematch cycle.
+    Their full encounter reward may be earned again after the next victory.
+  */
+  trainer.completed=false;
+  trainer.rewardClaimed=false;
+
+  /* Restore the intended route-encounter battle item, if applicable. */
+  if(trainer.routeEncounterId){
+    const encounter=findKantoRouteTrainer(trainer.routeEncounterId);
+    if(encounter){
+      if(String(encounter.battleItem||"").startsWith("X Attack")){
+        trainer.inventory=[{id:"x-attack",quantity:1}];
+      }
+      else if(String(encounter.battleItem||"").startsWith("Potion")){
+        trainer.inventory=[{id:"potion",quantity:1}];
+      }
+      else if(String(encounter.battleItem||"")==="None"){
+        trainer.inventory=[];
+      }
+    }
+  }
+
+  savePokemon();
+  saveTrainers();
+  displayCompletedTrainers();
+  alert(trainer.name+" has been re-enabled. Their team is restored and their prize may be earned again.");
+}
+
+function displayCompletedTrainers(){
+  const list=document.getElementById("completedTrainerList");
+  if(!list)return;
+  list.innerHTML="";
+
+  const done=trainers
+    .filter(t=>t.trainerType==="NPC"&&t.completed)
+    .sort((a,b)=>a.name.localeCompare(b.name));
+
+  if(!done.length){
+    list.innerHTML=`<p class="empty-message">No defeated or completed NPC trainers.</p>`;
+    return;
+  }
+
+  done.forEach(trainer=>{
+    const team=getTrainerPokemon(trainer.id).sort((a,b)=>a.speciesNumber-b.speciesNumber);
+    const teamHTML=team.length
+      ? team.map(p=>`<div class="team-member"><strong>#${String(p.speciesNumber).padStart(3,"0")} ${getPokemonName(p)}</strong> — Level ${p.level}</div>`).join("")
+      : `<p class="empty-message">No Pokémon assigned.</p>`;
+
+    const rewardText=trainer.encounterReward
+      ? `<div class="completed-trainer-note">Rematch reward: ${trainer.encounterReward} to every PC trainer</div>`
+      : "";
+
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`
+      <h3>${trainer.name}</h3>
+      <div class="trainer-team"><strong>Owned Pokémon</strong>${teamHTML}</div>
+      ${rewardText}
+      <button class="primary-button" style="width:100%;margin-top:8px;" onclick="reenableCompletedTrainer(${trainer.id})">Re-enable Trainer</button>
+      <button class="delete-button" onclick="deleteTrainer(${trainer.id});displayCompletedTrainers();">Delete Trainer</button>
+    `;
+    list.appendChild(card);
+  });
+}
 
 function changeTrainerType(
   trainerId,
@@ -21670,6 +21784,7 @@ function showKantoTrainerEncounter(id){
   if(!encounter||!panel) return;
   selectedKantoRouteTrainerId=id;
   const loaded=getLoadedRouteEncounterTrainer(encounter);
+  const defeated=Boolean(loaded&&loaded.completed);
   const party=encounter.pokemon&&encounter.pokemon.length?encounter.pokemon.map(function(p){
     const moves=(p.moves||[]).length?p.moves.join(', '):'No level-up moves listed';
     return '<div class="route-trainer-mon"><strong>'+escapeEncounterHTML(p.species)+' — Lv. '+p.level+'</strong><div class="route-trainer-moves">Moves: '+escapeEncounterHTML(moves)+'</div></div>';
@@ -21681,10 +21796,10 @@ function showKantoTrainerEncounter(id){
     '<div class="route-trainer-team">'+party+'</div>'+
     '<div class="route-trainer-summary-grid"><div class="route-trainer-summary-box"><strong>Battle Item</strong><br>'+escapeEncounterHTML(encounter.battleItem||'None')+'</div><div class="route-trainer-summary-box"><strong>Reward</strong><br>'+escapeEncounterHTML(encounter.reward||'—')+'</div></div>'+
     '<div class="route-trainer-actions">'+
-      '<button class="small-button" type="button" onclick="loadKantoRouteEncounter(\''+encounter.id+'\',false)">'+(loaded?'Encounter Loaded ✓':'Load Encounter')+'</button>'+
-      '<button class="primary-button" type="button" onclick="loadKantoRouteEncounter(\''+encounter.id+'\',true)">'+(loaded?'Open Battles':'Load + Open Battles')+'</button>'+
+      '<button class="small-button" type="button" '+(defeated?'disabled':'onclick="loadKantoRouteEncounter(\''+encounter.id+'\',false)"')+'>'+(defeated?'Defeated ✓':(loaded?'Encounter Loaded ✓':'Load Encounter'))+'</button>'+
+      '<button class="primary-button" type="button" onclick="'+(defeated?"showPage('completedTrainersPage')":"loadKantoRouteEncounter('"+encounter.id+"',true)")+'">'+(defeated?'Go to Completed Trainers':(loaded?'Open Battles':'Load + Open Battles'))+'</button>'+
     '</div>'+
-    '<div class="route-trainer-status">'+(loaded?'This NPC and team are already in Trainers.':'Nothing is added until you choose Load Encounter.')+'</div>'+
+    '<div class="route-trainer-status">'+(defeated?'This trainer has been defeated. Re-enable them from Completed Trainers before a rematch.':(loaded?'This NPC and team are already in Trainers.':'Nothing is added until you choose Load Encounter.'))+'</div>'+
     '<button class="small-button route-trainer-close" type="button" onclick="closeKantoTrainerEncounter()">Close Encounter</button>'+
   '</div>';
   panel.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -21742,11 +21857,29 @@ function loadKantoRouteEncounter(id,openBattles){
   }
   showKantoTrainerEncounter(id);
   if(openBattles){
+    if(trainer.completed){
+      alert(trainer.name+' has already been defeated. Re-enable this trainer from Completed Trainers before starting a rematch.');
+      showPage('completedTrainersPage');
+      return;
+    }
+
+    /* Clear any old active battle before rebuilding Battle Setup. */
+    activeBattlePokemonAId = null;
+    activeBattlePokemonBId = null;
+    resetBattleTemporaryState();
+    lastBattleOpponentSource = 'trainer:' + trainer.id;
+
     showPage('battlesPage');
+    displayBattleSetup();
+
     const source=document.getElementById('battleOpponentSourceSelect');
     if(source){
       const value='trainer:'+trainer.id;
-      if(Array.from(source.options).some(o=>o.value===value)){source.value=value;displayBattleOpponentPokemonOptions();}
+      if(Array.from(source.options).some(o=>o.value===value)){
+        source.value=value;
+        lastBattleOpponentSource=value;
+        displayBattleOpponentPokemonOptions();
+      }
     }
   }
 }
