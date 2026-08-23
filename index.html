@@ -3523,9 +3523,11 @@ select {
       <h2 style="text-align:center;">Backup Files</h2>
 
       <p style="text-align:center;line-height:1.5;">
-        Export your complete campaign as a JSON file. On iPhone or iPad,
-        use <strong>Share / Save to Files</strong> if you want to place the
-        backup directly in the Files app.
+        Export your complete campaign as a JSON file, including Pokémon,
+        trainers, inventories, money, completed trainers, encounter/reward
+        state, PC level, and Kanto route/town visited/completed progress.
+        On iPhone or iPad, use <strong>Share / Save to Files</strong> if you
+        want to place the backup directly in the Files app.
       </p>
 
       <button
@@ -3584,9 +3586,9 @@ select {
         </summary>
 
         <p style="line-height:1.5;">
-          Manual snapshots are saved inside the app when you export or when
-          you press Create Manual Snapshot. The app keeps only the newest
-          12 manual snapshots.
+          Manual snapshots include the same campaign/progress data as exported
+          backups, including Kanto map progress and completed route encounters.
+          The app keeps only the newest 12 manual snapshots.
         </p>
 
         <button
@@ -3607,9 +3609,9 @@ select {
         </summary>
 
         <p style="line-height:1.5;">
-          Automatic snapshots are created before important saved data is
-          replaced. The app keeps only the newest 12 automatic snapshots.
-          Older automatic snapshots are removed automatically.
+          Automatic snapshots include campaign data plus Kanto map progress
+          whenever the app creates a new snapshot. The app keeps only the newest
+          12 automatic snapshots. Older automatic snapshots are removed automatically.
         </p>
 
         <div id="automaticBackupList"></div>
@@ -6642,7 +6644,7 @@ const CAMPAIGN_BACKUP_FORMAT =
   "pokemon-campaign-backup";
 
 const CAMPAIGN_BACKUP_VERSION =
-  1;
+  2;
 
 const AUTOMATIC_BACKUP_KEY =
   "pokemonCampaignAutoBackups";
@@ -6687,6 +6689,10 @@ function readPersistedCampaignRaw() {
     pcPokemonLevel:
       localStorage.getItem(
         "pcPokemonLevel"
+      ),
+    kantoMapProgress:
+      localStorage.getItem(
+        "pokemonCampaignKantoMapProgress"
       )
   };
 }
@@ -6701,7 +6707,8 @@ function rawCampaignHasData(
     (
       raw.ownedPokemon !== null ||
       raw.trainers !== null ||
-      raw.pcPokemonLevel !== null
+      raw.pcPokemonLevel !== null ||
+      raw.kantoMapProgress !== null
     )
   );
 }
@@ -6720,6 +6727,9 @@ function getRawCampaignSignature(
     : null,
     raw
     ? raw.pcPokemonLevel
+    : null,
+    raw
+    ? raw.kantoMapProgress
     : null
   ]);
 }
@@ -6969,7 +6979,9 @@ function getCurrentCampaignBackupObject() {
           pcPokemonLevel
         )
         ? pcPokemonLevel
-        : 5
+        : 5,
+      kantoMapProgress:
+        getKantoMapProgress()
     }
   };
 }
@@ -7036,6 +7048,33 @@ function validateImportedCampaignBackup(
       };
     }
 
+    let kantoMapProgress = null;
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        backup.data,
+        "kantoMapProgress"
+      )
+    ) {
+      if (
+        !backup.data.kantoMapProgress ||
+        typeof backup.data.kantoMapProgress !==
+          "object" ||
+        Array.isArray(
+          backup.data.kantoMapProgress
+        )
+      ) {
+        return {
+          valid:false,
+          message:
+            "The backup contains invalid Kanto map progress."
+        };
+      }
+
+      kantoMapProgress =
+        backup.data.kantoMapProgress;
+    }
+
     return {
       valid:true,
       data:{
@@ -7044,7 +7083,9 @@ function validateImportedCampaignBackup(
         trainers:
           backup.data.trainers,
         pcPokemonLevel:
-          level
+          level,
+        kantoMapProgress:
+          kantoMapProgress
       }
     };
   }
@@ -7082,7 +7123,18 @@ function validateImportedCampaignBackup(
           trainers:
             backup.trainers,
           pcPokemonLevel:
-            level
+            level,
+          kantoMapProgress:
+            (
+              backup.kantoMapProgress &&
+              typeof backup.kantoMapProgress ===
+                "object" &&
+              !Array.isArray(
+                backup.kantoMapProgress
+              )
+            )
+              ? backup.kantoMapProgress
+              : null
         }
       };
     }
@@ -7311,6 +7363,22 @@ function persistImportedCampaignData(
       data.pcPokemonLevel
     )
   );
+
+  if (
+    data.kantoMapProgress &&
+    typeof data.kantoMapProgress ===
+      "object" &&
+    !Array.isArray(
+      data.kantoMapProgress
+    )
+  ) {
+    localStorage.setItem(
+      "pokemonCampaignKantoMapProgress",
+      JSON.stringify(
+        data.kantoMapProgress
+      )
+    );
+  }
 }
 
 
@@ -7547,6 +7615,12 @@ function restoreManualBackup(
     return;
   }
 
+  const kantoMapProgress =
+    safelyParseJSON(
+      snapshot.raw.kantoMapProgress,
+      null
+    );
+
   restoreValidatedCampaignData(
     {
       ownedPokemon:
@@ -7554,7 +7628,18 @@ function restoreManualBackup(
       trainers:
         backupTrainers,
       pcPokemonLevel:
-        level
+        level,
+      kantoMapProgress:
+        (
+          kantoMapProgress &&
+          typeof kantoMapProgress ===
+            "object" &&
+          !Array.isArray(
+            kantoMapProgress
+          )
+        )
+          ? kantoMapProgress
+          : null
     },
     "the selected manual backup"
   );
@@ -7723,6 +7808,12 @@ function restoreAutomaticBackup(
     return;
   }
 
+  const kantoMapProgress =
+    safelyParseJSON(
+      snapshot.raw.kantoMapProgress,
+      null
+    );
+
   restoreValidatedCampaignData(
     {
       ownedPokemon:
@@ -7730,7 +7821,18 @@ function restoreAutomaticBackup(
       trainers:
         backupTrainers,
       pcPokemonLevel:
-        level
+        level,
+      kantoMapProgress:
+        (
+          kantoMapProgress &&
+          typeof kantoMapProgress ===
+            "object" &&
+          !Array.isArray(
+            kantoMapProgress
+          )
+        )
+          ? kantoMapProgress
+          : null
     },
     "the selected automatic backup"
   );
