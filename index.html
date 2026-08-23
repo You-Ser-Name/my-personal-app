@@ -2266,7 +2266,7 @@ select {
 
 .kanto-location-actions {
   display:grid;
-  grid-template-columns:1fr 1fr;
+  grid-template-columns:repeat(3,1fr);
   gap:5px;
   margin-top:8px;
 }
@@ -2337,6 +2337,50 @@ select {
   }
 }
 
+
+
+
+/* =========================================================
+   KANTO LOCAL MAP CONNECTION HOTSPOTS V20
+========================================================= */
+.kanto-local-map-stage {
+  position:relative;
+  width:100%;
+}
+
+.kanto-local-hotspot-layer {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+.kanto-local-hotspot {
+  position:absolute;
+  transform:translate(-50%,-50%);
+  margin:0 !important;
+  padding:0 !important;
+  min-width:28px;
+  min-height:28px;
+  border:0 !important;
+  outline:0 !important;
+  border-radius:8px;
+  background:transparent !important;
+  box-shadow:none !important;
+  opacity:0 !important;
+  pointer-events:auto;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.kanto-local-hotspot:active,
+.kanto-local-hotspot:focus,
+.kanto-local-hotspot:focus-visible {
+  border:0 !important;
+  outline:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  opacity:0 !important;
+}
 
 /* =========================================================
    KANTO TOWN MAP PAGES V17
@@ -2491,6 +2535,13 @@ select {
           onclick="toggleKantoCompleted()">
           Mark Completed
         </button>
+
+        <button
+          id="kantoViewMapButton"
+          class="small-button primary-button"
+          onclick="openSelectedKantoMap()">
+          View Map
+        </button>
       </div>
 
       <div
@@ -2518,7 +2569,7 @@ select {
     <div class="kanto-town-map-shell">
       <img
         class="kanto-town-map-image"
-        src="./assets/maps/pallet-town.jpg"
+        src="./assets/maps/pallet-town.jpg?v=20"
         alt="Pallet Town map"
         draggable="false">
     </div>
@@ -8062,8 +8113,8 @@ const kantoTownPageByLocation = {
 
 /* =========================================================
    KANTO ROUTE + GYM MAPS V18
-   Route and gym artwork is embedded directly in index.html so
-   these pages do not depend on extra image files.
+   Route and gym artwork is stored in ./assets/maps/ so the
+   GitHub index file stays small.
 ========================================================= */
 const kantoRoutePageByLocation = {
   "route-1": {name:"Route 1", image:"./assets/maps/route-01.jpg"},
@@ -8125,6 +8176,7 @@ function openKantoRoutePage(locationId) {
 
   showPage("kantoRoutePage");
   updateCurrentKantoRouteStatus();
+  installCurrentKantoRouteHotspots();
 }
 
 function updateCurrentKantoRouteStatus() {
@@ -8204,6 +8256,288 @@ function installKantoGymButtons() {
   });
 }
 
+
+/* =========================================================
+   KANTO MAP NAVIGATION + LOCAL CONNECTION HOTSPOTS V20
+========================================================= */
+function openSelectedKantoMap() {
+  if (!selectedKantoLocationId) return;
+
+  const routeInfo = kantoRoutePageByLocation[selectedKantoLocationId];
+  if (routeInfo) {
+    openKantoRoutePage(selectedKantoLocationId);
+    return;
+  }
+
+  const townPage = kantoTownPageByLocation[selectedKantoLocationId];
+  if (townPage) {
+    showPage(townPage);
+    installKantoLocalHotspotsForPage(townPage);
+  }
+}
+
+function openKantoLocationMapDirect(locationId) {
+  const routeInfo = kantoRoutePageByLocation[locationId];
+  if (routeInfo) {
+    openKantoRoutePage(locationId);
+    return;
+  }
+
+  const townPage = kantoTownPageByLocation[locationId];
+  if (townPage) {
+    showPage(townPage);
+    installKantoLocalHotspotsForPage(townPage);
+  }
+}
+
+/*
+  Invisible connection bars for detailed town and route maps.
+  x/y/w/h are percentages of each displayed image.
+*/
+const kantoLocalConnections = {
+  palletTownPage: [
+    {target:"route-1", label:"Route 1", x:50,y:7,w:24,h:14},
+    {target:"route-21", label:"Route 21", x:50,y:93,w:24,h:14}
+  ],
+  viridianCityPage: [
+    {target:"route-2-south", label:"Route 2", x:50,y:7,w:24,h:14},
+    {target:"route-1", label:"Route 1", x:50,y:93,w:24,h:14},
+    {target:"route-22", label:"Route 22", x:7,y:52,w:14,h:26}
+  ],
+  pewterCityPage: [
+    {target:"route-3", label:"Route 3", x:93,y:50,w:14,h:28},
+    {target:"route-2-north", label:"Route 2", x:50,y:93,w:24,h:14}
+  ],
+  ceruleanCityPage: [
+    {target:"route-24", label:"Route 24", x:50,y:7,w:24,h:14},
+    {target:"route-5", label:"Route 5", x:50,y:93,w:24,h:14},
+    {target:"route-4", label:"Route 4", x:7,y:53,w:14,h:26},
+    {target:"route-9", label:"Route 9", x:93,y:53,w:14,h:26}
+  ],
+  vermilionCityPage: [
+    {target:"route-6", label:"Route 6", x:50,y:7,w:24,h:14},
+    {target:"route-11", label:"Route 11", x:93,y:52,w:14,h:28}
+  ],
+  lavenderTownPage: [
+    {target:"route-10", label:"Route 10", x:50,y:7,w:24,h:14},
+    {target:"route-12", label:"Route 12", x:50,y:93,w:24,h:14},
+    {target:"route-8", label:"Route 8", x:7,y:52,w:14,h:28}
+  ],
+  celadonCityPage: [
+    {target:"route-16", label:"Route 16", x:7,y:52,w:14,h:28},
+    {target:"route-7", label:"Route 7", x:93,y:52,w:14,h:28}
+  ],
+  saffronCityPage: [
+    {target:"route-5", label:"Route 5", x:50,y:7,w:24,h:14},
+    {target:"route-6", label:"Route 6", x:50,y:93,w:24,h:14},
+    {target:"route-7", label:"Route 7", x:7,y:52,w:14,h:28},
+    {target:"route-8", label:"Route 8", x:93,y:52,w:14,h:28}
+  ],
+  fuchsiaCityPage: [
+    {target:"route-18", label:"Route 18", x:7,y:52,w:14,h:28},
+    {target:"route-15", label:"Route 15", x:93,y:52,w:14,h:28},
+    {target:"route-19", label:"Route 19", x:50,y:93,w:24,h:14}
+  ],
+  cinnabarIslandPage: [
+    {target:"route-21", label:"Route 21", x:50,y:7,w:24,h:14},
+    {target:"route-20", label:"Route 20", x:93,y:52,w:14,h:28}
+  ],
+
+  "route-1": [
+    {target:"viridian-city", label:"Viridian City", x:50,y:7,w:30,h:14},
+    {target:"pallet-town", label:"Pallet Town", x:50,y:93,w:30,h:14}
+  ],
+  "route-2-south": [
+    {target:"pewter-city", label:"Pewter City", x:50,y:7,w:30,h:14},
+    {target:"viridian-city", label:"Viridian City", x:50,y:93,w:30,h:14}
+  ],
+  "route-2-north": [
+    {target:"pewter-city", label:"Pewter City", x:50,y:7,w:30,h:14},
+    {target:"viridian-city", label:"Viridian City", x:50,y:93,w:30,h:14}
+  ],
+  "route-3": [
+    {target:"pewter-city", label:"Pewter City", x:7,y:50,w:14,h:32},
+    {target:"route-4", label:"Route 4", x:93,y:50,w:14,h:32}
+  ],
+  "route-4": [
+    {target:"route-3", label:"Route 3", x:7,y:48,w:14,h:32},
+    {target:"cerulean-city", label:"Cerulean City", x:93,y:35,w:14,h:30}
+  ],
+  "route-5": [
+    {target:"cerulean-city", label:"Cerulean City", x:50,y:7,w:30,h:14},
+    {target:"saffron-city", label:"Saffron City", x:50,y:93,w:30,h:14}
+  ],
+  "route-6": [
+    {target:"saffron-city", label:"Saffron City", x:50,y:7,w:30,h:14},
+    {target:"vermilion-city", label:"Vermilion City", x:50,y:93,w:30,h:14}
+  ],
+  "route-7": [
+    {target:"celadon-city", label:"Celadon City", x:7,y:50,w:14,h:32},
+    {target:"saffron-city", label:"Saffron City", x:93,y:50,w:14,h:32}
+  ],
+  "route-8": [
+    {target:"saffron-city", label:"Saffron City", x:7,y:50,w:14,h:32},
+    {target:"lavender-town", label:"Lavender Town", x:93,y:50,w:14,h:32}
+  ],
+  "route-9": [
+    {target:"cerulean-city", label:"Cerulean City", x:7,y:38,w:14,h:30},
+    {target:"route-10", label:"Route 10", x:93,y:34,w:14,h:30}
+  ],
+  "route-10": [
+    {target:"route-9", label:"Route 9", x:50,y:7,w:30,h:14},
+    {target:"lavender-town", label:"Lavender Town", x:50,y:93,w:30,h:14}
+  ],
+  "route-11": [
+    {target:"vermilion-city", label:"Vermilion City", x:7,y:48,w:14,h:32},
+    {target:"route-12", label:"Route 12", x:93,y:52,w:14,h:32}
+  ],
+  "route-12": [
+    {target:"lavender-town", label:"Lavender Town", x:50,y:7,w:30,h:14},
+    {target:"route-13-east", label:"Route 13", x:50,y:93,w:30,h:14}
+  ],
+  "route-13-east": [
+    {target:"route-12", label:"Route 12", x:7,y:35,w:14,h:30},
+    {target:"route-14-east", label:"Route 14", x:93,y:50,w:14,h:32}
+  ],
+  "route-13-south": [
+    {target:"route-12", label:"Route 12", x:7,y:35,w:14,h:30},
+    {target:"route-14-east", label:"Route 14", x:93,y:50,w:14,h:32}
+  ],
+  "route-14-east": [
+    {target:"route-13-east", label:"Route 13", x:50,y:7,w:30,h:14},
+    {target:"route-15", label:"Route 15", x:50,y:93,w:30,h:14}
+  ],
+  "route-14-south": [
+    {target:"route-13-east", label:"Route 13", x:50,y:7,w:30,h:14},
+    {target:"route-15", label:"Route 15", x:50,y:93,w:30,h:14}
+  ],
+  "route-15": [
+    {target:"route-14-east", label:"Route 14", x:7,y:50,w:14,h:32},
+    {target:"fuchsia-city", label:"Fuchsia City", x:93,y:50,w:14,h:32}
+  ],
+  "route-16": [
+    {target:"route-17", label:"Route 17", x:7,y:50,w:14,h:32},
+    {target:"celadon-city", label:"Celadon City", x:93,y:40,w:14,h:30}
+  ],
+  "route-17": [
+    {target:"route-16", label:"Route 16", x:50,y:7,w:30,h:14},
+    {target:"route-18", label:"Route 18", x:50,y:93,w:30,h:14}
+  ],
+  "route-18": [
+    {target:"route-17", label:"Route 17", x:7,y:20,w:14,h:28},
+    {target:"fuchsia-city", label:"Fuchsia City", x:50,y:93,w:32,h:14}
+  ],
+  "route-19": [
+    {target:"fuchsia-city", label:"Fuchsia City", x:50,y:7,w:30,h:14},
+    {target:"route-20", label:"Route 20", x:50,y:93,w:30,h:14}
+  ],
+  "route-20": [
+    {target:"route-19", label:"Route 19", x:7,y:38,w:14,h:30},
+    {target:"route-21", label:"Route 21", x:93,y:63,w:14,h:30}
+  ],
+  "route-21": [
+    {target:"pallet-town", label:"Pallet Town", x:50,y:7,w:30,h:14},
+    {target:"cinnabar-island", label:"Cinnabar Island", x:50,y:93,w:30,h:14}
+  ],
+  "route-22": [
+    {target:"route-23", label:"Route 23", x:7,y:50,w:14,h:32},
+    {target:"viridian-city", label:"Viridian City", x:93,y:35,w:14,h:30}
+  ],
+  "route-23": [
+    {target:"route-22", label:"Route 22", x:50,y:93,w:30,h:14}
+  ],
+  "route-24": [
+    {target:"route-25", label:"Route 25", x:50,y:7,w:30,h:14},
+    {target:"cerulean-city", label:"Cerulean City", x:50,y:93,w:30,h:14}
+  ],
+  "route-25": [
+    {target:"route-24", label:"Route 24", x:7,y:30,w:14,h:30}
+  ]
+};
+
+function ensureKantoLocalStage(shell) {
+  if (!shell) return null;
+
+  let stage = shell.querySelector(".kanto-local-map-stage");
+  if (stage) return stage;
+
+  const image = shell.querySelector(".kanto-town-map-image");
+  if (!image) return null;
+
+  stage = document.createElement("div");
+  stage.className = "kanto-local-map-stage";
+  shell.insertBefore(stage, image);
+  stage.appendChild(image);
+
+  const layer = document.createElement("div");
+  layer.className = "kanto-local-hotspot-layer";
+  stage.appendChild(layer);
+
+  return stage;
+}
+
+function installKantoLocalHotspotsForPage(pageId) {
+  const page = document.getElementById(pageId);
+  if (!page) return;
+
+  const shell = page.querySelector(".kanto-town-map-shell");
+  const stage = ensureKantoLocalStage(shell);
+  if (!stage) return;
+
+  const layer = stage.querySelector(".kanto-local-hotspot-layer");
+  if (!layer) return;
+
+  layer.innerHTML = "";
+  const connections = kantoLocalConnections[pageId] || [];
+
+  connections.forEach(function(connection) {
+    const button = document.createElement("button");
+    button.className = "kanto-local-hotspot";
+    button.style.left = connection.x + "%";
+    button.style.top = connection.y + "%";
+    button.style.width = connection.w + "%";
+    button.style.height = connection.h + "%";
+    button.setAttribute("aria-label", "Open " + connection.label);
+    button.title = "Open " + connection.label;
+    button.onclick = function(event) {
+      event.stopPropagation();
+      openKantoLocationMapDirect(connection.target);
+    };
+    layer.appendChild(button);
+  });
+}
+
+function installCurrentKantoRouteHotspots() {
+  if (!currentKantoRouteLocationId) return;
+  const page = document.getElementById("kantoRoutePage");
+  if (!page) return;
+
+  const shell = page.querySelector(".kanto-town-map-shell");
+  const stage = ensureKantoLocalStage(shell);
+  if (!stage) return;
+
+  const layer = stage.querySelector(".kanto-local-hotspot-layer");
+  if (!layer) return;
+
+  layer.innerHTML = "";
+  const connections = kantoLocalConnections[currentKantoRouteLocationId] || [];
+  connections.forEach(function(connection) {
+    const button = document.createElement("button");
+    button.className = "kanto-local-hotspot";
+    button.style.left = connection.x + "%";
+    button.style.top = connection.y + "%";
+    button.style.width = connection.w + "%";
+    button.style.height = connection.h + "%";
+    button.setAttribute("aria-label", "Open " + connection.label);
+    button.title = "Open " + connection.label;
+    button.onclick = function(event) {
+      event.stopPropagation();
+      openKantoLocationMapDirect(connection.target);
+    };
+    layer.appendChild(button);
+  });
+}
+
 function selectKantoLocation(
   locationId
 ) {
@@ -8216,32 +8550,6 @@ function selectKantoLocation(
     );
 
   if (!location) {
-    return;
-  }
-
-  const routePage =
-    kantoRoutePageByLocation[
-      locationId
-    ];
-
-  if (routePage) {
-    openKantoRoutePage(locationId);
-    return;
-  }
-
-  const townPage =
-    kantoTownPageByLocation[
-      locationId
-    ];
-
-  if (townPage) {
-    selectedKantoLocationId =
-      null;
-
-    showPage(
-      townPage
-    );
-
     return;
   }
 
@@ -8283,8 +8591,20 @@ function selectKantoLocation(
   type.textContent =
     location.type;
 
-  description.textContent =
-    "Selected from the Kanto campaign map. We can add location-specific maps, trainers, encounters, shops, buildings, notes, and other interactions here.";
+  const hasMap =
+    !!kantoTownPageByLocation[locationId] ||
+    !!kantoRoutePageByLocation[locationId];
+
+  description.textContent = hasMap
+    ? "Track this location here, or open its detailed map."
+    : "Track this location here. A detailed map has not been added for this location yet.";
+
+  const viewMapButton =
+    document.getElementById("kantoViewMapButton");
+
+  if (viewMapButton) {
+    viewMapButton.style.display = hasMap ? "block" : "none";
+  }
 
   panel.style.display =
     "block";
