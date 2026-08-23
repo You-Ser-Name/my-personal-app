@@ -2196,23 +2196,24 @@ select {
 
 .kanto-hotspot:active,
 .kanto-hotspot.selected {
-  background:rgba(255,255,255,.26);
-  border-color:rgba(255,255,255,.9);
+  background:rgba(255,255,255,.22);
+  border-color:rgba(255,255,255,.95);
+  box-shadow:0 0 0 2px rgba(0,0,0,.15);
 }
 
 .kanto-hotspot.city {
-  min-width:72px;
-  min-height:34px;
+  min-width:58px;
+  min-height:26px;
 }
 
 .kanto-hotspot.landmark {
-  min-width:62px;
-  min-height:30px;
+  min-width:48px;
+  min-height:24px;
 }
 
 .kanto-hotspot.route {
-  min-width:30px;
-  min-height:28px;
+  min-width:22px;
+  min-height:22px;
   border-radius:50%;
 }
 
@@ -2294,18 +2295,18 @@ select {
   }
 
   .kanto-hotspot.city {
-    min-width:62px;
-    min-height:32px;
+    min-width:54px;
+    min-height:24px;
   }
 
   .kanto-hotspot.landmark {
-    min-width:54px;
-    min-height:28px;
+    min-width:44px;
+    min-height:22px;
   }
 
   .kanto-hotspot.route {
-    min-width:28px;
-    min-height:28px;
+    min-width:22px;
+    min-height:22px;
   }
 
   .kanto-location-panel {
@@ -7514,67 +7515,67 @@ let selectedKantoLocationId =
 
 const kantoMapLocations = [
   /* Cities / towns */
-  {id:"pallet-town",name:"Pallet Town",type:"City / Town",x:15.0,y:63.4,w:10,h:6},
-  {id:"viridian-city",name:"Viridian City",type:"City / Town",x:15.0,y:51.5,w:11,h:7},
-  {id:"pewter-city",name:"Pewter City",type:"City / Town",x:24.8,y:27.3,w:10,h:7},
-  {id:"cerulean-city",name:"Cerulean City",type:"City / Town",x:57.0,y:18.8,w:11,h:7},
-  {id:"vermilion-city",name:"Vermilion City",type:"City / Town",x:53.0,y:54.7,w:12,h:7},
-  {id:"lavender-town",name:"Lavender Town",type:"City / Town",x:91.3,y:39.4,w:11,h:7},
-  {id:"celadon-city",name:"Celadon City",type:"City / Town",x:43.7,y:34.6,w:12,h:7},
-  {id:"saffron-city",name:"Saffron City",type:"City / Town",x:59.2,y:36.6,w:12,h:7},
-  {id:"fuchsia-city",name:"Fuchsia City",type:"City / Town",x:71.8,y:74.6,w:12,h:7},
-  {id:"cinnabar-island",name:"Cinnabar Island",type:"City / Town",x:6.7,y:88.0,w:11,h:7},
-  {id:"indigo-plateau",name:"Indigo Plateau",type:"Landmark",x:13.5,y:13.2,w:12,h:8},
+  {id:"pallet-town",name:"Pallet Town",type:"City / Town",x:14.6,y:63.8,w:8,h:5},
+  {id:"viridian-city",name:"Viridian City",type:"City / Town",x:15.3,y:50.8,w:8,h:5},
+  {id:"pewter-city",name:"Pewter City",type:"City / Town",x:25.8,y:27.2,w:8,h:5},
+  {id:"cerulean-city",name:"Cerulean City",type:"City / Town",x:57.4,y:18.8,w:8.5,h:5},
+  {id:"vermilion-city",name:"Vermilion City",type:"City / Town",x:53.1,y:54.3,w:9,h:5.5},
+  {id:"lavender-town",name:"Lavender Town",type:"City / Town",x:91.0,y:38.9,w:8.5,h:5},
+  {id:"celadon-city",name:"Celadon City",type:"City / Town",x:43.4,y:34.6,w:8.5,h:5},
+  {id:"saffron-city",name:"Saffron City",type:"City / Town",x:59.2,y:37.2,w:8.5,h:5},
+  {id:"fuchsia-city",name:"Fuchsia City",type:"City / Town",x:72.8,y:74.4,w:8.5,h:5},
+  {id:"cinnabar-island",name:"Cinnabar Island",type:"City / Town",x:6.8,y:88.8,w:8.5,h:5},
+  {id:"indigo-plateau",name:"Indigo Plateau",type:"Landmark",x:13.5,y:12.8,w:9,h:6},
 
   /* Major landmarks / buildings */
-  {id:"pokemon-league",name:"Pokémon League",type:"Building / Landmark",x:13.6,y:16.4,w:10,h:5},
-  {id:"victory-road",name:"Victory Road",type:"Cave / Landmark",x:13.5,y:23.0,w:10,h:5},
-  {id:"viridian-forest",name:"Viridian Forest",type:"Landmark",x:19.2,y:42.7,w:10,h:7},
-  {id:"mt-moon",name:"Mt. Moon",type:"Cave",x:33.4,y:23.8,w:9,h:6},
-  {id:"cerulean-cave",name:"Cerulean Cave",type:"Cave",x:65.2,y:10.7,w:9,h:6},
-  {id:"bills-house",name:"Bill's House",type:"Building",x:90.4,y:9.0,w:10,h:6},
-  {id:"rock-tunnel",name:"Rock Tunnel",type:"Cave",x:81.4,y:24.9,w:9,h:6},
-  {id:"power-plant",name:"Power Plant",type:"Landmark",x:80.1,y:33.6,w:9,h:7},
-  {id:"pokemon-tower",name:"Pokémon Tower",type:"Building",x:92.5,y:49.2,w:9,h:7},
-  {id:"digletts-cave",name:"Diglett's Cave",type:"Cave",x:77.8,y:57.0,w:9,h:6},
-  {id:"ss-anne",name:"S.S. Anne",type:"Landmark",x:59.6,y:65.3,w:9,h:7},
-  {id:"safari-zone",name:"Safari Zone",type:"Landmark",x:53.4,y:72.5,w:11,h:7},
-  {id:"game-corner",name:"Game Corner",type:"Building",x:43.0,y:44.8,w:9,h:5},
-  {id:"silph-co",name:"Silph Co.",type:"Building",x:64.0,y:45.6,w:8,h:5},
-  {id:"fighting-dojo",name:"Fighting Dojo",type:"Building",x:64.5,y:48.0,w:9,h:5},
-  {id:"cycling-road",name:"Cycling Road",type:"Landmark",x:42.5,y:58.5,w:9,h:7},
-  {id:"seafoam-islands",name:"Seafoam Islands",type:"Cave / Landmark",x:31.7,y:92.2,w:10,h:7},
-  {id:"pokemon-mansion",name:"Pokémon Mansion",type:"Building",x:6.7,y:92.2,w:10,h:5},
+  {id:"pokemon-league",name:"Pokémon League",type:"Building / Landmark",x:13.2,y:16.4,w:7,h:4},
+  {id:"victory-road",name:"Victory Road",type:"Cave / Landmark",x:13.1,y:23.1,w:7,h:4},
+  {id:"viridian-forest",name:"Viridian Forest",type:"Landmark",x:18.8,y:41.9,w:7,h:5},
+  {id:"mt-moon",name:"Mt. Moon",type:"Cave",x:36.5,y:22.2,w:6.5,h:5},
+  {id:"cerulean-cave",name:"Cerulean Cave",type:"Cave",x:66.2,y:10.1,w:6.5,h:5},
+  {id:"bills-house",name:"Bill's House",type:"Building",x:92.8,y:9.0,w:7.5,h:4.5},
+  {id:"rock-tunnel",name:"Rock Tunnel",type:"Cave",x:81.4,y:25.5,w:6.5,h:5},
+  {id:"power-plant",name:"Power Plant",type:"Landmark",x:79.8,y:34.2,w:7,h:5.5},
+  {id:"pokemon-tower",name:"Pokémon Tower",type:"Building",x:90.3,y:48.6,w:7,h:6},
+  {id:"digletts-cave",name:"Diglett's Cave",type:"Cave",x:78.7,y:56.9,w:7,h:4.5},
+  {id:"ss-anne",name:"S.S. Anne",type:"Landmark",x:60.3,y:65.2,w:7,h:5},
+  {id:"safari-zone",name:"Safari Zone",type:"Landmark",x:55.2,y:74.6,w:8,h:5},
+  {id:"game-corner",name:"Game Corner",type:"Building",x:42.7,y:44.6,w:6.8,h:4},
+  {id:"silph-co",name:"Silph Co.",type:"Building",x:63.8,y:45.0,w:6,h:3.8},
+  {id:"fighting-dojo",name:"Fighting Dojo",type:"Building",x:64.0,y:46.6,w:6.8,h:3.8},
+  {id:"cycling-road",name:"Cycling Road",type:"Landmark",x:42.2,y:57.8,w:7,h:5},
+  {id:"seafoam-islands",name:"Seafoam Islands",type:"Cave / Landmark",x:31.9,y:91.5,w:8,h:5},
+  {id:"pokemon-mansion",name:"Pokémon Mansion",type:"Building",x:6.5,y:92.6,w:7.5,h:4},
 
   /* Routes 1–25 */
-  {id:"route-1",name:"Route 1",type:"Route",x:15.0,y:57.6,w:4,h:5},
-  {id:"route-2-south",name:"Route 2",type:"Route",x:24.8,y:46.8,w:4,h:5},
-  {id:"route-2-north",name:"Route 2",type:"Route",x:13.7,y:36.0,w:4,h:5},
-  {id:"route-3",name:"Route 3",type:"Route",x:32.6,y:27.8,w:4,h:5},
-  {id:"route-4",name:"Route 4",type:"Route",x:42.1,y:20.7,w:4,h:5},
-  {id:"route-5",name:"Route 5",type:"Route",x:57.3,y:29.6,w:4,h:5},
-  {id:"route-6",name:"Route 6",type:"Route",x:58.4,y:48.2,w:4,h:5},
-  {id:"route-7",name:"Route 7",type:"Route",x:51.1,y:40.9,w:4,h:5},
-  {id:"route-8",name:"Route 8",type:"Route",x:70.4,y:40.8,w:4,h:5},
-  {id:"route-9",name:"Route 9",type:"Route",x:91.2,y:26.1,w:4,h:5},
-  {id:"route-10",name:"Route 10",type:"Route",x:93.0,y:31.6,w:4,h:5},
-  {id:"route-11",name:"Route 11",type:"Route",x:69.0,y:54.8,w:4,h:5},
-  {id:"route-12",name:"Route 12",type:"Route",x:94.3,y:53.0,w:4,h:5},
-  {id:"route-13-east",name:"Route 13",type:"Route",x:92.0,y:63.0,w:4,h:5},
-  {id:"route-13-south",name:"Route 13",type:"Route",x:78.4,y:86.4,w:4,h:5},
-  {id:"route-14-east",name:"Route 14",type:"Route",x:87.4,y:69.6,w:4,h:5},
-  {id:"route-14-south",name:"Route 14",type:"Route",x:63.7,y:86.3,w:4,h:5},
-  {id:"route-15",name:"Route 15",type:"Route",x:84.8,y:76.3,w:4,h:5},
-  {id:"route-16",name:"Route 16",type:"Route",x:31.0,y:39.5,w:4,h:5},
-  {id:"route-17",name:"Route 17",type:"Route",x:42.4,y:51.7,w:4,h:5},
-  {id:"route-18",name:"Route 18",type:"Route",x:48.0,y:64.7,w:4,h:5},
-  {id:"route-19",name:"Route 19",type:"Route",x:48.6,y:93.3,w:4,h:5},
-  {id:"route-20",name:"Route 20",type:"Route",x:25.0,y:87.7,w:4,h:5},
-  {id:"route-21",name:"Route 21",type:"Route",x:11.8,y:74.3,w:4,h:5},
-  {id:"route-22",name:"Route 22",type:"Route",x:6.8,y:50.2,w:4,h:5},
-  {id:"route-23",name:"Route 23",type:"Route",x:13.5,y:27.7,w:4,h:5},
-  {id:"route-24",name:"Route 24",type:"Route",x:57.1,y:10.0,w:4,h:5},
-  {id:"route-25",name:"Route 25",type:"Route",x:74.1,y:15.0,w:4,h:5}
+  {id:"route-1",name:"Route 1",type:"Route",x:15.3,y:57.8,w:2.7,h:2.7},
+  {id:"route-2-south",name:"Route 2",type:"Route",x:24.8,y:47.0,w:2.7,h:2.7},
+  {id:"route-2-north",name:"Route 2",type:"Route",x:13.8,y:35.9,w:2.7,h:2.7},
+  {id:"route-3",name:"Route 3",type:"Route",x:33.0,y:27.8,w:2.7,h:2.7},
+  {id:"route-4",name:"Route 4",type:"Route",x:43.1,y:20.8,w:2.7,h:2.7},
+  {id:"route-5",name:"Route 5",type:"Route",x:57.4,y:29.5,w:2.7,h:2.7},
+  {id:"route-6",name:"Route 6",type:"Route",x:58.6,y:48.2,w:2.7,h:2.7},
+  {id:"route-7",name:"Route 7",type:"Route",x:51.0,y:40.8,w:2.7,h:2.7},
+  {id:"route-8",name:"Route 8",type:"Route",x:70.4,y:40.8,w:2.7,h:2.7},
+  {id:"route-9",name:"Route 9",type:"Route",x:91.2,y:26.1,w:2.7,h:2.7},
+  {id:"route-10",name:"Route 10",type:"Route",x:93.1,y:31.8,w:2.7,h:2.7},
+  {id:"route-11",name:"Route 11",type:"Route",x:69.2,y:54.8,w:2.7,h:2.7},
+  {id:"route-12",name:"Route 12",type:"Route",x:94.2,y:53.0,w:2.7,h:2.7},
+  {id:"route-13-east",name:"Route 13",type:"Route",x:92.0,y:63.0,w:2.7,h:2.7},
+  {id:"route-13-south",name:"Route 13",type:"Route",x:78.4,y:86.5,w:2.7,h:2.7},
+  {id:"route-14-east",name:"Route 14",type:"Route",x:87.4,y:69.6,w:2.7,h:2.7},
+  {id:"route-14-south",name:"Route 14",type:"Route",x:63.8,y:86.4,w:2.7,h:2.7},
+  {id:"route-15",name:"Route 15",type:"Route",x:84.8,y:76.3,w:2.7,h:2.7},
+  {id:"route-16",name:"Route 16",type:"Route",x:31.0,y:39.4,w:2.7,h:2.7},
+  {id:"route-17",name:"Route 17",type:"Route",x:42.4,y:51.8,w:2.7,h:2.7},
+  {id:"route-18",name:"Route 18",type:"Route",x:48.0,y:64.6,w:2.7,h:2.7},
+  {id:"route-19",name:"Route 19",type:"Route",x:49.0,y:93.3,w:2.7,h:2.7},
+  {id:"route-20",name:"Route 20",type:"Route",x:25.0,y:87.8,w:2.7,h:2.7},
+  {id:"route-21",name:"Route 21",type:"Route",x:11.9,y:74.3,w:2.7,h:2.7},
+  {id:"route-22",name:"Route 22",type:"Route",x:6.7,y:50.1,w:2.7,h:2.7},
+  {id:"route-23",name:"Route 23",type:"Route",x:13.7,y:27.9,w:2.7,h:2.7},
+  {id:"route-24",name:"Route 24",type:"Route",x:57.2,y:10.1,w:2.7,h:2.7},
+  {id:"route-25",name:"Route 25",type:"Route",x:74.0,y:15.1,w:2.7,h:2.7}
 ];
 
 
@@ -20238,7 +20239,7 @@ displayPokemonDatabase();
    APP VERSION CHECK
    Checks GitHub Pages directly, bypassing browser caches.
 ========================================================= */
-const APP_VERSION = "2026-08-22-11";
+const APP_VERSION = "2026-08-22-12";
 const APP_VERSION_STORAGE_KEY = "pokemonCampaignAppVersion";
 
 async function checkForAppUpdate() {
