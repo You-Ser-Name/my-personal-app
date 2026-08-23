@@ -11200,8 +11200,21 @@ function updateConfirmMovesButton() {
     return;
   }
 
+  const pokemonA =
+    getBattlePokemon("A");
+
+  const pokemonB =
+    getBattlePokemon("B");
+
+  const hasFaintedPokemon =
+    Boolean(
+      (pokemonA && pokemonA.currentHP <= 0) ||
+      (pokemonB && pokemonB.currentHP <= 0)
+    );
+
   const ready =
     Boolean(
+      !hasFaintedPokemon &&
       battleTurnMoves.A &&
       battleTurnMoves.B
     );
@@ -11999,45 +12012,15 @@ function getFaintedBattlePromptHTML(
         ${getPokemonName(pokemon)} fainted!
       </strong>
 
-      <div class="battle-fainted-actions">
-        ${
-          hasSwap
-          ? `
-            <button
-              class="primary-button battle-fainted-action"
-              onclick="toggleBattleActionPanel('${side}','swap')">
-              Swap Pokémon
-            </button>
-          `
-          : `
-            <p style="margin:6px 0;">
-              No available Pokémon to swap in.
-            </p>
-          `
-        }
-
-        ${
-          !isNPCOwned
-          ? `
-            <button
-              class="small-button battle-fainted-action"
-              onclick="runFromBattle('${side}')">
-              Run
-            </button>
-          `
-          : ""
-        }
-      </div>
-
       ${
         hasSwap
         ? `
           <div
             id="battleSwapPanel${side}"
             class="battle-action-panel"
-            style="display:none;margin-top:8px;">
+            style="display:block;margin-top:8px;">
 
-            <strong>Swap Pokémon</strong>
+            <strong>Choose Replacement</strong>
 
             <select
               id="battleSwapSelect${side}">
@@ -12048,7 +12031,25 @@ function getFaintedBattlePromptHTML(
               class="primary-button"
               style="width:100%;margin-top:8px;"
               onclick="performBattleSwap('${side}')">
-              Select Swap
+              Confirm Swap
+            </button>
+          </div>
+        `
+        : `
+          <p style="margin:6px 0;">
+            No available Pokémon to swap in.
+          </p>
+        `
+      }
+
+      ${
+        !isNPCOwned
+        ? `
+          <div class="battle-fainted-actions">
+            <button
+              class="small-button battle-fainted-action"
+              onclick="runFromBattle('${side}')">
+              Run
             </button>
           </div>
         `
@@ -14534,11 +14535,25 @@ function buildBattleArenaSideHTML(
     ? pokemon.status
     : "No Status";
 
-  const controlsHTML =
-    buildBattleCardHTML(
-      pokemon,
-      side
+  const opponent =
+    getBattlePokemon(
+      side === "A" ? "B" : "A"
     );
+
+  const survivingWhileOtherFainted =
+    Boolean(
+      pokemon.currentHP > 0 &&
+      opponent &&
+      opponent.currentHP <= 0
+    );
+
+  const controlsHTML =
+    survivingWhileOtherFainted
+    ? ""
+    : buildBattleCardHTML(
+        pokemon,
+        side
+      );
 
   return `
     <div class="battle-arena-side">
@@ -14550,9 +14565,15 @@ function buildBattleArenaSideHTML(
         ${owner}
       </div>
 
-      <div class="battle-arena-level">
-        Level ${pokemon.level}
-      </div>
+      ${
+        survivingWhileOtherFainted
+        ? ""
+        : `
+          <div class="battle-arena-level">
+            Level ${pokemon.level}
+          </div>
+        `
+      }
 
       <div class="battle-arena-image-wrap">
         ${
@@ -14579,7 +14600,8 @@ function buildBattleArenaSideHTML(
       </div>
 
       ${
-        pokemon.currentHP > 0
+        pokemon.currentHP > 0 &&
+        !survivingWhileOtherFainted
         ? `
           <div class="battle-arena-status">
             ${status}
@@ -14588,9 +14610,15 @@ function buildBattleArenaSideHTML(
         : ""
       }
 
-      <div class="battle-arena-controls">
-        ${controlsHTML}
-      </div>
+      ${
+        controlsHTML
+        ? `
+          <div class="battle-arena-controls">
+            ${controlsHTML}
+          </div>
+        `
+        : ""
+      }
     </div>
   `;
 }
@@ -16337,6 +16365,79 @@ function resolveNoRollBattleMove(
 }
 
 
+function parseEncounterRewardAmount(
+  reward
+) {
+
+  if (typeof reward === "number") {
+    return Math.max(0, Math.floor(reward));
+  }
+
+  const match =
+    String(reward || "")
+      .replace(/,/g, "")
+      .match(/\d+/);
+
+  return match
+    ? Math.max(0, Number(match[0]) || 0)
+    : 0;
+}
+
+
+function awardTrainerVictoryReward(
+  trainer
+) {
+
+  if (
+    !trainer ||
+    trainer.trainerType !== "NPC"
+  ) {
+    return 0;
+  }
+
+  const reward =
+    parseEncounterRewardAmount(
+      trainer.encounterReward
+    );
+
+  if (reward <= 0) {
+    return 0;
+  }
+
+  /*
+    Route trainers pay their prize only once. Marking the trainer
+    completed also keeps the defeated encounter out of Battle Setup.
+  */
+  if (trainer.rewardClaimed) {
+    trainer.completed = true;
+    saveTrainers();
+    return 0;
+  }
+
+  const pcTrainers =
+    trainers.filter(
+      entry =>
+        entry.trainerType === "PC"
+    );
+
+  pcTrainers.forEach(
+    function(pcTrainer) {
+      const currentMoney =
+        Number(pcTrainer.money) || 0;
+
+      pcTrainer.money =
+        currentMoney + reward;
+    }
+  );
+
+  trainer.rewardClaimed = true;
+  trainer.completed = true;
+  saveTrainers();
+
+  return reward;
+}
+
+
 function getBattleConclusion() {
 
   const sideA =
@@ -16402,6 +16503,7 @@ function getBattleConclusion() {
       ) {
         return {
           result:"won",
+          defeatedTrainer:trainer,
           message:"Battle Won! All of " +
             trainer.name +
             "'s Pokémon have fainted."
@@ -16423,8 +16525,30 @@ function handleBattleConclusionIfNeeded() {
     return false;
   }
 
+  let message =
+    conclusion.message;
+
+  if (
+    conclusion.result === "won" &&
+    conclusion.defeatedTrainer
+  ) {
+    const reward =
+      awardTrainerVictoryReward(
+        conclusion.defeatedTrainer
+      );
+
+    if (reward > 0) {
+      message +=
+        "\n\nYou've received ₽" +
+        reward.toLocaleString() +
+        ". Every player character received ₽" +
+        reward.toLocaleString() +
+        ".";
+    }
+  }
+
   alert(
-    conclusion.message
+    message
   );
 
   endBattle(
