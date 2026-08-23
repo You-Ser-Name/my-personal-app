@@ -2182,9 +2182,8 @@ select {
 .kanto-hotspot {
   position:absolute;
   transform:translate(-50%,-50%);
-  border:0;
-  outline:0;
-  background:transparent;
+  border:1px solid rgba(255,255,255,.0);
+  background:rgba(255,255,255,.0);
   border-radius:10px;
   cursor:pointer;
   padding:0;
@@ -2193,19 +2192,17 @@ select {
   min-height:24px;
   box-shadow:none;
   z-index:2;
-  appearance:none;
-  -webkit-appearance:none;
-  -webkit-tap-highlight-color:transparent;
 }
 
 .kanto-hotspot:active,
 .kanto-hotspot:focus,
 .kanto-hotspot:focus-visible,
 .kanto-hotspot.selected {
-  border:0;
-  outline:0;
-  background:transparent;
-  box-shadow:none;
+  background:transparent !important;
+  border-color:transparent !important;
+  outline:none !important;
+  box-shadow:none !important;
+  -webkit-tap-highlight-color:transparent;
 }
 
 .kanto-hotspot.city {
@@ -7696,6 +7693,15 @@ function renderKantoHotspots() {
             location.id
           );
         };
+
+      if (
+        selectedKantoLocationId ===
+        location.id
+      ) {
+        button.classList.add(
+          "selected"
+        );
+      }
 
       layer.appendChild(
         button
@@ -20233,121 +20239,41 @@ displayPokemonDatabase();
 
 
 <script>
-/* =========================================================
-   APP VERSION CHECK
-   Checks GitHub Pages directly, bypassing browser caches.
-========================================================= */
-const APP_VERSION = "2026-08-22-15";
-const APP_VERSION_STORAGE_KEY = "pokemonCampaignAppVersion";
+/*
+  RESCUE MODE:
+  Remove service workers and app caches that were causing the
+  installed iPhone PWA to repeatedly refresh / ignore taps.
 
-async function checkForAppUpdate() {
+  The app itself continues to use localStorage for campaign data.
+  This does NOT delete Pokémon, trainers, inventory, or backups.
+*/
+window.addEventListener("load", async function() {
   try {
-    const response = await fetch(
-      "./version.json?t=" + Date.now(),
-      {
-        cache: "no-store",
-        headers: {
-          "Cache-Control": "no-cache"
-        }
+    if ("serviceWorker" in navigator) {
+      const registrations =
+        await navigator.serviceWorker.getRegistrations();
+
+      for (const registration of registrations) {
+        await registration.unregister();
       }
-    );
-
-    if (!response.ok) {
-      return;
     }
 
-    const data = await response.json();
-    const latestVersion = String(data.version || "");
+    if ("caches" in window) {
+      const cacheNames =
+        await caches.keys();
 
-    if (
-      latestVersion &&
-      latestVersion > APP_VERSION
-    ) {
-      /*
-        Only reload when GitHub reports a genuinely newer version.
-        An older cached version.json must never trigger a reload loop.
-      */
-      const url =
-        new URL("./", window.location.href);
-
-      url.searchParams.set(
-        "appv",
-        latestVersion
-      );
-
-      window.location.replace(
-        url.toString()
-      );
-
-      return;
+      for (const cacheName of cacheNames) {
+        await caches.delete(cacheName);
+      }
     }
-
-    localStorage.setItem(
-      APP_VERSION_STORAGE_KEY,
-      APP_VERSION
-    );
   }
   catch (error) {
-    /*
-      Offline is expected sometimes. Do nothing so the cached
-      app continues working normally.
-    */
     console.log(
-      "App update check skipped:",
+      "PWA cache cleanup skipped:",
       error
     );
   }
-}
-
-window.addEventListener(
-  "load",
-  function() {
-    checkForAppUpdate();
-  }
-);
-</script>
-
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", async function() {
-    try {
-      const registration =
-        await navigator.serviceWorker.register(
-          "./service-worker.js?v=5"
-        );
-
-      /*
-        Ask the browser to check GitHub Pages for a newer service worker
-        whenever the app is opened.
-      */
-      registration.update();
-
-      /*
-        If a new worker activates while the app is already open,
-        reload once so the newest index.html becomes visible immediately.
-      */
-      let refreshing = false;
-
-      navigator.serviceWorker.addEventListener(
-        "controllerchange",
-        function() {
-          if (refreshing) {
-            return;
-          }
-
-          refreshing = true;
-          window.location.reload();
-        }
-      );
-    }
-    catch (error) {
-      console.error(
-        "Service worker registration failed:",
-        error
-      );
-    }
-  });
-}
+});
 </script>
 
 </body>
