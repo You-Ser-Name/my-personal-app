@@ -2008,6 +2008,101 @@ select {
 /* V5 compact/focused controls */
 .compact-top-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;align-items:center;margin-bottom:8px}.compact-top-actions.three{grid-template-columns:repeat(3,minmax(0,1fr))}.compact-top-actions button{width:100%;margin:0!important;min-height:34px;padding:6px 8px}.pokedex-details{margin-top:3px}.pokedex-details summary{cursor:pointer;list-style:none;text-align:center;font-size:9px;font-weight:700;padding:3px 5px;border:1px solid #bbb;border-radius:5px;background:#f4f4f4;user-select:none}.pokedex-details summary::-webkit-details-marker{display:none}.pokedex-details[open] summary{margin-bottom:3px}.pokedex-details .stat-grid{margin-top:2px}.manual-override-box{margin-top:3px}.manual-override-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px;align-items:center;margin-top:4px}.manual-override-grid input{min-width:0;height:26px;padding:3px 5px;font-size:9px}.manual-override-grid button{min-height:26px!important;padding:3px 7px!important;margin:0!important;font-size:8px!important}.manual-pp-row{display:grid;grid-template-columns:minmax(0,1fr) 44px 36px;gap:3px;align-items:center;margin-top:3px;font-size:8px}.manual-pp-row input{width:100%;height:24px;padding:2px 3px;font-size:8px}.manual-pp-row button{min-height:24px!important;padding:2px 4px!important;margin:0!important;font-size:7px!important}.completed-trainer-note{font-size:11px;text-align:center;color:#666;margin:4px 0 10px}@media(max-width:600px){.compact-top-actions{gap:4px;margin-bottom:6px}.compact-top-actions button{min-height:29px;padding:4px 5px;font-size:9px}#pokemonList .pokedex-details p{margin:1px 0!important;font-size:7px!important;line-height:1.05!important}#pokemonList .pokedex-details .stat-grid{gap:0 3px!important}#pokemonList .pokedex-base-stats-title{margin:1px 0!important;font-size:7px!important}#pokemonList .pokedex-details summary{font-size:7px!important;padding:2px 3px!important;min-height:18px;line-height:1.1}}
 
+
+/* =========================================================
+   KANTO MAP MAIN DASHBOARD
+========================================================= */
+
+.home-dashboard {
+  width:100%;
+  max-width:1200px;
+  margin:0 auto;
+  padding:8px 10px 16px;
+  box-sizing:border-box;
+}
+
+.kanto-map-shell {
+  position:relative;
+  width:100%;
+  overflow:hidden;
+  border-radius:14px;
+  background:#0b75bc;
+  box-shadow:0 3px 12px rgba(0,0,0,.18);
+}
+
+.kanto-map-image {
+  display:block;
+  width:100%;
+  height:auto;
+  margin:0;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+}
+
+/*
+  Empty overlay for now. This gives us a clean layer where we can
+  add clickable towns, routes, caves, buildings, gyms, etc. next.
+*/
+.kanto-hotspot-layer {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+.home-tools-title {
+  margin:9px 0 5px;
+  text-align:center;
+  font-size:13px;
+  font-weight:800;
+}
+
+.home-quick-menu {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:6px;
+}
+
+.home-quick-menu button {
+  width:100%;
+  min-height:38px;
+  margin:0 !important;
+  padding:7px 5px;
+  font-size:12px;
+}
+
+@media (max-width:600px) {
+
+  #homePage {
+    overflow-x:hidden;
+  }
+
+  .home-dashboard {
+    padding:6px 6px 12px;
+  }
+
+  .kanto-map-shell {
+    border-radius:9px;
+  }
+
+  .home-tools-title {
+    margin:6px 0 4px;
+    font-size:10px;
+  }
+
+  .home-quick-menu {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:4px;
+  }
+
+  .home-quick-menu button {
+    min-height:30px !important;
+    padding:4px 5px !important;
+    font-size:9px !important;
+    line-height:1.05 !important;
+  }
+}
+
 </style>
 
 
@@ -2028,15 +2123,41 @@ select {
 <div id="homePage">
   <header><h1>Pokémon Campaign</h1></header>
 
-  <div class="menu">
-    <button onclick="showPage('pokemonPage')">Pokémon</button>
-    <button onclick="showPage('trainersPage')">Trainers</button>
-    <button onclick="showPage('inventoryPage')">Inventory</button>
-    <button onclick="showPage('battlesPage')">Battles</button>
-    <button onclick="showPage('campaignPage')">Campaign</button>
-    <button onclick="showPage('pokemonCenterPage')">Poké Center</button>
-    <button onclick="showPage('backupPage')">Backup & Restore</button>
-  </div>
+  <main class="home-dashboard">
+
+    <div
+      id="kantoMapShell"
+      class="kanto-map-shell">
+
+      <img
+        id="kantoMainMap"
+        class="kanto-map-image"
+        src="./images/kanto-map.png"
+        alt="Kanto region campaign map"
+        draggable="false">
+
+      <div
+        id="kantoHotspotLayer"
+        class="kanto-hotspot-layer"
+        aria-hidden="true">
+      </div>
+    </div>
+
+    <div class="home-tools-title">
+      Campaign Tools
+    </div>
+
+    <div class="home-quick-menu">
+      <button onclick="showPage('pokemonPage')">Pokémon</button>
+      <button onclick="showPage('trainersPage')">Trainers</button>
+      <button onclick="showPage('inventoryPage')">Inventory</button>
+      <button onclick="showPage('battlesPage')">Battles</button>
+      <button onclick="showPage('campaignPage')">Campaign</button>
+      <button onclick="showPage('pokemonCenterPage')">Poké Center</button>
+      <button onclick="showPage('backupPage')">Backup & Restore</button>
+    </div>
+
+  </main>
 </div>
 
 
@@ -19407,7 +19528,7 @@ displayPokemonDatabase();
    APP VERSION CHECK
    Checks GitHub Pages directly, bypassing browser caches.
 ========================================================= */
-const APP_VERSION = "2026-08-22-08";
+const APP_VERSION = "2026-08-22-09";
 const APP_VERSION_STORAGE_KEY = "pokemonCampaignAppVersion";
 
 async function checkForAppUpdate() {
