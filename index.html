@@ -2576,53 +2576,76 @@ select {
 }
 
 /* =========================================================
-   CAMPAIGN PROGRESS / GYM BADGES V32
+   CAMPAIGN PROGRESS / GYM BADGES V33 - COMPACT
 ========================================================= */
 .campaign-progress-card {
-  margin-top: 16px;
+  margin-top: 12px;
+  padding: 12px 10px !important;
+}
+
+.campaign-progress-card h2 {
+  font-size: 24px !important;
+  margin: 0 0 2px !important;
+}
+
+.gym-progress-summary {
+  text-align: center;
+  font-weight: 800;
+  font-size: 14px;
+  margin: 2px 0 8px;
 }
 
 .gym-badge-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 6px;
 }
 
 .gym-badge-card {
+  min-width: 0;
   background: #fff;
   border: 1px solid #dedede;
-  border-radius: 16px;
-  padding: 12px 10px;
+  border-radius: 10px;
+  padding: 6px 3px;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  box-shadow: 0 2px 6px rgba(0,0,0,.07);
 }
 
 .gym-badge-image {
   display: block;
-  width: min(100%, 132px);
+  width: 54px;
+  max-width: 90%;
   aspect-ratio: 1 / 1;
   object-fit: contain;
-  margin: 0 auto 7px;
+  margin: 0 auto 3px;
 }
 
 .gym-badge-name {
-  font-size: 17px;
+  font-size: 11px;
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 1.05;
+  min-height: 23px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .gym-badge-city {
-  margin-top: 3px;
+  margin-top: 1px;
   color: #666;
-  font-size: 13px;
-  line-height: 1.2;
+  font-size: 9px;
+  line-height: 1.05;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gym-badge-status {
-  margin-top: 7px;
-  font-size: 13px;
+  margin-top: 3px;
+  font-size: 9px;
   font-weight: 800;
+  line-height: 1.05;
 }
 
 .gym-badge-status.earned {
@@ -2631,15 +2654,13 @@ select {
 
 .gym-badge-card .small-button {
   width: 100%;
-  margin-top: 8px;
-  padding: 9px 7px;
-  font-size: 13px;
-}
-
-.gym-progress-summary {
-  text-align: center;
-  font-weight: 800;
-  margin-top: 6px;
+  min-height: 0;
+  margin-top: 4px;
+  padding: 5px 2px;
+  border-radius: 8px;
+  font-size: 9px;
+  line-height: 1.05;
+  box-shadow: none;
 }
 
 .gym-page-progress-card {
@@ -2660,8 +2681,18 @@ select {
 }
 
 @media (min-width: 700px) {
-  .gym-badge-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .gym-badge-image {
+    width: 70px;
+  }
+
+  .gym-badge-name {
+    font-size: 13px;
+  }
+
+  .gym-badge-city,
+  .gym-badge-status,
+  .gym-badge-card .small-button {
+    font-size: 11px;
   }
 }
 
@@ -8578,16 +8609,16 @@ function displayGymBadgeProgress() {
           class="gym-badge-image"
           src="${completed ? info.color : info.gray}"
           alt="${info.badge}">
-        <div class="gym-badge-name">${info.badge}</div>
-        <div class="gym-badge-city">${info.city}</div>
+        <div class="gym-badge-name">${info.badge.replace(" Badge","")}</div>
+        <div class="gym-badge-city">${info.city.replace(" City","")}</div>
         <div class="gym-badge-status ${completed ? "earned" : ""}">
-          ${completed ? "Earned ✓" : "Not earned"}
+          ${completed ? "✓ Earned" : "Locked"}
         </div>
         <button
           class="small-button"
           type="button"
           onclick="toggleGymBadgeCompletion('${info.gymKey}')">
-          ${completed ? "Mark Gym Incomplete" : "Mark Gym Completed"}
+          ${completed ? "Undo" : "Complete"}
         </button>
       </div>
     `;
