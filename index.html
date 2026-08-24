@@ -7898,11 +7898,53 @@ const kantoDetailMaps = {
     alt: "Vermilion Electric Gym map with trainers Jolt, Watt, and Gym Leader Amp",
     buttonLabel: "Open Vermilion Gym Map",
     caption: "Gym 4 — Electric • Trainers: Jolt, Watt • Leader: Amp"
+  },
+  "route-6": {
+    title: "Route 6",
+    image: "./assets/maps/route-6.png",
+    alt: "Route 6 map from Vermilion City across the water bridge to Lavender Town with trainers Toby, Lark, and Reese",
+    buttonLabel: "Open Route 6 Map",
+    caption: "Vermilion City → Lavender Town • Trainers: Toby, Lark, Reese"
+  },
+  "route-7": {
+    title: "Route 7",
+    image: "./assets/maps/route-7.png",
+    alt: "Route 7 map from Lavender Town south to the Safari Zone with trainers Emery, Kellan, and Quinn",
+    buttonLabel: "Open Route 7 Map",
+    caption: "Lavender Town → Safari Zone • Trainers: Emery, Kellan, Quinn"
+  },
+  "route-8": {
+    title: "Route 8",
+    image: "./assets/maps/route-8.png",
+    alt: "Route 8 map from the Safari Zone to Fuchsia City with trainers Pax, Wren, and Jace",
+    buttonLabel: "Open Route 8 Map",
+    caption: "Safari Zone → Fuchsia City • Trainers: Pax, Wren, Jace"
+  },
+  "route-9": {
+    title: "Route 9",
+    image: "./assets/maps/route-9.png",
+    alt: "Route 9 map from Fuchsia City to Saffron City with trainers Mack, Tess, and Rook",
+    buttonLabel: "Open Route 9 Map",
+    caption: "Fuchsia City → Saffron City • Trainers: Mack, Tess, Rook"
+  },
+  "route-10": {
+    title: "Route 10",
+    image: "./assets/maps/route-10.png",
+    alt: "Route 10 map from Saffron City to Celadon City with trainers Ember, Dune, and Slate",
+    buttonLabel: "Open Route 10 Map",
+    caption: "Saffron City → Celadon City • Trainers: Ember, Dune, Slate"
+  },
+  "route-11": {
+    title: "Route 11",
+    image: "./assets/maps/route-11.png",
+    alt: "Route 11 map from Celadon City to the coast with trainers Marlin, Gale, and Brook plus a separate trainer-free coastal path",
+    buttonLabel: "Open Route 11 Map",
+    caption: "Celadon City → Coast • Trainers: Marlin, Gale, Brook"
   }
 };
 
 /*
-  Trainer hotspots for the first four detailed maps.
+  Trainer hotspots for the detailed Kanto route and gym maps.
   Coordinates are percentages of the displayed map image so they scale on iPhone/iPad.
   Tapping a hotspot shows the encounter roster and can prepare that NPC for Battle Setup.
 */
@@ -7956,6 +7998,36 @@ const kantoDetailTrainerEncounters = {
     {key:"g4-jolt",name:"Jolt",role:"Gym Trainer",x:44.5,y:37.0,reward:"₽1100",team:[["Pikachu",26],["Magnemite",26],["Voltorb",27],["Electabuzz",28]]},
     {key:"g4-watt",name:"Watt",role:"Gym Trainer",x:18.0,y:54.0,reward:"₽1300",team:[["Voltorb",27],["Pikachu",27],["Magneton",28],["Electabuzz",28],["Raichu",29]]},
     {key:"g4-amp",name:"Amp",role:"Gym Leader",x:44.5,y:11.0,reward:"₽2500",team:[["Voltorb",28],["Magnemite",28],["Electabuzz",29],["Magneton",29],["Raichu",30]]}
+  ],
+  "route-6": [
+    {key:"r6-toby",name:"Toby",role:"Ground Trainer",x:59.7,y:30.5,reward:"₽1300",team:[["Sandshrew",28],["Diglett",28],["Cubone",29],["Rhyhorn",29]]},
+    {key:"r6-lark",name:"Lark",role:"Flying Trainer",x:73.5,y:47.0,reward:"₽1450",team:[["Pidgeotto",29],["Fearow",29],["Doduo",30],["Farfetch'd",30]]},
+    {key:"r6-reese",name:"Reese",role:"Route Ace",x:79.5,y:63.0,reward:"₽1650",team:[["Meowth",30],["Raticate",30],["Kangaskhan",30],["Persian",31],["Dodrio",31]]}
+  ],
+  "route-7": [
+    {key:"r7-emery",name:"Emery",role:"Normal Trainer",x:50.0,y:34.0,reward:"₽1450",team:[["Clefairy",30],["Jigglypuff",30],["Meowth",31],["Lickitung",31]]},
+    {key:"r7-kellan",name:"Kellan",role:"Psychic Trainer",x:50.0,y:51.0,reward:"₽1600",team:[["Abra",31],["Drowzee",31],["Slowpoke",32],["Mr. Mime",32]]},
+    {key:"r7-quinn",name:"Quinn",role:"Route Ace",x:50.0,y:69.0,reward:"₽1800",team:[["Kadabra",32],["Clefable",32],["Persian",32],["Wigglytuff",33],["Slowpoke",33]]}
+  ],
+  "route-8": [
+    {key:"r8-pax",name:"Pax",role:"Electric Trainer",x:27.0,y:50.0,reward:"₽1600",team:[["Voltorb",32],["Pikachu",32],["Magnemite",33],["Electrode",33]]},
+    {key:"r8-wren",name:"Wren",role:"Electric/Flying Trainer",x:50.5,y:47.5,reward:"₽1750",team:[["Pikachu",32],["Magneton",33],["Dodrio",33],["Electabuzz",34]]},
+    {key:"r8-jace",name:"Jace",role:"Route Ace",x:74.5,y:50.0,reward:"₽1950",team:[["Raichu",33],["Electabuzz",33],["Magneton",34],["Electrode",34],["Pidgeot",34]]}
+  ],
+  "route-9": [
+    {key:"r9-mack",name:"Mack",role:"Fighting Trainer",x:34.0,y:70.0,reward:"₽1800",team:[["Primeape",35],["Machoke",35],["Hitmonlee",36],["Raticate",36]]},
+    {key:"r9-tess",name:"Tess",role:"Ground/Normal Trainer",x:37.0,y:49.0,reward:"₽2000",team:[["Marowak",36],["Rhyhorn",36],["Sandslash",37],["Tauros",37],["Dodrio",37]]},
+    {key:"r9-rook",name:"Rook",role:"Route Ace",x:45.5,y:24.5,reward:"₽2250",team:[["Hitmonchan",37],["Persian",37],["Dodrio",37],["Rhydon",38],["Kangaskhan",38]]}
+  ],
+  "route-10": [
+    {key:"r10-ember",name:"Ember",role:"Fire Trainer",x:62.0,y:64.0,reward:"₽2050",team:[["Growlithe",38],["Ponyta",38],["Cubone",39],["Geodude",39]]},
+    {key:"r10-dune",name:"Dune",role:"Ground/Rock Trainer",x:44.5,y:47.0,reward:"₽2250",team:[["Marowak",39],["Graveler",39],["Rapidash",40],["Onix",40],["Arcanine",40]]},
+    {key:"r10-slate",name:"Slate",role:"Route Ace",x:25.7,y:34.0,reward:"₽2500",team:[["Arcanine",40],["Rapidash",40],["Rhydon",40],["Marowak",41],["Graveler",41],["Onix",41]]}
+  ],
+  "route-11": [
+    {key:"r11-marlin",name:"Marlin",role:"Water Trainer",x:60.0,y:43.0,reward:"₽2250",team:[["Goldeen",41],["Horsea",41],["Seel",42],["Fearow",42],["Raticate",42]]},
+    {key:"r11-gale",name:"Gale",role:"Flying/Water Trainer",x:57.0,y:63.0,reward:"₽2450",team:[["Dodrio",42],["Seadra",42],["Seaking",43],["Kangaskhan",43],["Pidgeot",43]]},
+    {key:"r11-brook",name:"Brook",role:"Route Ace",x:54.5,y:82.5,reward:"₽2700",team:[["Dewgong",43],["Seadra",43],["Dodrio",43],["Tauros",44],["Seaking",44],["Kangaskhan",44]]}
   ]
 };
 
@@ -7986,6 +8058,30 @@ const kantoDetailLocationHotspots = {
     {name:"Cerulean City",target:"cerulean-city",x:35,y:0,w:30,h:27},
     {name:"Vermilion City",target:"vermilion-city",x:77,y:53,w:23,h:38},
     {name:"Celadon City",target:"celadon-city",x:0,y:65,w:21,h:24}
+  ],
+  "route-6": [
+    {name:"Vermilion City",target:"vermilion-city",x:12,y:17,w:25,h:30},
+    {name:"Lavender Town",target:"lavender-town",x:86,y:84,w:27,h:29}
+  ],
+  "route-7": [
+    {name:"Lavender Town",target:"lavender-town",x:48,y:9,w:35,h:20},
+    {name:"Safari Zone",target:"safari-zone",x:50,y:91,w:28,h:18}
+  ],
+  "route-8": [
+    {name:"Fuchsia City",target:"fuchsia-city",x:12,y:29,w:25,h:35},
+    {name:"Safari Zone",target:"safari-zone",x:93,y:63,w:14,h:28}
+  ],
+  "route-9": [
+    {name:"Fuchsia City",target:"fuchsia-city",x:72,y:82,w:30,h:25},
+    {name:"Saffron City",target:"saffron-city",x:50,y:8,w:37,h:17}
+  ],
+  "route-10": [
+    {name:"Saffron City",target:"saffron-city",x:82,y:82,w:31,h:28},
+    {name:"Celadon City",target:"celadon-city",x:19,y:12,w:35,h:25}
+  ],
+  "route-11": [
+    {name:"Celadon City",target:"celadon-city",x:62,y:8,w:39,h:18},
+    {name:"Coast / Route 12",target:"route-12",x:48,y:94,w:30,h:15}
   ]
 };
 
