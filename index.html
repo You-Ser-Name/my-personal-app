@@ -7959,7 +7959,7 @@ function renderKantoDetailTrainerHotspots(locationId) {
 }
 
 function openKantoDetailLocationHotspot(locationId) {
-  const destination = (kantoLocations || []).find(function(location) {
+  const destination = (kantoMapLocations || []).find(function(location) {
     return location.id === locationId;
   });
   const destinationName = destination ? destination.name : "this location";
