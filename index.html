@@ -2125,6 +2125,38 @@ select {
   margin:0 !important;
 }
 
+
+.kanto-detail-map-wrap {
+  max-width:1100px;
+  margin:0 auto;
+  padding:8px;
+}
+
+.kanto-detail-map-card {
+  background:#fff;
+  padding:8px;
+  border-radius:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,.16);
+}
+
+.kanto-detail-map-image {
+  display:block;
+  width:100%;
+  height:auto;
+  border-radius:8px;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+}
+
+.kanto-detail-map-caption {
+  margin:8px 2px 2px;
+  font-size:12px;
+  font-weight:700;
+  color:#555;
+  text-align:center;
+}
+
 .kanto-location-status {
   margin-top:6px;
   text-align:center;
@@ -2450,15 +2482,28 @@ select {
       <div id="kantoLocationDescription" class="kanto-location-description"></div>
 
       <div class="kanto-location-actions">
+        <button id="kantoDetailMapButton" class="primary-button small-button" type="button" style="display:none;grid-column:1 / -1;" onclick="openSelectedKantoDetailMap()">Open Detailed Map</button>
         <button id="kantoVisitedButton" class="small-button" type="button" onclick="toggleKantoVisited()">Mark Visited</button>
         <button id="kantoCompletedButton" class="small-button" type="button" onclick="toggleKantoCompleted()">Mark Completed</button>
       </div>
 
       <div id="kantoLocationStatus" class="kanto-location-status"></div>
-      <div class="kanto-rebuild-note">Detailed route, town, landmark, and trainer maps are intentionally disconnected while the map system is rebuilt.</div>
+      <div class="kanto-rebuild-note">Detailed maps are available for Route 1, Viridian Gym, Route 2, and Pewter Gym. Additional campaign maps will be added in order.</div>
     </div>
 
     <button class="back-button kanto-bottom-back" type="button" onclick="showPage('homePage')">← Back</button>
+  </div>
+</div>
+
+<!-- KANTO DETAILED MAP VIEWER -->
+<div id="kantoDetailMapPage" style="display:none;">
+  <header><h1 id="kantoDetailMapTitle">Detailed Map</h1></header>
+  <div class="page-content kanto-detail-map-wrap">
+    <button class="back-button" type="button" onclick="showPage('kantoMapPage')">← Back to Kanto Map</button>
+    <div class="kanto-detail-map-card">
+      <img id="kantoDetailMapImage" class="kanto-detail-map-image" src="" alt="" draggable="false">
+      <div id="kantoDetailMapCaption" class="kanto-detail-map-caption"></div>
+    </div>
   </div>
 </div>
 
@@ -7677,6 +7722,37 @@ const kantoMapLocations = [
   {id:"route-13",name:"Route 13",type:"Route",x:19.0,y:75.5,w:4.0,h:5.0}
 ];
 
+const kantoDetailMaps = {
+  "route-1": {
+    title: "Route 1",
+    image: "./assets/maps/route-1.png?v=20260823b",
+    alt: "Route 1 map from Pallet Town to Viridian City with trainers Cal, Penny, and Riley",
+    buttonLabel: "Open Route 1 Map",
+    caption: "Pallet Town → Viridian City • Trainers: Cal, Penny, Riley"
+  },
+  "viridian-city": {
+    title: "Viridian Gym — Gym 1",
+    image: "./assets/maps/viridian-gym.png?v=20260823b",
+    alt: "Viridian Grass Gym map with trainers Clover, Reed, and Gym Leader Fern",
+    buttonLabel: "Open Viridian Gym Map",
+    caption: "Gym 1 — Grass • Trainers: Clover, Reed • Leader: Fern"
+  },
+  "route-2": {
+    title: "Route 2",
+    image: "./assets/maps/route-2.png?v=20260823b",
+    alt: "Route 2 map from Viridian City to Pewter City with trainers Nate, Skye, and Wade",
+    buttonLabel: "Open Route 2 Map",
+    caption: "Viridian City → Pewter City • Trainers: Nate, Skye, Wade"
+  },
+  "pewter-city": {
+    title: "Pewter Gym — Gym 2",
+    image: "./assets/maps/pewter-gym.png?v=20260823b",
+    alt: "Pewter Rock Gym map with trainers Cliff, Gemma, and Gym Leader Flint",
+    buttonLabel: "Open Pewter Gym Map",
+    caption: "Gym 2 — Rock • Trainers: Cliff, Gemma • Leader: Flint"
+  }
+};
+
 function getKantoMapProgress() {
   try {
     const raw = localStorage.getItem(KANTO_MAP_PROGRESS_KEY);
@@ -7735,13 +7811,65 @@ function selectKantoLocation(locationId) {
 
   name.textContent = location.name;
   type.textContent = location.type;
-  description.textContent = location.type === "Route"
-    ? "Route content and trainers will be rebuilt from scratch. Progress tracking is available now."
-    : "This location is active on the new Kanto overview. Detailed location content will be rebuilt separately.";
+
+  const detailMap = kantoDetailMaps[locationId] || null;
+  const detailButton = document.getElementById("kantoDetailMapButton");
+
+  if (locationId === "route-1") {
+    description.textContent = "Route 1 connects Pallet Town to Viridian City. Trainers: Cal, Penny, and Riley.";
+  }
+  else if (locationId === "viridian-city") {
+    description.textContent = "Viridian City contains Gym 1, a Grass-type gym led by Fern.";
+  }
+  else if (locationId === "route-2") {
+    description.textContent = "Route 2 connects Viridian City to Pewter City. Trainers: Nate, Skye, and Wade.";
+  }
+  else if (locationId === "pewter-city") {
+    description.textContent = "Pewter City contains Gym 2, a Rock-type gym led by Flint.";
+  }
+  else {
+    description.textContent = location.type === "Route"
+      ? "This route is active on the Kanto overview. Its detailed map will be added as the campaign is built."
+      : "This location is active on the Kanto overview. Detailed content will be added as the campaign is built.";
+  }
+
+  if (detailButton) {
+    if (detailMap) {
+      detailButton.textContent = detailMap.buttonLabel;
+      detailButton.style.display = "block";
+    }
+    else {
+      detailButton.style.display = "none";
+    }
+  }
 
   panel.style.display = "block";
   updateKantoLocationStatus();
   panel.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function openSelectedKantoDetailMap() {
+  if (!selectedKantoLocationId) return;
+  openKantoDetailMap(selectedKantoLocationId);
+}
+
+function openKantoDetailMap(locationId) {
+  const detail = kantoDetailMaps[locationId];
+  if (!detail) return;
+
+  const title = document.getElementById("kantoDetailMapTitle");
+  const image = document.getElementById("kantoDetailMapImage");
+  const caption = document.getElementById("kantoDetailMapCaption");
+
+  if (title) title.textContent = detail.title;
+  if (image) {
+    image.src = detail.image;
+    image.alt = detail.alt;
+  }
+  if (caption) caption.textContent = detail.caption;
+
+  showPage("kantoDetailMapPage");
+  window.scrollTo(0, 0);
 }
 
 function closeKantoLocationPanel() {
@@ -7887,6 +8015,7 @@ function showPage(pageId) {
   [
     "homePage",
     "kantoMapPage",
+    "kantoDetailMapPage",
     "pokemonPage",
     "createPokemonPage",
     "partyPokemonPage",
