@@ -2149,6 +2149,86 @@ select {
   -webkit-touch-callout:none;
 }
 
+.kanto-detail-map-stage {
+  position:relative;
+  width:100%;
+}
+
+.kanto-detail-hotspot-layer {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+.kanto-detail-trainer-hotspot {
+  position:absolute;
+  transform:translate(-50%,-50%);
+  min-width:44px;
+  min-height:44px;
+  padding:0;
+  border:2px solid transparent;
+  border-radius:50%;
+  background:transparent;
+  box-shadow:none;
+  pointer-events:auto;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.kanto-detail-trainer-hotspot:focus-visible,
+.kanto-detail-trainer-hotspot:active {
+  outline:none;
+  border-color:#cc0000;
+  background:rgba(255,255,255,.22);
+}
+
+.kanto-detail-trainer-panel {
+  margin-top:8px;
+  padding:10px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  background:#fafafa;
+  text-align:left;
+}
+
+.kanto-detail-trainer-panel h3 {
+  margin:0 0 4px;
+  text-align:center;
+}
+
+.kanto-detail-trainer-meta {
+  margin:0 0 8px;
+  color:#666;
+  font-size:11px;
+  text-align:center;
+}
+
+.kanto-detail-team-list {
+  display:grid;
+  gap:5px;
+  margin:8px 0;
+}
+
+.kanto-detail-team-member {
+  padding:7px 9px;
+  border-radius:7px;
+  background:#fff;
+  border:1px solid #e3e3e3;
+  font-size:12px;
+}
+
+.kanto-detail-trainer-actions {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  margin-top:8px;
+}
+
+.kanto-detail-trainer-actions button {
+  width:100%;
+  margin:0 !important;
+}
+
 .kanto-detail-map-caption {
   margin:8px 2px 2px;
   font-size:12px;
@@ -2501,8 +2581,12 @@ select {
   <div class="page-content kanto-detail-map-wrap">
     <button class="back-button" type="button" onclick="showPage('kantoMapPage')">← Back to Kanto Map</button>
     <div class="kanto-detail-map-card">
-      <img id="kantoDetailMapImage" class="kanto-detail-map-image" src="" alt="" draggable="false">
+      <div class="kanto-detail-map-stage">
+        <img id="kantoDetailMapImage" class="kanto-detail-map-image" src="" alt="" draggable="false">
+        <div id="kantoDetailHotspotLayer" class="kanto-detail-hotspot-layer"></div>
+      </div>
       <div id="kantoDetailMapCaption" class="kanto-detail-map-caption"></div>
+      <div id="kantoDetailTrainerPanel" class="kanto-detail-trainer-panel" style="display:none;"></div>
     </div>
   </div>
 </div>
@@ -7753,6 +7837,236 @@ const kantoDetailMaps = {
   }
 };
 
+/*
+  Trainer hotspots for the first four detailed maps.
+  Coordinates are percentages of the displayed map image so they scale on iPhone/iPad.
+  Tapping a hotspot shows the encounter roster and can prepare that NPC for Battle Setup.
+*/
+const kantoDetailTrainerEncounters = {
+  "route-1": [
+    {key:"r1-cal",name:"Cal",role:"Youngster",x:33.0,y:37.0,reward:"₽120",team:[["Rattata",5],["Pidgey",5],["Spearow",6]]},
+    {key:"r1-penny",name:"Penny",role:"Lass",x:44.0,y:65.0,reward:"₽160",team:[["Caterpie",6],["Weedle",6],["Nidoran♀",7]]},
+    {key:"r1-riley",name:"Riley",role:"Route Ace",x:65.0,y:75.0,reward:"₽250",team:[["Rattata",7],["Pidgey",7],["Nidoran♂",8],["Butterfree",9]]}
+  ],
+  "viridian-city": [
+    {key:"g1-clover",name:"Clover",role:"Gym Trainer",x:42.0,y:48.0,reward:"₽300",team:[["Oddish",11],["Bellsprout",11],["Paras",12]]},
+    {key:"g1-reed",name:"Reed",role:"Gym Trainer",x:62.0,y:69.0,reward:"₽400",team:[["Exeggcute",12],["Tangela",12],["Bulbasaur",13]]},
+    {key:"g1-fern",name:"Fern",role:"Gym Leader",x:50.0,y:25.0,reward:"₽1000",team:[["Paras",13],["Oddish",14],["Bulbasaur",14],["Ivysaur",15]]}
+  ],
+  "route-2": [
+    {key:"r2-nate",name:"Nate",role:"Bug Catcher",x:54.0,y:71.0,reward:"₽220",team:[["Caterpie",13],["Metapod",13],["Butterfree",14]]},
+    {key:"r2-skye",name:"Skye",role:"Bird Keeper",x:37.0,y:50.0,reward:"₽280",team:[["Spearow",14],["Zubat",14],["Pidgeotto",15]]},
+    {key:"r2-wade",name:"Wade",role:"Route Ace",x:60.0,y:25.0,reward:"₽380",team:[["Weedle",15],["Beedrill",15],["Nidoran♀",16],["Fearow",16]]}
+  ],
+  "pewter-city": [
+    {key:"g2-cliff",name:"Cliff",role:"Gym Trainer",x:43.0,y:50.0,reward:"₽450",team:[["Geodude",16],["Onix",17],["Kabuto",17]]},
+    {key:"g2-gemma",name:"Gemma",role:"Gym Trainer",x:62.0,y:69.0,reward:"₽550",team:[["Omanyte",17],["Geodude",17],["Onix",18],["Aerodactyl",18]]},
+    {key:"g2-flint",name:"Flint",role:"Gym Leader",x:50.0,y:25.0,reward:"₽1400",team:[["Geodude",18],["Omanyte",18],["Kabuto",19],["Onix",19],["Aerodactyl",20]]}
+  ]
+};
+
+let activeKantoDetailMapId = null;
+let selectedKantoDetailTrainerKey = null;
+
+function getKantoDetailTrainerEncounter(trainerKey) {
+  const groups = Object.values(kantoDetailTrainerEncounters);
+  for (const group of groups) {
+    const found = group.find(function(entry) { return entry.key === trainerKey; });
+    if (found) return found;
+  }
+  return null;
+}
+
+function renderKantoDetailTrainerHotspots(locationId) {
+  activeKantoDetailMapId = locationId;
+  selectedKantoDetailTrainerKey = null;
+
+  const layer = document.getElementById("kantoDetailHotspotLayer");
+  const panel = document.getElementById("kantoDetailTrainerPanel");
+  if (panel) { panel.style.display = "none"; panel.innerHTML = ""; }
+  if (!layer) return;
+
+  layer.innerHTML = "";
+  const encounters = kantoDetailTrainerEncounters[locationId] || [];
+  encounters.forEach(function(encounter) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "kanto-detail-trainer-hotspot";
+    button.style.left = encounter.x + "%";
+    button.style.top = encounter.y + "%";
+    button.style.width = "11%";
+    button.style.height = "14%";
+    button.setAttribute("aria-label", "Open encounter with " + encounter.name);
+    button.title = encounter.name;
+    button.onclick = function(event) {
+      event.stopPropagation();
+      selectKantoDetailTrainer(encounter.key);
+    };
+    layer.appendChild(button);
+  });
+}
+
+function selectKantoDetailTrainer(trainerKey) {
+  const encounter = getKantoDetailTrainerEncounter(trainerKey);
+  const panel = document.getElementById("kantoDetailTrainerPanel");
+  if (!encounter || !panel) return;
+
+  selectedKantoDetailTrainerKey = trainerKey;
+  const existing = trainers.find(function(trainer) {
+    return trainer.mapEncounterKey === trainerKey;
+  });
+  const statusText = existing && existing.completed ? "Defeated / completed" : "Ready";
+
+  panel.innerHTML = `
+    <h3>${encounter.name}</h3>
+    <div class="kanto-detail-trainer-meta">${encounter.role} • ${statusText} • Reward ${encounter.reward}</div>
+    <div class="kanto-detail-team-list">
+      ${encounter.team.map(function(member) {
+        return `<div class="kanto-detail-team-member"><strong>${member[0]}</strong> — Level ${member[1]}</div>`;
+      }).join("")}
+    </div>
+    <div class="kanto-detail-trainer-actions">
+      <button class="primary-button small-button" type="button" onclick="prepareKantoMapTrainerBattle('${trainerKey}')">Prepare Battle</button>
+      <button class="small-button" type="button" onclick="closeKantoDetailTrainerPanel()">Close</button>
+    </div>
+  `;
+  panel.style.display = "block";
+  panel.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function closeKantoDetailTrainerPanel() {
+  selectedKantoDetailTrainerKey = null;
+  const panel = document.getElementById("kantoDetailTrainerPanel");
+  if (panel) { panel.style.display = "none"; panel.innerHTML = ""; }
+}
+
+function createMapEncounterPokemon(encounter, trainer, member, slotIndex) {
+  const speciesName = member[0];
+  const level = Number(member[1]);
+  const species = pokemonDatabase.find(function(entry) { return entry.name === speciesName; });
+  if (!species) return null;
+
+  const ivs = {hp:10,attack:10,defense:10,specialAttack:10,specialDefense:10,speed:10};
+  const evs = {hp:0,attack:0,defense:0,specialAttack:0,specialDefense:0,speed:0};
+  const stats = {
+    hp:calculateHP(species.baseStats.hp,ivs.hp,evs.hp,level),
+    attack:calculateStat(species.baseStats.attack,ivs.attack,evs.attack,level),
+    defense:calculateStat(species.baseStats.defense,ivs.defense,evs.defense,level),
+    specialAttack:calculateStat(species.baseStats.specialAttack,ivs.specialAttack,evs.specialAttack,level),
+    specialDefense:calculateStat(species.baseStats.specialDefense,ivs.specialDefense,evs.specialDefense,level),
+    speed:calculateStat(species.baseStats.speed,ivs.speed,evs.speed,level)
+  };
+  const moves = getDefaultWildPokemonMoves(species.number,level);
+  const movePP = {};
+  moves.forEach(function(moveName) {
+    if (moveDatabase[moveName]) movePP[moveName] = moveDatabase[moveName].pp;
+  });
+
+  return {
+    id:930000000 + (trainer.id * 10) + slotIndex,
+    speciesNumber:species.number,
+    speciesName:species.name,
+    nickname:"",
+    level:level,
+    ivs:ivs,
+    evs:evs,
+    stats:stats,
+    currentHP:stats.hp,
+    status:"None",
+    moves:moves,
+    movePP:movePP,
+    trainerId:trainer.id,
+    storageLocation:"party",
+    mapEncounterPokemon:true,
+    mapEncounterKey:encounter.key
+  };
+}
+
+function ensureKantoMapTrainerEncounter(trainerKey) {
+  const encounter = getKantoDetailTrainerEncounter(trainerKey);
+  if (!encounter) return null;
+
+  let trainer = trainers.find(function(entry) { return entry.mapEncounterKey === trainerKey; });
+  if (!trainer) {
+    const allEncounterKeys = Object.values(kantoDetailTrainerEncounters).flat().map(function(entry) { return entry.key; });
+    const encounterIndex = Math.max(0,allEncounterKeys.indexOf(trainerKey));
+    trainer = {
+      id:910000 + encounterIndex,
+      name:encounter.name,
+      trainerType:"NPC",
+      money:0,
+      inventory:[],
+      completed:false,
+      rewardClaimed:false,
+      encounterReward:encounter.reward,
+      mapEncounterKey:trainerKey
+    };
+    trainers.push(trainer);
+  }
+  else {
+    trainer.name = encounter.name;
+    trainer.trainerType = "NPC";
+    trainer.encounterReward = encounter.reward;
+  }
+
+  const existingTeam = ownedPokemon.filter(function(pokemon) {
+    return pokemon.trainerId === trainer.id && pokemon.mapEncounterKey === trainerKey;
+  });
+
+  if (existingTeam.length !== encounter.team.length) {
+    ownedPokemon = ownedPokemon.filter(function(pokemon) {
+      return !(pokemon.trainerId === trainer.id && pokemon.mapEncounterKey === trainerKey);
+    });
+    encounter.team.forEach(function(member,index) {
+      const pokemon = createMapEncounterPokemon(encounter,trainer,member,index + 1);
+      if (pokemon) ownedPokemon.push(pokemon);
+    });
+  }
+
+  saveTrainers();
+  savePokemon();
+  return trainer;
+}
+
+function prepareKantoMapTrainerBattle(trainerKey) {
+  const trainer = ensureKantoMapTrainerEncounter(trainerKey);
+  if (!trainer) {
+    alert("This trainer encounter could not be prepared.");
+    return;
+  }
+
+  if (trainer.completed) {
+    const rematch = confirm(trainer.name + " is marked defeated. Re-enable this trainer for a rematch?");
+    if (!rematch) return;
+    trainer.completed = false;
+    trainer.rewardClaimed = false;
+    const team = getTrainerPokemon(trainer.id);
+    team.forEach(function(pokemon) {
+      pokemon.currentHP = pokemon.stats.hp;
+      pokemon.status = "None";
+      if (Array.isArray(pokemon.moves)) {
+        pokemon.movePP = pokemon.movePP || {};
+        pokemon.moves.forEach(function(moveName) {
+          if (moveDatabase[moveName]) pokemon.movePP[moveName] = moveDatabase[moveName].pp;
+        });
+      }
+    });
+    saveTrainers();
+    savePokemon();
+  }
+
+  showPage("battlesPage");
+  const sourceSelect = document.getElementById("battleOpponentSourceSelect");
+  if (sourceSelect) {
+    const targetValue = "trainer:" + trainer.id;
+    if (Array.from(sourceSelect.options).some(function(option) { return option.value === targetValue; })) {
+      sourceSelect.value = targetValue;
+      displayBattleOpponentPokemonOptions();
+    }
+  }
+  window.scrollTo(0,0);
+}
+
 function getKantoMapProgress() {
   try {
     const raw = localStorage.getItem(KANTO_MAP_PROGRESS_KEY);
@@ -7868,6 +8182,7 @@ function openKantoDetailMap(locationId) {
   }
   if (caption) caption.textContent = detail.caption;
 
+  renderKantoDetailTrainerHotspots(locationId);
   showPage("kantoDetailMapPage");
   window.scrollTo(0, 0);
 }
