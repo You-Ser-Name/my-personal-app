@@ -7959,6 +7959,19 @@ function renderKantoDetailTrainerHotspots(locationId) {
 }
 
 function openKantoDetailLocationHotspot(locationId) {
+  const destination = (kantoLocations || []).find(function(location) {
+    return location.id === locationId;
+  });
+  const destinationName = destination ? destination.name : "this location";
+  const currentMap = activeKantoDetailMapId && kantoDetailMaps[activeKantoDetailMapId]
+    ? kantoDetailMaps[activeKantoDetailMapId].title
+    : "this map";
+
+  const confirmed = window.confirm(
+    "Leave " + currentMap + " and go to " + destinationName + "?"
+  );
+  if (!confirmed) return;
+
   if (kantoDetailMaps[locationId]) {
     selectedKantoLocationId = locationId;
     openKantoDetailMap(locationId);
