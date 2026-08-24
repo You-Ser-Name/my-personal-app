@@ -2182,6 +2182,28 @@ select {
   background:rgba(255,255,255,.22);
 }
 
+.kanto-detail-location-hotspot {
+  position:absolute;
+  transform:translate(-50%,-50%);
+  min-width:44px;
+  min-height:44px;
+  padding:0;
+  border:2px solid transparent;
+  border-radius:10px;
+  background:transparent;
+  box-shadow:none;
+  pointer-events:auto;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.kanto-detail-location-hotspot:focus-visible,
+.kanto-detail-location-hotspot:active {
+  outline:none;
+  border-color:#cc0000;
+  background:rgba(255,255,255,.18);
+}
+
 .kanto-detail-trainer-panel {
   margin-top:8px;
   padding:10px;
@@ -7865,6 +7887,18 @@ const kantoDetailTrainerEncounters = {
   ]
 };
 
+/* City/town hotspots embedded on Route 1 and Route 2 detailed maps. */
+const kantoDetailLocationHotspots = {
+  "route-1": [
+    {name:"Pallet Town",target:"pallet-town",x:31,y:8,w:36,h:18},
+    {name:"Viridian City",target:"viridian-city",x:80,y:88,w:34,h:20}
+  ],
+  "route-2": [
+    {name:"Pewter City",target:"pewter-city",x:52,y:8,w:42,h:18},
+    {name:"Viridian City",target:"viridian-city",x:54,y:91,w:46,h:18}
+  ]
+};
+
 let activeKantoDetailMapId = null;
 let selectedKantoDetailTrainerKey = null;
 
@@ -7904,6 +7938,36 @@ function renderKantoDetailTrainerHotspots(locationId) {
     };
     layer.appendChild(button);
   });
+
+  const locationHotspots = kantoDetailLocationHotspots[locationId] || [];
+  locationHotspots.forEach(function(location) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "kanto-detail-location-hotspot";
+    button.style.left = location.x + "%";
+    button.style.top = location.y + "%";
+    button.style.width = location.w + "%";
+    button.style.height = location.h + "%";
+    button.setAttribute("aria-label", "Open " + location.name);
+    button.title = location.name;
+    button.onclick = function(event) {
+      event.stopPropagation();
+      openKantoDetailLocationHotspot(location.target);
+    };
+    layer.appendChild(button);
+  });
+}
+
+function openKantoDetailLocationHotspot(locationId) {
+  if (kantoDetailMaps[locationId]) {
+    selectedKantoLocationId = locationId;
+    openKantoDetailMap(locationId);
+    return;
+  }
+
+  showPage("kantoMapPage");
+  selectKantoLocation(locationId);
+  window.scrollTo(0,0);
 }
 
 function selectKantoDetailTrainer(trainerKey) {
@@ -7915,7 +7979,11 @@ function selectKantoDetailTrainer(trainerKey) {
   const existing = trainers.find(function(trainer) {
     return trainer.mapEncounterKey === trainerKey;
   });
-  const statusText = existing && existing.completed ? "Defeated / completed" : "Ready";
+  const isDefeated = !!(existing && existing.completed);
+  const statusText = isDefeated ? "Defeated / completed" : "Ready";
+  const battleButton = isDefeated
+    ? `<button class="small-button" type="button" disabled>Already Defeated</button>`
+    : `<button class="primary-button small-button" type="button" onclick="prepareKantoMapTrainerBattle('${trainerKey}')">Prepare Battle</button>`;
 
   panel.innerHTML = `
     <h3>${encounter.name}</h3>
@@ -7926,7 +7994,7 @@ function selectKantoDetailTrainer(trainerKey) {
       }).join("")}
     </div>
     <div class="kanto-detail-trainer-actions">
-      <button class="primary-button small-button" type="button" onclick="prepareKantoMapTrainerBattle('${trainerKey}')">Prepare Battle</button>
+      ${battleButton}
       <button class="small-button" type="button" onclick="closeKantoDetailTrainerPanel()">Close</button>
     </div>
   `;
@@ -8036,24 +8104,14 @@ function prepareKantoMapTrainerBattle(trainerKey) {
   }
 
   if (trainer.completed) {
-    const rematch = confirm(trainer.name + " is marked defeated. Re-enable this trainer for a rematch?");
-    if (!rematch) return;
-    trainer.completed = false;
-    trainer.rewardClaimed = false;
-    const team = getTrainerPokemon(trainer.id);
-    team.forEach(function(pokemon) {
-      pokemon.currentHP = pokemon.stats.hp;
-      pokemon.status = "None";
-      if (Array.isArray(pokemon.moves)) {
-        pokemon.movePP = pokemon.movePP || {};
-        pokemon.moves.forEach(function(moveName) {
-          if (moveDatabase[moveName]) pokemon.movePP[moveName] = moveDatabase[moveName].pp;
-        });
-      }
-    });
-    saveTrainers();
-    savePokemon();
+    alert(trainer.name + " has already been defeated.");
+    return;
   }
+
+  battleReturnContext = {
+    type:"kantoDetailMap",
+    locationId:activeKantoDetailMapId
+  };
 
   showPage("battlesPage");
   const sourceSelect = document.getElementById("battleOpponentSourceSelect");
@@ -11863,6 +11921,13 @@ function battleBack() {
     return;
   }
 
+  if (battleReturnContext && battleReturnContext.type === "kantoDetailMap") {
+    const returnContext = battleReturnContext;
+    battleReturnContext = null;
+    openKantoDetailMap(returnContext.locationId);
+    return;
+  }
+
   showPage(
     "homePage"
   );
@@ -11891,7 +11956,12 @@ function endBattle(force=false){
   if(details)details.innerHTML="";
   updateBattleEndButtonVisibility();
 
-  showPage("homePage");
+  if (returnContext && returnContext.type === "kantoDetailMap") {
+    openKantoDetailMap(returnContext.locationId);
+  }
+  else {
+    showPage("homePage");
+  }
 }
 
 
