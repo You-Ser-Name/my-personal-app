@@ -2590,7 +2590,7 @@ select {
       </div>
 
       <div id="kantoLocationStatus" class="kanto-location-status"></div>
-      <div class="kanto-rebuild-note">Detailed maps are available for Route 1, Viridian Gym, Route 2, and Pewter Gym. Additional campaign maps will be added in order.</div>
+      <div class="kanto-rebuild-note">Detailed maps are available through Gym 4, including Route 3, Mt. Moon, Route 4, Cerulean Gym, Route 5, and Vermilion Gym.</div>
     </div>
 
     <button class="back-button kanto-bottom-back" type="button" onclick="showPage('homePage')">← Back</button>
@@ -7856,6 +7856,48 @@ const kantoDetailMaps = {
     alt: "Pewter Rock Gym map with trainers Cliff, Gemma, and Gym Leader Flint",
     buttonLabel: "Open Pewter Gym Map",
     caption: "Gym 2 — Rock • Trainers: Cliff, Gemma • Leader: Flint"
+  },
+  "route-3": {
+    title: "Route 3",
+    image: "./assets/maps/route-3.png",
+    alt: "Route 3 map from Pewter City to Mt. Moon with trainers Theo, Maya, and Knox",
+    buttonLabel: "Open Route 3 Map",
+    caption: "Pewter City → Mt. Moon • Trainers: Theo, Maya, Knox"
+  },
+  "mt-moon": {
+    title: "Mt. Moon",
+    image: "./assets/maps/mt-moon.png",
+    alt: "Mt. Moon cave map with trainers Dex, Mira, and Vex",
+    buttonLabel: "Open Mt. Moon Map",
+    caption: "Route 3 → Mt. Moon → Route 4 • Trainers: Dex, Mira, Vex"
+  },
+  "route-4": {
+    title: "Route 4",
+    image: "./assets/maps/route-4.png",
+    alt: "Route 4 map from Mt. Moon to Cerulean City with a north branch toward Victory Road and trainers Finn, Cora, and Sol",
+    buttonLabel: "Open Route 4 Map",
+    caption: "Mt. Moon → Cerulean City • North branch: Victory Road • Trainers: Finn, Cora, Sol"
+  },
+  "cerulean-city": {
+    title: "Cerulean Gym — Gym 3",
+    image: "./assets/maps/cerulean-gym.png",
+    alt: "Cerulean Water Gym map with trainers Marina, Reef, and Gym Leader Coral",
+    buttonLabel: "Open Cerulean Gym Map",
+    caption: "Gym 3 — Water • Trainers: Marina, Reef • Leader: Coral"
+  },
+  "route-5": {
+    title: "Route 5",
+    image: "./assets/maps/route-5.png",
+    alt: "Route 5 map from Cerulean City south to a split toward Vermilion City and Celadon City with trainers Ivy, Basil, and Lane",
+    buttonLabel: "Open Route 5 Map",
+    caption: "Cerulean City → Vermilion City • West branch: Celadon City • Trainers: Ivy, Basil, Lane"
+  },
+  "vermilion-city": {
+    title: "Vermilion Gym — Gym 4",
+    image: "./assets/maps/vermilion-gym.png",
+    alt: "Vermilion Electric Gym map with trainers Jolt, Watt, and Gym Leader Amp",
+    buttonLabel: "Open Vermilion Gym Map",
+    caption: "Gym 4 — Electric • Trainers: Jolt, Watt • Leader: Amp"
   }
 };
 
@@ -7884,6 +7926,36 @@ const kantoDetailTrainerEncounters = {
     {key:"g2-cliff",name:"Cliff",role:"Gym Trainer",x:43.0,y:50.0,reward:"₽450",team:[["Geodude",16],["Onix",17],["Kabuto",17]]},
     {key:"g2-gemma",name:"Gemma",role:"Gym Trainer",x:62.0,y:69.0,reward:"₽550",team:[["Omanyte",17],["Geodude",17],["Onix",18],["Aerodactyl",18]]},
     {key:"g2-flint",name:"Flint",role:"Gym Leader",x:50.0,y:25.0,reward:"₽1400",team:[["Geodude",18],["Omanyte",18],["Kabuto",19],["Onix",19],["Aerodactyl",20]]}
+  ],
+  "route-3": [
+    {key:"r3-theo",name:"Theo",role:"Youngster",x:22.0,y:41.0,reward:"₽500",team:[["Nidoran♂",18],["Rattata",18],["Mankey",19]]},
+    {key:"r3-maya",name:"Maya",role:"Lass",x:50.0,y:42.0,reward:"₽600",team:[["Jigglypuff",19],["Ekans",19],["Nidoran♀",20],["Meowth",20]]},
+    {key:"r3-knox",name:"Knox",role:"Route Ace",x:70.5,y:44.0,reward:"₽750",team:[["Primeape",20],["Nidorino",20],["Persian",21],["Nidorina",21]]}
+  ],
+  "mt-moon": [
+    {key:"mm-dex",name:"Dex",role:"Explorer",x:11.5,y:42.0,reward:"₽600",team:[["Zubat",19],["Paras",20],["Clefairy",20]]},
+    {key:"mm-mira",name:"Mira",role:"Researcher",x:51.0,y:35.0,reward:"₽750",team:[["Magnemite",20],["Drowzee",20],["Clefairy",21],["Zubat",21]]},
+    {key:"mm-vex",name:"Vex",role:"Cave Ace",x:57.0,y:66.0,reward:"₽900",team:[["Golbat",21],["Kadabra",21],["Parasect",21],["Clefairy",22],["Raticate",22]]}
+  ],
+  "route-4": [
+    {key:"r4-finn",name:"Finn",role:"Camper",x:43.0,y:46.0,reward:"₽650",team:[["Meowth",21],["Spearow",21],["Abra",22]]},
+    {key:"r4-cora",name:"Cora",role:"Bird Keeper",x:21.0,y:49.0,reward:"₽800",team:[["Pidgeotto",22],["Fearow",22],["Drowzee",22],["Meowth",23]]},
+    {key:"r4-sol",name:"Sol",role:"Route Ace",x:61.0,y:48.0,reward:"₽950",team:[["Kadabra",22],["Persian",23],["Fearow",23],["Clefable",23]]}
+  ],
+  "cerulean-city": [
+    {key:"g3-marina",name:"Marina",role:"Gym Trainer",x:39.5,y:36.0,reward:"₽850",team:[["Goldeen",22],["Horsea",22],["Shellder",23],["Psyduck",23]]},
+    {key:"g3-reef",name:"Reef",role:"Gym Trainer",x:40.5,y:60.0,reward:"₽1000",team:[["Poliwag",23],["Krabby",23],["Staryu",24],["Seel",24]]},
+    {key:"g3-coral",name:"Coral",role:"Gym Leader",x:44.5,y:11.0,reward:"₽1800",team:[["Psyduck",24],["Staryu",24],["Seadra",25],["Poliwhirl",25],["Starmie",26]]}
+  ],
+  "route-5": [
+    {key:"r5-ivy",name:"Ivy",role:"Bug Catcher",x:41.0,y:31.0,reward:"₽900",team:[["Paras",24],["Venonat",24],["Butterfree",25],["Beedrill",25]]},
+    {key:"r5-basil",name:"Basil",role:"Jr. Trainer",x:41.0,y:49.0,reward:"₽1050",team:[["Gloom",25],["Weepinbell",25],["Venomoth",26],["Parasect",26]]},
+    {key:"r5-lane",name:"Lane",role:"Route Ace",x:41.0,y:63.0,reward:"₽1250",team:[["Scyther",25],["Pinsir",26],["Gloom",26],["Weepinbell",27],["Venomoth",27]]}
+  ],
+  "vermilion-city": [
+    {key:"g4-jolt",name:"Jolt",role:"Gym Trainer",x:44.5,y:37.0,reward:"₽1100",team:[["Pikachu",26],["Magnemite",26],["Voltorb",27],["Electabuzz",28]]},
+    {key:"g4-watt",name:"Watt",role:"Gym Trainer",x:18.0,y:54.0,reward:"₽1300",team:[["Voltorb",27],["Pikachu",27],["Magneton",28],["Electabuzz",28],["Raichu",29]]},
+    {key:"g4-amp",name:"Amp",role:"Gym Leader",x:44.5,y:11.0,reward:"₽2500",team:[["Voltorb",28],["Magnemite",28],["Electabuzz",29],["Magneton",29],["Raichu",30]]}
   ]
 };
 
@@ -7896,6 +7968,24 @@ const kantoDetailLocationHotspots = {
   "route-2": [
     {name:"Pewter City",target:"pewter-city",x:52,y:8,w:42,h:18},
     {name:"Viridian City",target:"viridian-city",x:54,y:91,w:46,h:18}
+  ],
+  "route-3": [
+    {name:"Pewter City",target:"pewter-city",x:1,y:20,w:20,h:52},
+    {name:"Mt. Moon",target:"mt-moon",x:86,y:20,w:14,h:54}
+  ],
+  "mt-moon": [
+    {name:"Route 3",target:"route-3",x:0,y:34,w:16,h:36},
+    {name:"Route 4",target:"route-4",x:85,y:36,w:15,h:34}
+  ],
+  "route-4": [
+    {name:"Mt. Moon",target:"mt-moon",x:0,y:19,w:18,h:40},
+    {name:"Cerulean City",target:"cerulean-city",x:81,y:16,w:19,h:61},
+    {name:"Victory Road",target:"victory-road",x:41,y:0,w:18,h:25}
+  ],
+  "route-5": [
+    {name:"Cerulean City",target:"cerulean-city",x:35,y:0,w:30,h:27},
+    {name:"Vermilion City",target:"vermilion-city",x:77,y:53,w:23,h:38},
+    {name:"Celadon City",target:"celadon-city",x:0,y:65,w:21,h:24}
   ]
 };
 
@@ -8211,6 +8301,24 @@ function selectKantoLocation(locationId) {
   }
   else if (locationId === "pewter-city") {
     description.textContent = "Pewter City contains Gym 2, a Rock-type gym led by Flint.";
+  }
+  else if (locationId === "route-3") {
+    description.textContent = "Route 3 connects Pewter City to Mt. Moon. Trainers: Theo, Maya, and Knox.";
+  }
+  else if (locationId === "mt-moon") {
+    description.textContent = "Mt. Moon connects Route 3 to Route 4. Trainers: Dex, Mira, and Vex.";
+  }
+  else if (locationId === "route-4") {
+    description.textContent = "Route 4 connects Mt. Moon to Cerulean City, with a north branch toward Victory Road. Trainers: Finn, Cora, and Sol.";
+  }
+  else if (locationId === "cerulean-city") {
+    description.textContent = "Cerulean City contains Gym 3, a Water-type gym led by Coral.";
+  }
+  else if (locationId === "route-5") {
+    description.textContent = "Route 5 runs south from Cerulean City, then splits east toward Vermilion City and west toward Celadon City. Trainers: Ivy, Basil, and Lane.";
+  }
+  else if (locationId === "vermilion-city") {
+    description.textContent = "Vermilion City contains Gym 4, an Electric-type gym led by Amp.";
   }
   else {
     description.textContent = location.type === "Route"
