@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pokémon Campaign Manager</title>
-<!-- Kanto routes + gym maps build: v18 / 2026-08-22 -->
+<!-- Kanto overview clean rebuild: v34R1 / 2026-08-23 -->
 
 <style>
 * { box-sizing: border-box; }
@@ -2011,23 +2011,21 @@ select {
 
 
 /* =========================================================
-   KANTO MAP MAIN DASHBOARD
+   KANTO OVERVIEW MAP — CLEAN REBUILD V34R1
+   Legacy town/route/local-navigation/trainer map CSS removed.
 ========================================================= */
-
-.home-dashboard {
-  width:100%;
-  max-width:1200px;
+#kantoMapPage .page-content {
+  max-width:1400px;
   margin:0 auto;
-  padding:8px 10px 16px;
-  box-sizing:border-box;
+  padding:6px;
 }
 
 .kanto-map-shell {
   position:relative;
   width:100%;
   overflow:hidden;
-  border-radius:14px;
-  background:#0b75bc;
+  border-radius:10px;
+  background:#087fc8;
   box-shadow:0 3px 12px rgba(0,0,0,.18);
 }
 
@@ -2041,140 +2039,7 @@ select {
   -webkit-touch-callout:none;
 }
 
-/*
-  Empty overlay for now. This gives us a clean layer where we can
-  add clickable towns, routes, caves, buildings, gyms, etc. next.
-*/
 .kanto-hotspot-layer {
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-}
-
-.home-tools-title {
-  margin:9px 0 5px;
-  text-align:center;
-  font-size:13px;
-  font-weight:800;
-}
-
-.home-quick-menu {
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:6px;
-}
-
-.home-quick-menu button {
-  width:100%;
-  min-height:38px;
-  margin:0 !important;
-  padding:7px 5px;
-  font-size:12px;
-}
-
-@media (max-width:600px) {
-
-  #homePage {
-    overflow-x:hidden;
-  }
-
-  .home-dashboard {
-    padding:6px 6px 12px;
-  }
-
-  .kanto-map-shell {
-    border-radius:9px;
-  }
-
-  .home-tools-title {
-    margin:6px 0 4px;
-    font-size:10px;
-  }
-
-  .home-quick-menu {
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:4px;
-  }
-
-  .home-quick-menu button {
-    min-height:30px !important;
-    padding:4px 5px !important;
-    font-size:9px !important;
-    line-height:1.05 !important;
-  }
-}
-
-
-/* =========================================================
-   KANTO MAP PAGE V10
-========================================================= */
-
-#kantoMapPage .page-content {
-  max-width:1200px;
-  margin:0 auto;
-  padding:8px;
-}
-
-#kantoMapPage .back-button {
-  margin:0 0 6px 0;
-}
-
-#kantoMapPage .kanto-map-shell {
-  width:100%;
-  overflow:auto;
-  -webkit-overflow-scrolling:touch;
-  background:#0b75bc;
-}
-
-#kantoMapPage .kanto-map-image {
-  width:100%;
-  height:auto;
-  display:block;
-}
-
-@media (max-width:600px) {
-  #kantoMapPage .page-content {
-    padding:6px;
-  }
-
-  #kantoMapPage .back-button {
-    width:100%;
-    min-height:30px !important;
-    margin-bottom:5px;
-  }
-
-  #kantoMapPage .kanto-map-shell {
-    border-radius:8px;
-  }
-}
-
-
-/* =========================================================
-   KANTO INTERACTIVE MAP V11
-========================================================= */
-
-#kantoMapPage .page-content {
-  max-width:1200px;
-  margin:0 auto;
-  padding:8px;
-}
-
-#kantoMapPage .kanto-map-shell {
-  position:relative;
-  width:100%;
-  overflow:hidden;
-  border-radius:10px;
-  background:#0b75bc;
-  box-shadow:0 3px 12px rgba(0,0,0,.18);
-}
-
-#kantoMapPage .kanto-map-image {
-  width:100%;
-  height:auto;
-  display:block;
-}
-
-#kantoMapPage .kanto-hotspot-layer {
   position:absolute;
   inset:0;
   pointer-events:auto;
@@ -2183,51 +2048,35 @@ select {
 .kanto-hotspot {
   position:absolute;
   transform:translate(-50%,-50%);
-  border:1px solid rgba(255,255,255,.0);
-  background:rgba(255,255,255,.0);
-  border-radius:10px;
-  cursor:pointer;
-  padding:0;
-  margin:0;
-  min-width:28px;
+  margin:0 !important;
+  padding:0 !important;
+  min-width:24px;
   min-height:24px;
-  box-shadow:none;
+  border:0 !important;
+  outline:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  opacity:0;
+  cursor:pointer;
   z-index:2;
+  -webkit-tap-highlight-color:transparent;
 }
 
 .kanto-hotspot:active,
 .kanto-hotspot:focus,
-.kanto-hotspot:focus-visible,
-.kanto-hotspot.selected {
-  background:transparent !important;
-  border-color:transparent !important;
+.kanto-hotspot:focus-visible {
   outline:none !important;
+  background:transparent !important;
   box-shadow:none !important;
-  -webkit-tap-highlight-color:transparent;
-}
-
-.kanto-hotspot.city {
-  min-width:58px;
-  min-height:26px;
-}
-
-.kanto-hotspot.landmark {
-  min-width:48px;
-  min-height:24px;
-}
-
-.kanto-hotspot.route {
-  min-width:22px;
-  min-height:22px;
-  border-radius:50%;
 }
 
 .kanto-location-panel {
-  margin-top:8px;
-  padding:10px;
+  margin-top:7px;
+  padding:9px;
   border-radius:10px;
   background:#fff;
   box-shadow:0 2px 10px rgba(0,0,0,.15);
+  text-align:left;
 }
 
 .kanto-location-panel-header {
@@ -2261,12 +2110,12 @@ select {
 .kanto-location-description {
   margin-top:5px;
   font-size:12px;
-  line-height:1.3;
+  line-height:1.35;
 }
 
 .kanto-location-actions {
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:1fr 1fr;
   gap:5px;
   margin-top:8px;
 }
@@ -2283,52 +2132,31 @@ select {
   font-weight:700;
 }
 
+.kanto-rebuild-note {
+  margin:7px 0 0;
+  padding:7px 9px;
+  border-radius:8px;
+  background:#eef5fb;
+  color:#345;
+  font-size:10px;
+  line-height:1.35;
+}
+
 .kanto-bottom-back {
   width:100%;
-  margin-top:8px !important;
+  margin-top:7px !important;
 }
 
 @media (max-width:600px) {
-
-  #kantoMapPage .page-content {
-    padding:6px;
-  }
-
-  .kanto-hotspot {
-    min-width:30px;
-    min-height:28px;
-  }
-
-  .kanto-hotspot.city {
-    min-width:54px;
-    min-height:24px;
-  }
-
-  .kanto-hotspot.landmark {
-    min-width:44px;
-    min-height:22px;
-  }
-
-  .kanto-hotspot.route {
-    min-width:22px;
-    min-height:22px;
-  }
-
-  .kanto-location-panel {
-    padding:7px;
-    margin-top:6px;
-  }
-
-  .kanto-location-name {
-    font-size:16px;
-  }
-
+  #kantoMapPage .page-content { padding:4px; }
+  .kanto-map-shell { border-radius:8px; }
+  .kanto-hotspot { min-width:28px; min-height:28px; }
+  .kanto-location-panel { padding:7px; margin-top:5px; }
+  .kanto-location-name { font-size:16px; }
   .kanto-location-type,
   .kanto-location-description,
-  .kanto-location-status {
-    font-size:9px;
-  }
-
+  .kanto-location-status,
+  .kanto-rebuild-note { font-size:9px; }
   .kanto-location-actions button,
   .kanto-bottom-back {
     min-height:30px !important;
@@ -2336,170 +2164,6 @@ select {
     font-size:9px !important;
   }
 }
-
-
-
-
-/* =========================================================
-   KANTO LOCAL MAP CONNECTION HOTSPOTS V20
-========================================================= */
-.kanto-local-map-stage {
-  position:relative;
-  width:100%;
-}
-
-.kanto-local-hotspot-layer {
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-}
-
-.kanto-local-hotspot {
-  position:absolute;
-  transform:translate(-50%,-50%);
-  margin:0 !important;
-  padding:0 !important;
-  min-width:28px;
-  min-height:28px;
-  border:0 !important;
-  outline:0 !important;
-  border-radius:8px;
-  background:transparent !important;
-  box-shadow:none !important;
-  opacity:0 !important;
-  pointer-events:auto;
-  cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-}
-
-.kanto-local-hotspot:active,
-.kanto-local-hotspot:focus,
-.kanto-local-hotspot:focus-visible {
-  border:0 !important;
-  outline:0 !important;
-  background:transparent !important;
-  box-shadow:none !important;
-  opacity:0 !important;
-}
-
-/* =========================================================
-   KANTO TOWN MAP PAGES V17
-========================================================= */
-.kanto-town-page .page-content {
-  max-width:1200px;
-  margin:0 auto;
-  padding:6px;
-}
-
-.kanto-town-map-shell {
-  width:100%;
-  overflow:hidden;
-  border-radius:10px;
-  background:#f4f4f4;
-  box-shadow:0 3px 12px rgba(0,0,0,.16);
-}
-
-.kanto-town-map-image {
-  display:block;
-  width:100%;
-  height:auto;
-  user-select:none;
-  -webkit-user-select:none;
-  -webkit-touch-callout:none;
-}
-
-.kanto-town-bottom-nav {
-  display:grid;
-  grid-template-columns:1fr;
-  gap:5px;
-  margin-top:7px;
-}
-
-.kanto-town-bottom-nav button {
-  width:100%;
-  margin:0 !important;
-}
-
-@media (max-width:600px) {
-  .kanto-town-page .page-content {
-    padding:5px;
-  }
-
-  .kanto-town-map-shell {
-    border-radius:8px;
-  }
-
-  .kanto-town-bottom-nav button {
-    min-height:30px !important;
-    padding:4px 6px !important;
-    font-size:9px !important;
-  }
-}
-
-
-
-/* =========================================================
-   KANTO LOCAL NAVIGATION CONFIRMATION V22
-========================================================= */
-.kanto-nav-confirmation {
-  margin-top:7px;
-  padding:10px;
-  border-radius:10px;
-  background:#fff;
-  box-shadow:0 2px 10px rgba(0,0,0,.15);
-  text-align:left;
-}
-.kanto-nav-confirmation-title {
-  font-size:18px;
-  font-weight:800;
-  text-align:center;
-  margin-bottom:4px;
-}
-.kanto-nav-confirmation-subtitle {
-  font-size:11px;
-  color:#666;
-  text-align:center;
-  margin-bottom:8px;
-}
-.kanto-nav-confirmation-actions {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:5px;
-}
-.kanto-nav-confirmation-actions button {
-  width:100%;
-  margin:0 !important;
-}
-.kanto-nav-confirmation-status {
-  margin-top:6px;
-  font-size:10px;
-  font-weight:700;
-  text-align:center;
-}
-.kanto-nav-confirmation-cancel {
-  width:100%;
-  margin:6px 0 0 0 !important;
-}
-@media (max-width:600px) {
-  .kanto-nav-confirmation { padding:7px; }
-  .kanto-nav-confirmation-title { font-size:15px; }
-  .kanto-nav-confirmation-subtitle,
-  .kanto-nav-confirmation-status { font-size:9px; }
-  .kanto-nav-confirmation-actions button,
-  .kanto-nav-confirmation-cancel {
-    min-height:30px !important;
-    padding:4px 6px !important;
-    font-size:9px !important;
-  }
-}
-
-
-
-/* =========================================================
-   ROUTE TRAINER ENCOUNTER HOTSPOTS V23
-========================================================= */
-.kanto-trainer-hotspot-layer{position:absolute;inset:0;pointer-events:none;z-index:3}.kanto-trainer-hotspot{position:absolute;transform:translate(-50%,-50%);margin:0!important;padding:0!important;border:0!important;outline:0!important;background:transparent!important;box-shadow:none!important;opacity:0!important;pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}.kanto-trainer-hotspot:active,.kanto-trainer-hotspot:focus,.kanto-trainer-hotspot:focus-visible{border:0!important;outline:0!important;background:transparent!important;box-shadow:none!important;opacity:0!important}.kanto-trainer-hotspot.defeated{opacity:1!important}.kanto-trainer-hotspot.defeated::after{content:"✓";position:absolute;right:-4px;top:-4px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#18864b;color:#fff;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45);font-size:12px;font-weight:900;line-height:1;pointer-events:none}.kanto-trainer-hotspot.defeated:active,.kanto-trainer-hotspot.defeated:focus,.kanto-trainer-hotspot.defeated:focus-visible{opacity:1!important}.route-trainer-panel{margin-top:7px;padding:10px;border-radius:10px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.15);text-align:left}.route-trainer-title{text-align:center;font-size:20px;font-weight:800;line-height:1.1}.route-trainer-meta{text-align:center;font-size:11px;color:#666;margin-top:3px}.route-trainer-fit{display:inline-block;margin-top:7px;padding:3px 8px;border-radius:999px;background:#f1f1f1;font-size:10px;font-weight:700}.route-trainer-team{margin-top:8px}.route-trainer-mon{background:#f5f5f5;border-radius:8px;padding:8px;margin-top:6px}.route-trainer-mon strong{font-size:13px}.route-trainer-moves{font-size:10px;color:#555;margin-top:3px;line-height:1.35}.route-trainer-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.route-trainer-summary-box{background:#f5f5f5;border-radius:8px;padding:7px;text-align:center;font-size:10px}.route-trainer-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px}.route-trainer-actions button{width:100%;margin:0!important}.route-trainer-status{text-align:center;margin-top:6px;font-size:10px;font-weight:700}.route-trainer-close{width:100%;margin:6px 0 0!important}@media(max-width:600px){.route-trainer-panel{padding:7px}.route-trainer-title{font-size:16px}.route-trainer-meta,.route-trainer-fit,.route-trainer-moves,.route-trainer-summary-box,.route-trainer-status{font-size:8px}.route-trainer-mon{padding:5px;margin-top:4px}.route-trainer-mon strong{font-size:10px}.route-trainer-actions button,.route-trainer-close{min-height:30px!important;padding:4px 5px!important;font-size:9px!important}}
-
 
 
 /* =========================================================
@@ -2708,7 +2372,7 @@ select {
 <meta name="apple-mobile-web-app-title" content="Pokémon Campaign">
 
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
-<!-- KANTO APP BUILD v30: settings refresh, map return, defeated trainer markers -->
+<!-- KANTO APP BUILD v34R1: new overview map; legacy route/town/trainer map system removed -->
 </head>
 
 <body>
@@ -2759,380 +2423,45 @@ select {
 </div>
 
 
-<!-- KANTO MAP -->
+<!-- KANTO MAP — CLEAN REBUILD -->
 <div id="kantoMapPage" style="display:none;">
   <header><h1>Kanto Map</h1></header>
 
   <div class="page-content">
-
-    <div
-      id="kantoMapShell"
-      class="kanto-map-shell">
-
+    <div id="kantoMapShell" class="kanto-map-shell">
       <img
         id="kantoMainMap"
         class="kanto-map-image"
-        src="./assets/maps/kanto-map.png"
-        alt="Kanto region campaign map"
+        src="./assets/maps/kanto-map.png?v=20260823"
+        alt="Kanto campaign map"
         draggable="false">
-
-      <div
-        id="kantoHotspotLayer"
-        class="kanto-hotspot-layer">
-      </div>
-
+      <div id="kantoHotspotLayer" class="kanto-hotspot-layer"></div>
     </div>
 
-    <div
-      id="kantoLocationPanel"
-      class="kanto-location-panel"
-      style="display:none;">
-
+    <div id="kantoLocationPanel" class="kanto-location-panel" style="display:none;">
       <div class="kanto-location-panel-header">
         <div>
-          <div
-            id="kantoLocationType"
-            class="kanto-location-type">
-          </div>
-
-          <div
-            id="kantoLocationName"
-            class="kanto-location-name">
-          </div>
+          <div id="kantoLocationType" class="kanto-location-type"></div>
+          <div id="kantoLocationName" class="kanto-location-name"></div>
         </div>
-
-        <button
-          class="small-button"
-          onclick="closeKantoLocationPanel()">
-          ✕
-        </button>
+        <button class="small-button" type="button" onclick="closeKantoLocationPanel()">✕</button>
       </div>
 
-      <div
-        id="kantoLocationDescription"
-        class="kanto-location-description">
-      </div>
+      <div id="kantoLocationDescription" class="kanto-location-description"></div>
 
       <div class="kanto-location-actions">
-        <button
-          class="small-button"
-          onclick="toggleKantoVisited()">
-          Mark Visited
-        </button>
-
-        <button
-          class="small-button"
-          onclick="toggleKantoCompleted()">
-          Mark Completed
-        </button>
-
-        <button
-          id="kantoViewMapButton"
-          class="small-button primary-button"
-          onclick="openSelectedKantoMap()">
-          View Map
-        </button>
+        <button id="kantoVisitedButton" class="small-button" type="button" onclick="toggleKantoVisited()">Mark Visited</button>
+        <button id="kantoCompletedButton" class="small-button" type="button" onclick="toggleKantoCompleted()">Mark Completed</button>
       </div>
 
-      <div
-        id="kantoLocationStatus"
-        class="kanto-location-status">
-      </div>
+      <div id="kantoLocationStatus" class="kanto-location-status"></div>
+      <div class="kanto-rebuild-note">Detailed route, town, landmark, and trainer maps are intentionally disconnected while the map system is rebuilt.</div>
     </div>
 
-    <button
-      class="back-button kanto-bottom-back"
-      onclick="showPage('homePage')">
-      ← Back
-    </button>
-
+    <button class="back-button kanto-bottom-back" type="button" onclick="showPage('homePage')">← Back</button>
   </div>
 </div>
 
-
-
-<!-- PALLET TOWN MAP -->
-<div id="palletTownPage" class="kanto-town-page" style="display:none;">
-  <header><h1>Pallet Town</h1></header>
-
-  <div class="page-content">
-    <div class="kanto-town-map-shell">
-      <img
-        class="kanto-town-map-image"
-        src="./assets/maps/pallet-town.jpg?v=20"
-        alt="Pallet Town map"
-        draggable="false">
-    </div>
-
-    <div class="kanto-town-bottom-nav">
-      <button
-        class="back-button"
-        onclick="showPage('kantoMapPage')">
-        ← Back to Kanto Map
-      </button>
-    </div>
-  </div>
-</div>
-
-
-<!-- VIRIDIAN CITY MAP -->
-<div id="viridianCityPage" class="kanto-town-page" style="display:none;">
-  <header><h1>Viridian City</h1></header>
-
-  <div class="page-content">
-    <div class="kanto-town-map-shell">
-      <img
-        class="kanto-town-map-image"
-        src="./assets/maps/viridian-city.jpg"
-        alt="Viridian City map"
-        draggable="false">
-    </div>
-
-    <div class="kanto-town-bottom-nav">
-      <button
-        class="back-button"
-        onclick="showPage('kantoMapPage')">
-        ← Back to Kanto Map
-      </button>
-    </div>
-  </div>
-</div>
-
-
-<!-- PEWTER CITY MAP -->
-<div id="pewterCityPage" class="kanto-town-page" style="display:none;">
-  <header><h1>Pewter City</h1></header>
-
-  <div class="page-content">
-    <div class="kanto-town-map-shell">
-      <img
-        class="kanto-town-map-image"
-        src="./assets/maps/pewter-city.jpg"
-        alt="Pewter City map"
-        draggable="false">
-    </div>
-
-    <div class="kanto-town-bottom-nav">
-      <button
-        class="back-button"
-        onclick="showPage('kantoMapPage')">
-        ← Back to Kanto Map
-      </button>
-    </div>
-  </div>
-</div>
-
-
-<!-- CERULEAN CITY MAP -->
-<div id="ceruleanCityPage" class="kanto-town-page" style="display:none;">
-  <header><h1>Cerulean City</h1></header>
-
-  <div class="page-content">
-    <div class="kanto-town-map-shell">
-      <img
-        class="kanto-town-map-image"
-        src="./assets/maps/cerulean-city.jpg"
-        alt="Cerulean City map"
-        draggable="false">
-    </div>
-
-    <div class="kanto-town-bottom-nav">
-      <button
-        class="back-button"
-        onclick="showPage('kantoMapPage')">
-        ← Back to Kanto Map
-      </button>
-    </div>
-  </div>
-</div>
-
-
-<!-- VERMILION CITY MAP -->
-<div id="vermilionCityPage" class="kanto-town-page" style="display:none;">
-  <header><h1>Vermilion City</h1></header>
-
-  <div class="page-content">
-    <div class="kanto-town-map-shell">
-      <img
-        class="kanto-town-map-image"
-        src="./assets/maps/vermilion-city.jpg"
-        alt="Vermilion City map"
-        draggable="false">
-    </div>
-
-    <div class="kanto-town-bottom-nav">
-      <button
-        class="back-button"
-        onclick="showPage('kantoMapPage')">
-        ← Back to Kanto Map
-      </button>
-    </div>
-  </div>
-</div>
-
-
-<!-- LAVENDER TOWN MAP -->
-<div id="lavenderTownPage" class="kanto-town-page" style="display:none;">
-  <header><h1>Lavender Town</h1></header>
-
-  <div class="page-content">
-    <div class="kanto-town-map-shell">
-      <img
-        class="kanto-town-map-image"
-        src="./assets/maps/lavender-town.jpg"
-        alt="Lavender Town map"
-        draggable="false">
-    </div>
-
-    <div class="kanto-town-bottom-nav">
-      <button
-        class="back-button"
-        onclick="showPage('kantoMapPage')">
-        ← Back to Kanto Map
-      </button>
-    </div>
-  </div>
-</div>
-
-
-<!-- CELADON CITY MAP -->
-<div id="celadonCityPage" class="kanto-town-page" style="display:none;">
-  <header><h1>Celadon City</h1></header>
-
-  <div class="page-content">
-    <div class="kanto-town-map-shell">
-      <img
-        class="kanto-town-map-image"
-        src="./assets/maps/celadon-city.jpg"
-        alt="Celadon City map"
-        draggable="false">
-    </div>
-
-    <div class="kanto-town-bottom-nav">
-      <button
-        class="back-button"
-        onclick="showPage('kantoMapPage')">
-        ← Back to Kanto Map
-      </button>
-    </div>
-  </div>
-</div>
-
-
-<!-- SAFFRON CITY MAP -->
-<div id="saffronCityPage" class="kanto-town-page" style="display:none;">
-  <header><h1>Saffron City</h1></header>
-
-  <div class="page-content">
-    <div class="kanto-town-map-shell">
-      <img
-        class="kanto-town-map-image"
-        src="./assets/maps/saffron-city.jpg"
-        alt="Saffron City map"
-        draggable="false">
-    </div>
-
-    <div class="kanto-town-bottom-nav">
-      <button
-        class="back-button"
-        onclick="showPage('kantoMapPage')">
-        ← Back to Kanto Map
-      </button>
-    </div>
-  </div>
-</div>
-
-
-<!-- FUCHSIA CITY MAP -->
-<div id="fuchsiaCityPage" class="kanto-town-page" style="display:none;">
-  <header><h1>Fuchsia City</h1></header>
-
-  <div class="page-content">
-    <div class="kanto-town-map-shell">
-      <img
-        class="kanto-town-map-image"
-        src="./assets/maps/fuchsia-city.jpg"
-        alt="Fuchsia City map"
-        draggable="false">
-    </div>
-
-    <div class="kanto-town-bottom-nav">
-      <button
-        class="back-button"
-        onclick="showPage('kantoMapPage')">
-        ← Back to Kanto Map
-      </button>
-    </div>
-  </div>
-</div>
-
-
-<!-- CINNABAR ISLAND MAP -->
-<div id="cinnabarIslandPage" class="kanto-town-page" style="display:none;">
-  <header><h1>Cinnabar Island</h1></header>
-
-  <div class="page-content">
-    <div class="kanto-town-map-shell">
-      <img
-        class="kanto-town-map-image"
-        src="./assets/maps/cinnabar-island.jpg"
-        alt="Cinnabar Island map"
-        draggable="false">
-    </div>
-
-    <div class="kanto-town-bottom-nav">
-      <button
-        class="back-button"
-        onclick="showPage('kantoMapPage')">
-        ← Back to Kanto Map
-      </button>
-    </div>
-  </div>
-</div>
-
-
-
-
-<!-- =========================================================
-     KANTO ROUTE + GYM MAP PAGES V18
-========================================================= -->
-<div id="kantoRoutePage" class="kanto-town-page" style="display:none;">
-  <header><h1 id="kantoRoutePageTitle">Route</h1></header>
-  <div class="page-content">
-    <div class="kanto-town-map-shell">
-      <img id="kantoRoutePageImage" class="kanto-town-map-image" src="" alt="Kanto route map" draggable="false">
-    </div>
-    <div class="kanto-location-panel" style="margin-top:7px;">
-      <div class="kanto-location-actions">
-        <button id="kantoRouteVisitedButton" class="small-button" onclick="toggleCurrentKantoRouteVisited()">Mark Visited</button>
-        <button id="kantoRouteCompletedButton" class="small-button" onclick="toggleCurrentKantoRouteCompleted()">Mark Completed</button>
-      </div>
-      <div id="kantoRouteStatus" class="kanto-location-status"></div>
-    </div>
-    <div id="kantoRouteTrainerPanel"></div>
-    <div class="kanto-town-bottom-nav">
-      <button class="back-button" onclick="showPage('kantoMapPage')">← Back to Kanto Map</button>
-    </div>
-  </div>
-</div>
-
-<div id="kantoGymPage" class="kanto-town-page" style="display:none;">
-  <header><h1 id="kantoGymPageTitle">Gym</h1></header>
-  <div class="page-content">
-    <div class="kanto-town-map-shell">
-      <img id="kantoGymPageImage" class="kanto-town-map-image" src="" alt="Kanto gym map" draggable="false">
-    </div>
-    <div class="form-card gym-page-progress-card">
-      <div id="kantoGymProgressStatus" style="font-weight:800;margin-bottom:10px;">Gym not completed</div>
-      <button id="kantoGymCompleteButton" class="primary-button" style="width:100%;" onclick="toggleCurrentKantoGymCompleted()">Mark Gym Completed</button>
-    </div>
-
-    <div class="kanto-town-bottom-nav">
-      <button id="kantoGymTownBackButton" class="back-button" onclick="returnFromKantoGymPage()">← Back to City</button>
-      <button class="back-button" onclick="showPage('kantoMapPage')">← Back to Kanto Map</button>
-    </div>
-  </div>
-</div>
 
 <!-- POKEMON -->
 <div id="pokemonPage" style="display:none;">
@@ -8303,274 +7632,212 @@ upgradeSavedData();
 const KANTO_MAP_PROGRESS_KEY =
   "pokemonCampaignKantoMapProgress";
 
-let selectedKantoLocationId =
-  null;
+let selectedKantoLocationId = null;
 
+/*
+  Hotspots match the new 1408 x 1024 overview artwork.
+  Percent-based coordinates keep them aligned at any rendered size.
+  Only locations visibly represented on the new map are included.
+*/
 const kantoMapLocations = [
-  /* Cities / towns */
-  {id:"pallet-town",name:"Pallet Town",type:"City / Town",x:14.6,y:63.8,w:8,h:5},
-  {id:"viridian-city",name:"Viridian City",type:"City / Town",x:15.3,y:50.8,w:8,h:5},
-  {id:"pewter-city",name:"Pewter City",type:"City / Town",x:25.8,y:27.2,w:8,h:5},
-  {id:"cerulean-city",name:"Cerulean City",type:"City / Town",x:57.4,y:18.8,w:8.5,h:5},
-  {id:"vermilion-city",name:"Vermilion City",type:"City / Town",x:53.1,y:54.3,w:9,h:5.5},
-  {id:"lavender-town",name:"Lavender Town",type:"City / Town",x:91.0,y:38.9,w:8.5,h:5},
-  {id:"celadon-city",name:"Celadon City",type:"City / Town",x:43.4,y:34.6,w:8.5,h:5},
-  {id:"saffron-city",name:"Saffron City",type:"City / Town",x:59.2,y:37.2,w:8.5,h:5},
-  {id:"fuchsia-city",name:"Fuchsia City",type:"City / Town",x:72.8,y:74.4,w:8.5,h:5},
-  {id:"cinnabar-island",name:"Cinnabar Island",type:"City / Town",x:6.8,y:88.8,w:8.5,h:5},
-  {id:"indigo-plateau",name:"Indigo Plateau",type:"Landmark",x:13.5,y:12.8,w:9,h:6},
+  {id:"pallet-town",name:"Pallet Town",type:"City / Town",x:8.5,y:18.5,w:11,h:8},
+  {id:"viridian-city",name:"Viridian City",type:"City / Town",x:22.0,y:39.0,w:13,h:9},
+  {id:"pewter-city",name:"Pewter City",type:"City / Town",x:25.5,y:18.5,w:12,h:8},
+  {id:"cerulean-city",name:"Cerulean City",type:"City / Town",x:64.0,y:25.0,w:13,h:9},
+  {id:"vermilion-city",name:"Vermilion City",type:"City / Town",x:68.5,y:39.0,w:14,h:9},
+  {id:"lavender-town",name:"Lavender Town",type:"City / Town",x:91.0,y:46.0,w:13,h:9},
+  {id:"celadon-city",name:"Celadon City",type:"City / Town",x:44.0,y:40.0,w:13,h:9},
+  {id:"saffron-city",name:"Saffron City",type:"City / Town",x:62.5,y:55.0,w:13,h:9},
+  {id:"fuchsia-city",name:"Fuchsia City",type:"City / Town",x:69.5,y:70.0,w:13,h:9},
+  {id:"cinnabar-island",name:"Cinnabar Island",type:"City / Town",x:7.5,y:77.5,w:13,h:9},
+  {id:"indigo-plateau",name:"Indigo Plateau",type:"Landmark",x:53.5,y:7.0,w:15,h:10},
 
-  /* Major landmarks / buildings */
-  {id:"pokemon-league",name:"Pokémon League",type:"Building / Landmark",x:13.2,y:16.4,w:7,h:4},
-  {id:"victory-road",name:"Victory Road",type:"Cave / Landmark",x:13.1,y:23.1,w:7,h:4},
-  {id:"viridian-forest",name:"Viridian Forest",type:"Landmark",x:18.8,y:41.9,w:7,h:5},
-  {id:"mt-moon",name:"Mt. Moon",type:"Cave",x:36.5,y:22.2,w:6.5,h:5},
-  {id:"cerulean-cave",name:"Cerulean Cave",type:"Cave",x:66.2,y:10.1,w:6.5,h:5},
-  {id:"bills-house",name:"Bill's House",type:"Building",x:92.8,y:9.0,w:7.5,h:4.5},
-  {id:"rock-tunnel",name:"Rock Tunnel",type:"Cave",x:81.4,y:25.5,w:6.5,h:5},
-  {id:"power-plant",name:"Power Plant",type:"Landmark",x:79.8,y:34.2,w:7,h:5.5},
-  {id:"pokemon-tower",name:"Pokémon Tower",type:"Building",x:90.3,y:48.6,w:7,h:6},
-  {id:"digletts-cave",name:"Diglett's Cave",type:"Cave",x:78.7,y:56.9,w:7,h:4.5},
-  {id:"ss-anne",name:"S.S. Anne",type:"Landmark",x:60.3,y:65.2,w:7,h:5},
-  {id:"safari-zone",name:"Safari Zone",type:"Landmark",x:55.2,y:74.6,w:8,h:5},
-  {id:"game-corner",name:"Game Corner",type:"Building",x:42.7,y:44.6,w:6.8,h:4},
-  {id:"silph-co",name:"Silph Co.",type:"Building",x:63.8,y:45.0,w:6,h:3.8},
-  {id:"fighting-dojo",name:"Fighting Dojo",type:"Building",x:64.0,y:46.6,w:6.8,h:3.8},
-  {id:"cycling-road",name:"Cycling Road",type:"Landmark",x:42.2,y:57.8,w:7,h:5},
-  {id:"seafoam-islands",name:"Seafoam Islands",type:"Cave / Landmark",x:31.9,y:91.5,w:8,h:5},
-  {id:"pokemon-mansion",name:"Pokémon Mansion",type:"Building",x:6.5,y:92.6,w:7.5,h:4},
+  {id:"victory-road",name:"Victory Road",type:"Landmark",x:53.0,y:18.5,w:10,h:6},
+  {id:"mt-moon",name:"Mt. Moon",type:"Landmark",x:40.0,y:30.0,w:9,h:7},
+  {id:"rock-tunnel",name:"Rock Tunnel",type:"Landmark",x:87.0,y:30.0,w:10,h:7},
+  {id:"viridian-forest",name:"Viridian Forest",type:"Landmark",x:20.0,y:52.5,w:11,h:7},
+  {id:"ss-anne",name:"S.S. Anne",type:"Landmark",x:75.5,y:50.0,w:9,h:6},
+  {id:"pokemon-tower",name:"Pokémon Tower",type:"Landmark",x:91.5,y:52.0,w:10,h:7},
+  {id:"safari-zone",name:"Safari Zone",type:"Landmark",x:89.0,y:78.5,w:12,h:7},
+  {id:"seafoam-islands",name:"Seafoam Islands",type:"Landmark",x:29.0,y:79.5,w:12,h:8},
+  {id:"pokemon-mansion",name:"Pokémon Mansion",type:"Landmark",x:7.5,y:82.5,w:12,h:6},
 
-  /* Routes 1–25 */
-  {id:"route-1",name:"Route 1",type:"Route",x:15.3,y:57.8,w:2.7,h:2.7},
-  {id:"route-2-south",name:"Route 2",type:"Route",x:24.8,y:47.0,w:2.7,h:2.7},
-  {id:"route-2-north",name:"Route 2",type:"Route",x:13.8,y:35.9,w:2.7,h:2.7},
-  {id:"route-3",name:"Route 3",type:"Route",x:33.0,y:27.8,w:2.7,h:2.7},
-  {id:"route-4",name:"Route 4",type:"Route",x:43.1,y:20.8,w:2.7,h:2.7},
-  {id:"route-5",name:"Route 5",type:"Route",x:57.4,y:29.5,w:2.7,h:2.7},
-  {id:"route-6",name:"Route 6",type:"Route",x:58.6,y:48.2,w:2.7,h:2.7},
-  {id:"route-7",name:"Route 7",type:"Route",x:51.0,y:40.8,w:2.7,h:2.7},
-  {id:"route-8",name:"Route 8",type:"Route",x:70.4,y:40.8,w:2.7,h:2.7},
-  {id:"route-9",name:"Route 9",type:"Route",x:91.2,y:26.1,w:2.7,h:2.7},
-  {id:"route-10",name:"Route 10",type:"Route",x:93.1,y:31.8,w:2.7,h:2.7},
-  {id:"route-11",name:"Route 11",type:"Route",x:69.2,y:54.8,w:2.7,h:2.7},
-  {id:"route-12",name:"Route 12",type:"Route",x:94.2,y:53.0,w:2.7,h:2.7},
-  {id:"route-13-east",name:"Route 13",type:"Route",x:92.0,y:63.0,w:2.7,h:2.7},
-  {id:"route-13-south",name:"Route 13",type:"Route",x:78.4,y:86.5,w:2.7,h:2.7},
-  {id:"route-14-east",name:"Route 14",type:"Route",x:87.4,y:69.6,w:2.7,h:2.7},
-  {id:"route-14-south",name:"Route 14",type:"Route",x:63.8,y:86.4,w:2.7,h:2.7},
-  {id:"route-15",name:"Route 15",type:"Route",x:84.8,y:76.3,w:2.7,h:2.7},
-  {id:"route-16",name:"Route 16",type:"Route",x:31.0,y:39.4,w:2.7,h:2.7},
-  {id:"route-17",name:"Route 17",type:"Route",x:42.4,y:51.8,w:2.7,h:2.7},
-  {id:"route-18",name:"Route 18",type:"Route",x:48.0,y:64.6,w:2.7,h:2.7},
-  {id:"route-19",name:"Route 19",type:"Route",x:49.0,y:93.3,w:2.7,h:2.7},
-  {id:"route-20",name:"Route 20",type:"Route",x:25.0,y:87.8,w:2.7,h:2.7},
-  {id:"route-21",name:"Route 21",type:"Route",x:11.9,y:74.3,w:2.7,h:2.7},
-  {id:"route-22",name:"Route 22",type:"Route",x:6.7,y:50.1,w:2.7,h:2.7},
-  {id:"route-23",name:"Route 23",type:"Route",x:13.7,y:27.9,w:2.7,h:2.7},
-  {id:"route-24",name:"Route 24",type:"Route",x:57.2,y:10.1,w:2.7,h:2.7},
-  {id:"route-25",name:"Route 25",type:"Route",x:74.0,y:15.1,w:2.7,h:2.7}
+  {id:"route-1",name:"Route 1",type:"Route",x:8.2,y:32.7,w:4.0,h:5.0},
+  {id:"route-2",name:"Route 2",type:"Route",x:22.4,y:30.8,w:4.0,h:5.0},
+  {id:"route-3",name:"Route 3",type:"Route",x:33.0,y:26.0,w:4.0,h:5.0},
+  {id:"route-4",name:"Route 4",type:"Route",x:48.7,y:26.8,w:4.0,h:5.0},
+  {id:"route-5",name:"Route 5",type:"Route",x:62.0,y:37.0,w:4.0,h:5.0},
+  {id:"route-6",name:"Route 6",type:"Route",x:80.5,y:44.5,w:4.0,h:5.0},
+  {id:"route-7",name:"Route 7",type:"Route",x:88.0,y:59.7,w:4.0,h:5.0},
+  {id:"route-8",name:"Route 8",type:"Route",x:81.0,y:77.2,w:4.0,h:5.0},
+  {id:"route-9",name:"Route 9",type:"Route",x:59.0,y:67.0,w:4.0,h:5.0},
+  {id:"route-10",name:"Route 10",type:"Route",x:50.0,y:56.0,w:4.0,h:5.0},
+  {id:"route-11",name:"Route 11",type:"Route",x:41.2,y:58.5,w:4.0,h:5.0},
+  {id:"route-12",name:"Route 12",type:"Route",x:38.0,y:76.3,w:4.0,h:5.0},
+  {id:"route-13",name:"Route 13",type:"Route",x:19.0,y:75.5,w:4.0,h:5.0}
 ];
 
-
 function getKantoMapProgress() {
-
   try {
-    const raw =
-      localStorage.getItem(
-        KANTO_MAP_PROGRESS_KEY
-      );
-
-    return raw
-      ? JSON.parse(raw)
-      : {};
+    const raw = localStorage.getItem(KANTO_MAP_PROGRESS_KEY);
+    return raw ? JSON.parse(raw) : {};
   }
   catch (error) {
     return {};
   }
 }
 
-
-function saveKantoMapProgress(
-  progress
-) {
-
-  localStorage.setItem(
-    KANTO_MAP_PROGRESS_KEY,
-    JSON.stringify(progress)
-  );
+function saveKantoMapProgress(progress) {
+  localStorage.setItem(KANTO_MAP_PROGRESS_KEY, JSON.stringify(progress));
 }
 
-
-function getKantoLocationProgress(
-  locationId
-) {
-
-  const progress =
-    getKantoMapProgress();
-
-  return progress[
-    locationId
-  ] || {
-    visited:false,
-    completed:false
-  };
+function getKantoLocationProgress(locationId) {
+  const progress = getKantoMapProgress();
+  return progress[locationId] || {visited:false,completed:false};
 }
-
 
 function renderKantoHotspots() {
-
-  const layer =
-    document.getElementById(
-      "kantoHotspotLayer"
-    );
-
-  if (!layer) {
-    return;
-  }
-
+  const layer = document.getElementById("kantoHotspotLayer");
+  if (!layer) return;
   layer.innerHTML = "";
 
-  kantoMapLocations.forEach(
-    function(location) {
-
-      const button =
-        document.createElement(
-          "button"
-        );
-
-      const typeClass =
-        location.type === "Route"
-        ? "route"
-        : (
-            location.type.includes(
-              "City"
-            )
-            ? "city"
-            : "landmark"
-          );
-
-      button.className =
-        "kanto-hotspot " +
-        typeClass;
-
-      button.style.left =
-        location.x + "%";
-
-      button.style.top =
-        location.y + "%";
-
-      button.style.width =
-        (location.w || 5) +
-        "%";
-
-      button.style.height =
-        (location.h || 5) +
-        "%";
-
-      button.setAttribute(
-        "aria-label",
-        location.name
-      );
-
-      button.title =
-        location.name;
-
-      button.onclick =
-        function(event) {
-          event.stopPropagation();
-          selectKantoLocation(
-            location.id
-          );
-        };
-
-      if (
-        selectedKantoLocationId ===
-        location.id
-      ) {
-        button.classList.add(
-          "selected"
-        );
-      }
-
-      layer.appendChild(
-        button
-      );
-    }
-  );
+  kantoMapLocations.forEach(function(location) {
+    const button = document.createElement("button");
+    button.className = "kanto-hotspot";
+    button.type = "button";
+    button.style.left = location.x + "%";
+    button.style.top = location.y + "%";
+    button.style.width = location.w + "%";
+    button.style.height = location.h + "%";
+    button.setAttribute("aria-label", location.name);
+    button.title = location.name;
+    button.onclick = function(event) {
+      event.stopPropagation();
+      selectKantoLocation(location.id);
+    };
+    layer.appendChild(button);
+  });
 }
 
+function selectKantoLocation(locationId) {
+  const location = kantoMapLocations.find(function(item) {
+    return item.id === locationId;
+  });
+  if (!location) return;
 
+  selectedKantoLocationId = locationId;
 
-const kantoTownPageByLocation = {
-  "pallet-town":"palletTownPage",
-  "viridian-city":"viridianCityPage",
-  "pewter-city":"pewterCityPage",
-  "cerulean-city":"ceruleanCityPage",
-  "vermilion-city":"vermilionCityPage",
-  "lavender-town":"lavenderTownPage",
-  "celadon-city":"celadonCityPage",
-  "saffron-city":"saffronCityPage",
-  "fuchsia-city":"fuchsiaCityPage",
-  "cinnabar-island":"cinnabarIslandPage"
-};
+  const panel = document.getElementById("kantoLocationPanel");
+  const name = document.getElementById("kantoLocationName");
+  const type = document.getElementById("kantoLocationType");
+  const description = document.getElementById("kantoLocationDescription");
+  if (!panel || !name || !type || !description) return;
 
+  name.textContent = location.name;
+  type.textContent = location.type;
+  description.textContent = location.type === "Route"
+    ? "Route content and trainers will be rebuilt from scratch. Progress tracking is available now."
+    : "This location is active on the new Kanto overview. Detailed location content will be rebuilt separately.";
 
-/* =========================================================
-   KANTO ROUTE + GYM MAPS V18
-   Route and gym artwork is stored in ./assets/maps/ so the
-   GitHub index file stays small.
-========================================================= */
-const kantoRoutePageByLocation = {
-  "route-1": {name:"Route 1", image:"./assets/maps/route-01.jpg"},
-  "route-2-south": {name:"Route 2", image:"./assets/maps/route-02.jpg"},
-  "route-2-north": {name:"Route 2", image:"./assets/maps/route-02.jpg"},
-  "route-3": {name:"Route 3", image:"./assets/maps/route-03.jpg"},
-  "route-4": {name:"Route 4", image:"./assets/maps/route-04.jpg"},
-  "route-5": {name:"Route 5", image:"./assets/maps/route-05.jpg"},
-  "route-6": {name:"Route 6", image:"./assets/maps/route-06.jpg"},
-  "route-7": {name:"Route 7", image:"./assets/maps/route-07.jpg"},
-  "route-8": {name:"Route 8", image:"./assets/maps/route-08.jpg"},
-  "route-9": {name:"Route 9", image:"./assets/maps/route-09.jpg"},
-  "route-10": {name:"Route 10", image:"./assets/maps/route-10.jpg"},
-  "route-11": {name:"Route 11", image:"./assets/maps/route-11.jpg"},
-  "route-12": {name:"Route 12", image:"./assets/maps/route-12.jpg"},
-  "route-13-east": {name:"Route 13", image:"./assets/maps/route-13.jpg"},
-  "route-13-south": {name:"Route 13", image:"./assets/maps/route-13.jpg"},
-  "route-14-east": {name:"Route 14", image:"./assets/maps/route-14.jpg"},
-  "route-14-south": {name:"Route 14", image:"./assets/maps/route-14.jpg"},
-  "route-15": {name:"Route 15", image:"./assets/maps/route-15.jpg"},
-  "route-16": {name:"Route 16", image:"./assets/maps/route-16.jpg"},
-  "route-17": {name:"Route 17", image:"./assets/maps/route-17.jpg"},
-  "route-18": {name:"Route 18", image:"./assets/maps/route-18.jpg"},
-  "route-19": {name:"Route 19", image:"./assets/maps/route-19.jpg"},
-  "route-20": {name:"Route 20", image:"./assets/maps/route-20.jpg"},
-  "route-21": {name:"Route 21", image:"./assets/maps/route-21.jpg"},
-  "route-22": {name:"Route 22", image:"./assets/maps/route-22.jpg"},
-  "route-23": {name:"Route 23", image:"./assets/maps/route-23.jpg"},
-  "route-24": {name:"Route 24", image:"./assets/maps/route-24.jpg"},
-  "route-25": {name:"Route 25", image:"./assets/maps/route-25.jpg"}
-};
+  panel.style.display = "block";
+  updateKantoLocationStatus();
+  panel.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
 
-const kantoGymPageByTown = {
-  "pewter-city": {title:"Pewter City Gym", image:"./assets/maps/pewter-city-gym.jpg", townPage:"pewterCityPage"},
-  "cerulean-city": {title:"Cerulean City Gym", image:"./assets/maps/cerulean-city-gym.jpg", townPage:"ceruleanCityPage"},
-  "vermilion-city": {title:"Vermilion City Gym", image:"./assets/maps/vermilion-city-gym.jpg", townPage:"vermilionCityPage"},
-  "celadon-city": {title:"Celadon City Gym", image:"./assets/maps/celadon-city-gym.jpg", townPage:"celadonCityPage"},
-  "fuchsia-city": {title:"Fuchsia City Gym", image:"./assets/maps/fuchsia-city-gym.jpg", townPage:"fuchsiaCityPage"}
-};
+function closeKantoLocationPanel() {
+  selectedKantoLocationId = null;
+  const panel = document.getElementById("kantoLocationPanel");
+  if (panel) panel.style.display = "none";
+}
 
+function updateKantoLocationStatus() {
+  if (!selectedKantoLocationId) return;
+  const state = getKantoLocationProgress(selectedKantoLocationId);
+  const visitedButton = document.getElementById("kantoVisitedButton");
+  const completedButton = document.getElementById("kantoCompletedButton");
+  const status = document.getElementById("kantoLocationStatus");
+
+  if (visitedButton) visitedButton.textContent = state.visited ? "Visited ✓" : "Mark Visited";
+  if (completedButton) completedButton.textContent = state.completed ? "Completed ✓" : "Mark Completed";
+  if (status) status.textContent =
+    (state.visited ? "Visited" : "Not visited") + " • " +
+    (state.completed ? "Completed" : "Not completed");
+}
+
+function toggleKantoVisited() {
+  if (!selectedKantoLocationId) return;
+  const progress = getKantoMapProgress();
+  const state = progress[selectedKantoLocationId] || {visited:false,completed:false};
+  state.visited = !state.visited;
+  if (!state.visited) state.completed = false;
+  progress[selectedKantoLocationId] = state;
+  saveKantoMapProgress(progress);
+  updateKantoLocationStatus();
+}
+
+function toggleKantoCompleted() {
+  if (!selectedKantoLocationId) return;
+  const progress = getKantoMapProgress();
+  const state = progress[selectedKantoLocationId] || {visited:false,completed:false};
+  state.completed = !state.completed;
+  if (state.completed) state.visited = true;
+  progress[selectedKantoLocationId] = state;
+  saveKantoMapProgress(progress);
+  updateKantoLocationStatus();
+}
+
+/*
+  One-time cleanup for the map rebuild:
+  - removes NPCs/Pokémon that were auto-created by the retired route-encounter system
+  - clears old town/route map progress so the new overview starts clean
+  - preserves gym badge progress, which belongs to the Campaign page
+*/
+function cleanupLegacyKantoMapData() {
+  const cleanupKey = "pokemonCampaignKantoRebuildCleanup20260823";
+  if (localStorage.getItem(cleanupKey) === "done") return;
+
+  const removedTrainerIds = new Set(
+    trainers
+      .filter(function(trainer) { return !!trainer.routeEncounterId; })
+      .map(function(trainer) { return trainer.id; })
+  );
+
+  if (removedTrainerIds.size) {
+    trainers = trainers.filter(function(trainer) {
+      return !removedTrainerIds.has(trainer.id);
+    });
+
+    ownedPokemon = ownedPokemon.filter(function(pokemon) {
+      return !pokemon.routeEncounterPokemon && !removedTrainerIds.has(pokemon.trainerId);
+    });
+
+    saveTrainers();
+    savePokemon();
+  }
+
+  const oldProgress = getKantoMapProgress();
+  const retainedGymProgress = {};
+  Object.keys(oldProgress).forEach(function(key) {
+    if (key.startsWith("gym-")) retainedGymProgress[key] = oldProgress[key];
+  });
+  saveKantoMapProgress(retainedGymProgress);
+
+  localStorage.setItem(cleanupKey, "done");
+}
+
+cleanupLegacyKantoMapData();
+
+/* Campaign badge tracking is intentionally retained; it is independent of the retired detailed-map system. */
 const kantoGymBadges = [
+  {id:"viridian", city:"Viridian City", gymKey:"gym-viridian-city", badge:"Earth Badge", color:"./assets/badges/earth-badge.png", gray:"./assets/badges/earth-badge-gray.png"},
   {id:"pewter", city:"Pewter City", gymKey:"gym-pewter-city", badge:"Boulder Badge", color:"./assets/badges/boulder-badge.png", gray:"./assets/badges/boulder-badge-gray.png"},
   {id:"cerulean", city:"Cerulean City", gymKey:"gym-cerulean-city", badge:"Cascade Badge", color:"./assets/badges/cascade-badge.png", gray:"./assets/badges/cascade-badge-gray.png"},
   {id:"vermilion", city:"Vermilion City", gymKey:"gym-vermilion-city", badge:"Thunder Badge", color:"./assets/badges/thunder-badge.png", gray:"./assets/badges/thunder-badge-gray.png"},
-  {id:"celadon", city:"Celadon City", gymKey:"gym-celadon-city", badge:"Rainbow Badge", color:"./assets/badges/rainbow-badge.png", gray:"./assets/badges/rainbow-badge-gray.png"},
   {id:"fuchsia", city:"Fuchsia City", gymKey:"gym-fuchsia-city", badge:"Soul Badge", color:"./assets/badges/soul-badge.png", gray:"./assets/badges/soul-badge-gray.png"},
   {id:"saffron", city:"Saffron City", gymKey:"gym-saffron-city", badge:"Marsh Badge", color:"./assets/badges/marsh-badge.png", gray:"./assets/badges/marsh-badge-gray.png"},
-  {id:"cinnabar", city:"Cinnabar Island", gymKey:"gym-cinnabar-island", badge:"Volcano Badge", color:"./assets/badges/volcano-badge.png", gray:"./assets/badges/volcano-badge-gray.png"},
-  {id:"viridian", city:"Viridian City", gymKey:"gym-viridian-city", badge:"Earth Badge", color:"./assets/badges/earth-badge.png", gray:"./assets/badges/earth-badge-gray.png"}
+  {id:"celadon", city:"Celadon City", gymKey:"gym-celadon-city", badge:"Rainbow Badge", color:"./assets/badges/rainbow-badge.png", gray:"./assets/badges/rainbow-badge-gray.png"},
+  {id:"cinnabar", city:"Cinnabar Island", gymKey:"gym-cinnabar-island", badge:"Volcano Badge", color:"./assets/badges/volcano-badge.png", gray:"./assets/badges/volcano-badge-gray.png"}
 ];
-
-let currentKantoGymLocationId = null;
 
 function getKantoGymCompleted(gymKey) {
   return !!getKantoLocationProgress(gymKey).completed;
@@ -8583,8 +7850,6 @@ function setKantoGymCompleted(gymKey, completed) {
   if (state.completed) state.visited = true;
   progress[gymKey] = state;
   saveKantoMapProgress(progress);
-
-  updateCurrentKantoGymStatus();
   displayGymBadgeProgress();
 }
 
@@ -8598,804 +7863,22 @@ function displayGymBadgeProgress() {
   if (!grid) return;
 
   let earned = 0;
-
   grid.innerHTML = kantoGymBadges.map(function(info) {
     const completed = getKantoGymCompleted(info.gymKey);
     if (completed) earned += 1;
-
     return `
       <div class="gym-badge-card">
-        <img
-          class="gym-badge-image"
-          src="${completed ? info.color : info.gray}"
-          alt="${info.badge}">
+        <img class="gym-badge-image" src="${completed ? info.color : info.gray}" alt="${info.badge}">
         <div class="gym-badge-name">${info.badge.replace(" Badge","")}</div>
         <div class="gym-badge-city">${info.city.replace(" City","")}</div>
-        <button
-          class="small-button"
-          type="button"
-          onclick="toggleGymBadgeCompletion('${info.gymKey}')">
+        <button class="small-button" type="button" onclick="toggleGymBadgeCompletion('${info.gymKey}')">
           ${completed ? "Undo" : "Complete"}
         </button>
       </div>
     `;
   }).join("");
 
-  if (summary) {
-    summary.textContent = earned + " / " + kantoGymBadges.length + " Gym Badges Earned";
-  }
-}
-
-function updateCurrentKantoGymStatus() {
-  const status = document.getElementById("kantoGymProgressStatus");
-  const button = document.getElementById("kantoGymCompleteButton");
-  if (!currentKantoGymLocationId) {
-    if (status) status.textContent = "Gym not completed";
-    if (button) button.textContent = "Mark Gym Completed";
-    return;
-  }
-
-  const gymKey = "gym-" + currentKantoGymLocationId;
-  const completed = getKantoGymCompleted(gymKey);
-
-  if (status) {
-    status.textContent = completed ? "Gym completed ✓ • Badge earned" : "Gym not completed • Badge not earned";
-  }
-  if (button) {
-    button.textContent = completed ? "Mark Gym Incomplete" : "Mark Gym Completed";
-  }
-}
-
-function toggleCurrentKantoGymCompleted() {
-  if (!currentKantoGymLocationId) return;
-  toggleGymBadgeCompletion("gym-" + currentKantoGymLocationId);
-}
-
-let currentKantoRouteLocationId = null;
-let currentKantoGymTownPage = "kantoMapPage";
-
-function openKantoRoutePage(locationId) {
-  removeKantoNavigationConfirmation();
-  const info = kantoRoutePageByLocation[locationId];
-  if (!info) return;
-
-  currentKantoRouteLocationId = locationId;
-  selectedKantoLocationId = null;
-
-  const title = document.getElementById("kantoRoutePageTitle");
-  const image = document.getElementById("kantoRoutePageImage");
-
-  if (title) title.textContent = info.name;
-  if (image) {
-    image.src = info.image;
-    image.alt = info.name + " map";
-  }
-
-  showPage("kantoRoutePage");
-  closeKantoTrainerEncounter();
-  updateCurrentKantoRouteStatus();
-  installCurrentKantoRouteHotspots();
-}
-
-function updateCurrentKantoRouteStatus() {
-  if (!currentKantoRouteLocationId) return;
-
-  const state = getKantoLocationProgress(currentKantoRouteLocationId);
-  const visitedButton = document.getElementById("kantoRouteVisitedButton");
-  const completedButton = document.getElementById("kantoRouteCompletedButton");
-  const status = document.getElementById("kantoRouteStatus");
-
-  if (visitedButton) visitedButton.textContent = state.visited ? "Visited ✓" : "Mark Visited";
-  if (completedButton) completedButton.textContent = state.completed ? "Completed ✓" : "Mark Completed";
-  if (status) status.textContent = (state.visited ? "Visited" : "Not visited") + " • " + (state.completed ? "Completed" : "Not completed");
-}
-
-function toggleCurrentKantoRouteVisited() {
-  if (!currentKantoRouteLocationId) return;
-  const progress = getKantoMapProgress();
-  const state = progress[currentKantoRouteLocationId] || {visited:false,completed:false};
-  state.visited = !state.visited;
-  progress[currentKantoRouteLocationId] = state;
-  saveKantoMapProgress(progress);
-  updateCurrentKantoRouteStatus();
-}
-
-function toggleCurrentKantoRouteCompleted() {
-  if (!currentKantoRouteLocationId) return;
-  const progress = getKantoMapProgress();
-  const state = progress[currentKantoRouteLocationId] || {visited:false,completed:false};
-  state.completed = !state.completed;
-  if (state.completed) state.visited = true;
-  progress[currentKantoRouteLocationId] = state;
-  saveKantoMapProgress(progress);
-  updateCurrentKantoRouteStatus();
-}
-
-function openKantoGymPage(townLocationId) {
-  const info = kantoGymPageByTown[townLocationId];
-  if (!info) return;
-
-  currentKantoGymLocationId = townLocationId;
-  currentKantoGymTownPage = info.townPage || "kantoMapPage";
-
-  const title = document.getElementById("kantoGymPageTitle");
-  const image = document.getElementById("kantoGymPageImage");
-  const backButton = document.getElementById("kantoGymTownBackButton");
-
-  if (title) title.textContent = info.title;
-  if (image) {
-    image.src = info.image;
-    image.alt = info.title + " map";
-  }
-  if (backButton) backButton.textContent = "← Back to " + info.title.replace(" Gym", "");
-
-  showPage("kantoGymPage");
-  updateCurrentKantoGymStatus();
-}
-
-function returnFromKantoGymPage() {
-  showPage(currentKantoGymTownPage || "kantoMapPage");
-}
-
-function installKantoGymButtons() {
-  Object.keys(kantoGymPageByTown).forEach(function(townLocationId) {
-    const info = kantoGymPageByTown[townLocationId];
-    const townPage = document.getElementById(info.townPage);
-    if (!townPage) return;
-
-    const nav = townPage.querySelector(".kanto-town-bottom-nav");
-    if (!nav || nav.querySelector('[data-kanto-gym-button="' + townLocationId + '"]')) return;
-
-    const button = document.createElement("button");
-    button.className = "primary-button";
-    button.setAttribute("data-kanto-gym-button", townLocationId);
-    button.textContent = "Open " + info.title + " →";
-    button.onclick = function() { openKantoGymPage(townLocationId); };
-
-    nav.insertBefore(button, nav.firstChild);
-  });
-}
-
-
-/* =========================================================
-   KANTO MAP NAVIGATION + LOCAL CONNECTION HOTSPOTS V20
-========================================================= */
-let pendingKantoNavigationLocationId = null;
-let pendingKantoNavigationHost = null;
-
-function getKantoLocationDisplayName(locationId) {
-  const mainLocation = kantoMapLocations.find(function(item) {
-    return item.id === locationId;
-  });
-  if (mainLocation) return mainLocation.name;
-
-  const routeInfo = kantoRoutePageByLocation[locationId];
-  if (routeInfo) return routeInfo.name;
-
-  const townNames = {
-    "pallet-town":"Pallet Town",
-    "viridian-city":"Viridian City",
-    "pewter-city":"Pewter City",
-    "cerulean-city":"Cerulean City",
-    "vermilion-city":"Vermilion City",
-    "lavender-town":"Lavender Town",
-    "celadon-city":"Celadon City",
-    "saffron-city":"Saffron City",
-    "fuchsia-city":"Fuchsia City",
-    "cinnabar-island":"Cinnabar Island"
-  };
-
-  return townNames[locationId] || locationId;
-}
-
-function removeKantoNavigationConfirmation() {
-  const oldPanel = document.getElementById("kantoNavConfirmation");
-  if (oldPanel) oldPanel.remove();
-  pendingKantoNavigationLocationId = null;
-  pendingKantoNavigationHost = null;
-}
-
-function updateKantoNavigationConfirmation() {
-  if (!pendingKantoNavigationLocationId) return;
-
-  const state = getKantoLocationProgress(pendingKantoNavigationLocationId);
-  const visitedButton = document.getElementById("kantoNavConfirmVisited");
-  const completedButton = document.getElementById("kantoNavConfirmCompleted");
-  const status = document.getElementById("kantoNavConfirmStatus");
-
-  if (visitedButton) {
-    visitedButton.textContent = state.visited ? "Visited ✓" : "Mark Visited";
-  }
-  if (completedButton) {
-    completedButton.textContent = state.completed ? "Completed ✓" : "Mark Completed";
-  }
-  if (status) {
-    status.textContent =
-      (state.visited ? "Visited" : "Not visited") +
-      " • " +
-      (state.completed ? "Completed" : "Not completed");
-  }
-}
-
-function togglePendingKantoNavigationProgress(field) {
-  if (!pendingKantoNavigationLocationId) return;
-
-  const progress = getKantoMapProgress();
-  const state = progress[pendingKantoNavigationLocationId] || {
-    visited:false,
-    completed:false
-  };
-
-  if (field === "visited") {
-    state.visited = !state.visited;
-    if (!state.visited) state.completed = false;
-  }
-  else if (field === "completed") {
-    state.completed = !state.completed;
-    if (state.completed) state.visited = true;
-  }
-
-  progress[pendingKantoNavigationLocationId] = state;
-  saveKantoMapProgress(progress);
-  updateKantoNavigationConfirmation();
-}
-
-function showKantoNavigationConfirmation(locationId, sourceElement) {
-  removeKantoNavigationConfirmation();
-
-  const targetName = getKantoLocationDisplayName(locationId);
-  const sourcePage = sourceElement ? sourceElement.closest(".kanto-town-page, #kantoRoutePage") : null;
-  const host = sourcePage ? sourcePage.querySelector(".page-content") : null;
-  if (!host) {
-    return;
-  }
-
-  pendingKantoNavigationLocationId = locationId;
-  pendingKantoNavigationHost = host;
-
-  const panel = document.createElement("div");
-  panel.id = "kantoNavConfirmation";
-  panel.className = "kanto-nav-confirmation";
-  panel.innerHTML =
-    '<div class="kanto-nav-confirmation-title">' + targetName + '</div>' +
-    '<div class="kanto-nav-confirmation-subtitle">Go to this location?</div>' +
-    '<div class="kanto-nav-confirmation-actions">' +
-      '<button id="kantoNavConfirmVisited" class="small-button" type="button">Mark Visited</button>' +
-      '<button id="kantoNavConfirmCompleted" class="small-button" type="button">Mark Completed</button>' +
-      '<button id="kantoNavConfirmView" class="primary-button" type="button" style="grid-column:1 / -1;">View Map →</button>' +
-    '</div>' +
-    '<div id="kantoNavConfirmStatus" class="kanto-nav-confirmation-status"></div>' +
-    '<button id="kantoNavConfirmCancel" class="small-button kanto-nav-confirmation-cancel" type="button">Stay Here</button>';
-
-  const bottomNav = host.querySelector(".kanto-town-bottom-nav, .battle-bottom-nav");
-  if (bottomNav) host.insertBefore(panel, bottomNav);
-  else host.appendChild(panel);
-
-  document.getElementById("kantoNavConfirmVisited").onclick = function() {
-    togglePendingKantoNavigationProgress("visited");
-  };
-  document.getElementById("kantoNavConfirmCompleted").onclick = function() {
-    togglePendingKantoNavigationProgress("completed");
-  };
-  document.getElementById("kantoNavConfirmView").onclick = function() {
-    const target = pendingKantoNavigationLocationId;
-    removeKantoNavigationConfirmation();
-    openKantoLocationMapDirect(target);
-  };
-  document.getElementById("kantoNavConfirmCancel").onclick = function() {
-    removeKantoNavigationConfirmation();
-  };
-
-  updateKantoNavigationConfirmation();
-  panel.scrollIntoView({behavior:"smooth", block:"nearest"});
-}
-
-function openSelectedKantoMap() {
-  if (!selectedKantoLocationId) return;
-
-  const routeInfo = kantoRoutePageByLocation[selectedKantoLocationId];
-  if (routeInfo) {
-    openKantoRoutePage(selectedKantoLocationId);
-    return;
-  }
-
-  const townPage = kantoTownPageByLocation[selectedKantoLocationId];
-  if (townPage) {
-    showPage(townPage);
-    installKantoLocalHotspotsForPage(townPage);
-  }
-}
-
-function openKantoLocationMapDirect(locationId) {
-  const routeInfo = kantoRoutePageByLocation[locationId];
-  if (routeInfo) {
-    openKantoRoutePage(locationId);
-    return;
-  }
-
-  const townPage = kantoTownPageByLocation[locationId];
-  if (townPage) {
-    showPage(townPage);
-    installKantoLocalHotspotsForPage(townPage);
-  }
-}
-
-/*
-  Invisible connection bars for detailed town and route maps.
-  x/y/w/h are percentages of each displayed image.
-*/
-const kantoLocalConnections = {
-  palletTownPage: [
-    {target:"route-1", label:"Route 1", x:50,y:7,w:24,h:14},
-    {target:"route-21", label:"Route 21", x:50,y:93,w:24,h:14}
-  ],
-  viridianCityPage: [
-    {target:"route-2-south", label:"Route 2", x:50,y:7,w:24,h:14},
-    {target:"route-1", label:"Route 1", x:50,y:93,w:24,h:14},
-    {target:"route-22", label:"Route 22", x:7,y:52,w:14,h:26}
-  ],
-  pewterCityPage: [
-    {target:"route-3", label:"Route 3", x:93,y:50,w:14,h:28},
-    {target:"route-2-north", label:"Route 2", x:50,y:93,w:24,h:14}
-  ],
-  ceruleanCityPage: [
-    {target:"route-24", label:"Route 24", x:50,y:7,w:24,h:14},
-    {target:"route-5", label:"Route 5", x:50,y:93,w:24,h:14},
-    {target:"route-4", label:"Route 4", x:7,y:53,w:14,h:26},
-    {target:"route-9", label:"Route 9", x:93,y:53,w:14,h:26}
-  ],
-  vermilionCityPage: [
-    {target:"route-6", label:"Route 6", x:50,y:7,w:24,h:14},
-    {target:"route-11", label:"Route 11", x:93,y:52,w:14,h:28}
-  ],
-  lavenderTownPage: [
-    {target:"route-10", label:"Route 10", x:50,y:7,w:24,h:14},
-    {target:"route-12", label:"Route 12", x:50,y:93,w:24,h:14},
-    {target:"route-8", label:"Route 8", x:7,y:52,w:14,h:28}
-  ],
-  celadonCityPage: [
-    {target:"route-16", label:"Route 16", x:7,y:52,w:14,h:28},
-    {target:"route-7", label:"Route 7", x:93,y:52,w:14,h:28}
-  ],
-  saffronCityPage: [
-    {target:"route-5", label:"Route 5", x:50,y:7,w:24,h:14},
-    {target:"route-6", label:"Route 6", x:50,y:93,w:24,h:14},
-    {target:"route-7", label:"Route 7", x:7,y:52,w:14,h:28},
-    {target:"route-8", label:"Route 8", x:93,y:52,w:14,h:28}
-  ],
-  fuchsiaCityPage: [
-    {target:"route-18", label:"Route 18", x:7,y:52,w:14,h:28},
-    {target:"route-15", label:"Route 15", x:93,y:52,w:14,h:28},
-    {target:"route-19", label:"Route 19", x:50,y:93,w:24,h:14}
-  ],
-  cinnabarIslandPage: [
-    {target:"route-21", label:"Route 21", x:50,y:7,w:24,h:14},
-    {target:"route-20", label:"Route 20", x:93,y:52,w:14,h:28}
-  ],
-
-  "route-1": [
-    {target:"viridian-city", label:"Viridian City", x:50,y:7,w:30,h:14},
-    {target:"pallet-town", label:"Pallet Town", x:50,y:93,w:30,h:14}
-  ],
-  "route-2-south": [
-    {target:"pewter-city", label:"Pewter City", x:50,y:7,w:30,h:14},
-    {target:"viridian-city", label:"Viridian City", x:50,y:93,w:30,h:14}
-  ],
-  "route-2-north": [
-    {target:"pewter-city", label:"Pewter City", x:50,y:7,w:30,h:14},
-    {target:"viridian-city", label:"Viridian City", x:50,y:93,w:30,h:14}
-  ],
-  "route-3": [
-    {target:"pewter-city", label:"Pewter City", x:7,y:50,w:14,h:32},
-    {target:"route-4", label:"Route 4", x:93,y:50,w:14,h:32}
-  ],
-  "route-4": [
-    {target:"route-3", label:"Route 3", x:7,y:48,w:14,h:32},
-    {target:"cerulean-city", label:"Cerulean City", x:93,y:35,w:14,h:30}
-  ],
-  "route-5": [
-    {target:"cerulean-city", label:"Cerulean City", x:50,y:7,w:30,h:14},
-    {target:"saffron-city", label:"Saffron City", x:50,y:93,w:30,h:14}
-  ],
-  "route-6": [
-    {target:"saffron-city", label:"Saffron City", x:50,y:7,w:30,h:14},
-    {target:"vermilion-city", label:"Vermilion City", x:50,y:93,w:30,h:14}
-  ],
-  "route-7": [
-    {target:"celadon-city", label:"Celadon City", x:7,y:50,w:14,h:32},
-    {target:"saffron-city", label:"Saffron City", x:93,y:50,w:14,h:32}
-  ],
-  "route-8": [
-    {target:"saffron-city", label:"Saffron City", x:7,y:50,w:14,h:32},
-    {target:"lavender-town", label:"Lavender Town", x:93,y:50,w:14,h:32}
-  ],
-  "route-9": [
-    {target:"cerulean-city", label:"Cerulean City", x:7,y:38,w:14,h:30},
-    {target:"route-10", label:"Route 10", x:93,y:34,w:14,h:30}
-  ],
-  "route-10": [
-    {target:"route-9", label:"Route 9", x:50,y:7,w:30,h:14},
-    {target:"lavender-town", label:"Lavender Town", x:50,y:93,w:30,h:14}
-  ],
-  "route-11": [
-    {target:"vermilion-city", label:"Vermilion City", x:7,y:48,w:14,h:32},
-    {target:"route-12", label:"Route 12", x:93,y:52,w:14,h:32}
-  ],
-  "route-12": [
-    {target:"lavender-town", label:"Lavender Town", x:50,y:7,w:30,h:14},
-    {target:"route-13-east", label:"Route 13", x:50,y:93,w:30,h:14}
-  ],
-  "route-13-east": [
-    {target:"route-12", label:"Route 12", x:7,y:35,w:14,h:30},
-    {target:"route-14-east", label:"Route 14", x:93,y:50,w:14,h:32}
-  ],
-  "route-13-south": [
-    {target:"route-12", label:"Route 12", x:7,y:35,w:14,h:30},
-    {target:"route-14-east", label:"Route 14", x:93,y:50,w:14,h:32}
-  ],
-  "route-14-east": [
-    {target:"route-13-east", label:"Route 13", x:50,y:7,w:30,h:14},
-    {target:"route-15", label:"Route 15", x:50,y:93,w:30,h:14}
-  ],
-  "route-14-south": [
-    {target:"route-13-east", label:"Route 13", x:50,y:7,w:30,h:14},
-    {target:"route-15", label:"Route 15", x:50,y:93,w:30,h:14}
-  ],
-  "route-15": [
-    {target:"route-14-east", label:"Route 14", x:7,y:50,w:14,h:32},
-    {target:"fuchsia-city", label:"Fuchsia City", x:93,y:50,w:14,h:32}
-  ],
-  "route-16": [
-    {target:"route-17", label:"Route 17", x:7,y:50,w:14,h:32},
-    {target:"celadon-city", label:"Celadon City", x:93,y:40,w:14,h:30}
-  ],
-  "route-17": [
-    {target:"route-16", label:"Route 16", x:50,y:7,w:30,h:14},
-    {target:"route-18", label:"Route 18", x:50,y:93,w:30,h:14}
-  ],
-  "route-18": [
-    {target:"route-17", label:"Route 17", x:7,y:20,w:14,h:28},
-    {target:"fuchsia-city", label:"Fuchsia City", x:50,y:93,w:32,h:14}
-  ],
-  "route-19": [
-    {target:"fuchsia-city", label:"Fuchsia City", x:50,y:7,w:30,h:14},
-    {target:"route-20", label:"Route 20", x:50,y:93,w:30,h:14}
-  ],
-  "route-20": [
-    {target:"route-19", label:"Route 19", x:7,y:38,w:14,h:30},
-    {target:"route-21", label:"Route 21", x:93,y:63,w:14,h:30}
-  ],
-  "route-21": [
-    {target:"pallet-town", label:"Pallet Town", x:50,y:7,w:30,h:14},
-    {target:"cinnabar-island", label:"Cinnabar Island", x:50,y:93,w:30,h:14}
-  ],
-  "route-22": [
-    {target:"route-23", label:"Route 23", x:7,y:50,w:14,h:32},
-    {target:"viridian-city", label:"Viridian City", x:93,y:35,w:14,h:30}
-  ],
-  "route-23": [
-    {target:"route-22", label:"Route 22", x:50,y:93,w:30,h:14}
-  ],
-  "route-24": [
-    {target:"route-25", label:"Route 25", x:50,y:7,w:30,h:14},
-    {target:"cerulean-city", label:"Cerulean City", x:50,y:93,w:30,h:14}
-  ],
-  "route-25": [
-    {target:"route-24", label:"Route 24", x:7,y:30,w:14,h:30}
-  ]
-};
-
-function ensureKantoLocalStage(shell) {
-  if (!shell) return null;
-
-  let stage = shell.querySelector(".kanto-local-map-stage");
-  if (stage) return stage;
-
-  const image = shell.querySelector(".kanto-town-map-image");
-  if (!image) return null;
-
-  stage = document.createElement("div");
-  stage.className = "kanto-local-map-stage";
-  shell.insertBefore(stage, image);
-  stage.appendChild(image);
-
-  const layer = document.createElement("div");
-  layer.className = "kanto-local-hotspot-layer";
-  stage.appendChild(layer);
-
-  return stage;
-}
-
-function installKantoLocalHotspotsForPage(pageId) {
-  const page = document.getElementById(pageId);
-  if (!page) return;
-
-  const shell = page.querySelector(".kanto-town-map-shell");
-  const stage = ensureKantoLocalStage(shell);
-  if (!stage) return;
-
-  const layer = stage.querySelector(".kanto-local-hotspot-layer");
-  if (!layer) return;
-
-  layer.innerHTML = "";
-  const connections = kantoLocalConnections[pageId] || [];
-
-  connections.forEach(function(connection) {
-    const button = document.createElement("button");
-    button.className = "kanto-local-hotspot";
-    button.style.left = connection.x + "%";
-    button.style.top = connection.y + "%";
-    button.style.width = connection.w + "%";
-    button.style.height = connection.h + "%";
-    button.setAttribute("aria-label", "Open " + connection.label);
-    button.title = "Open " + connection.label;
-    button.onclick = function(event) {
-      event.stopPropagation();
-      showKantoNavigationConfirmation(connection.target, button);
-    };
-    layer.appendChild(button);
-  });
-}
-
-function installCurrentKantoRouteHotspots() {
-  if (!currentKantoRouteLocationId) return;
-  const page = document.getElementById("kantoRoutePage");
-  if (!page) return;
-
-  const shell = page.querySelector(".kanto-town-map-shell");
-  const stage = ensureKantoLocalStage(shell);
-  if (!stage) return;
-
-  const layer = stage.querySelector(".kanto-local-hotspot-layer");
-  if (!layer) return;
-
-  layer.innerHTML = "";
-  const connections = kantoLocalConnections[currentKantoRouteLocationId] || [];
-  connections.forEach(function(connection) {
-    const button = document.createElement("button");
-    button.className = "kanto-local-hotspot";
-    button.style.left = connection.x + "%";
-    button.style.top = connection.y + "%";
-    button.style.width = connection.w + "%";
-    button.style.height = connection.h + "%";
-    button.setAttribute("aria-label", "Open " + connection.label);
-    button.title = "Open " + connection.label;
-    button.onclick = function(event) {
-      event.stopPropagation();
-      showKantoNavigationConfirmation(connection.target, button);
-    };
-    layer.appendChild(button);
-  });
-  installCurrentRouteTrainerHotspots();
-
-}
-
-function selectKantoLocation(
-  locationId
-) {
-
-  const location =
-    kantoMapLocations.find(
-      item =>
-        item.id ===
-        locationId
-    );
-
-  if (!location) {
-    return;
-  }
-
-  selectedKantoLocationId =
-    locationId;
-
-  const panel =
-    document.getElementById(
-      "kantoLocationPanel"
-    );
-
-  const name =
-    document.getElementById(
-      "kantoLocationName"
-    );
-
-  const type =
-    document.getElementById(
-      "kantoLocationType"
-    );
-
-  const description =
-    document.getElementById(
-      "kantoLocationDescription"
-    );
-
-  if (
-    !panel ||
-    !name ||
-    !type ||
-    !description
-  ) {
-    return;
-  }
-
-  name.textContent =
-    location.name;
-
-  type.textContent =
-    location.type;
-
-  const hasMap =
-    !!kantoTownPageByLocation[locationId] ||
-    !!kantoRoutePageByLocation[locationId];
-
-  description.textContent = hasMap
-    ? "Track this location here, or open its detailed map."
-    : "Track this location here. A detailed map has not been added for this location yet.";
-
-  const viewMapButton =
-    document.getElementById("kantoViewMapButton");
-
-  if (viewMapButton) {
-    viewMapButton.style.display = hasMap ? "block" : "none";
-  }
-
-  panel.style.display =
-    "block";
-
-  updateKantoLocationStatus();
-  renderKantoHotspots();
-
-  panel.scrollIntoView({
-    behavior:"smooth",
-    block:"nearest"
-  });
-}
-
-
-function closeKantoLocationPanel() {
-
-  selectedKantoLocationId =
-    null;
-
-  const panel =
-    document.getElementById(
-      "kantoLocationPanel"
-    );
-
-  if (panel) {
-    panel.style.display =
-      "none";
-  }
-
-  renderKantoHotspots();
-}
-
-
-function updateKantoLocationStatus() {
-
-  if (!selectedKantoLocationId) {
-    return;
-  }
-
-  const state =
-    getKantoLocationProgress(
-      selectedKantoLocationId
-    );
-
-  const status =
-    document.getElementById(
-      "kantoLocationStatus"
-    );
-
-  const panel =
-    document.getElementById(
-      "kantoLocationPanel"
-    );
-
-  if (!status || !panel) {
-    return;
-  }
-
-  const buttons =
-    panel.querySelectorAll(
-      ".kanto-location-actions button"
-    );
-
-  if (buttons[0]) {
-    buttons[0].textContent =
-      state.visited
-      ? "Visited ✓"
-      : "Mark Visited";
-  }
-
-  if (buttons[1]) {
-    buttons[1].textContent =
-      state.completed
-      ? "Completed ✓"
-      : "Mark Completed";
-  }
-
-  status.textContent =
-    (
-      state.visited
-      ? "Visited"
-      : "Not visited"
-    ) +
-    " • " +
-    (
-      state.completed
-      ? "Completed"
-      : "Not completed"
-    );
-}
-
-
-function toggleKantoVisited() {
-
-  if (!selectedKantoLocationId) {
-    return;
-  }
-
-  const progress =
-    getKantoMapProgress();
-
-  const state =
-    progress[
-      selectedKantoLocationId
-    ] || {
-      visited:false,
-      completed:false
-    };
-
-  state.visited =
-    !state.visited;
-
-  progress[
-    selectedKantoLocationId
-  ] =
-    state;
-
-  saveKantoMapProgress(
-    progress
-  );
-
-  updateKantoLocationStatus();
-}
-
-
-function toggleKantoCompleted() {
-
-  if (!selectedKantoLocationId) {
-    return;
-  }
-
-  const progress =
-    getKantoMapProgress();
-
-  const state =
-    progress[
-      selectedKantoLocationId
-    ] || {
-      visited:false,
-      completed:false
-    };
-
-  state.completed =
-    !state.completed;
-
-  if (state.completed) {
-    state.visited = true;
-  }
-
-  progress[
-    selectedKantoLocationId
-  ] =
-    state;
-
-  saveKantoMapProgress(
-    progress
-  );
-
-  updateKantoLocationStatus();
+  if (summary) summary.textContent = earned + " / " + kantoGymBadges.length + " Gym Badges Earned";
 }
 
 
@@ -9404,18 +7887,6 @@ function showPage(pageId) {
   [
     "homePage",
     "kantoMapPage",
-    "kantoRoutePage",
-    "kantoGymPage",
-    "palletTownPage",
-    "viridianCityPage",
-    "pewterCityPage",
-    "ceruleanCityPage",
-    "vermilionCityPage",
-    "lavenderTownPage",
-    "celadonCityPage",
-    "saffronCityPage",
-    "fuchsiaCityPage",
-    "cinnabarIslandPage",
     "pokemonPage",
     "createPokemonPage",
     "partyPokemonPage",
@@ -12975,12 +11446,6 @@ function endBattle(force=false){
   const details=document.getElementById("battleMoveDetails");
   if(details)details.innerHTML="";
   updateBattleEndButtonVisibility();
-
-  if(returnContext&&returnContext.type==="route"&&returnContext.locationId){
-    openKantoRoutePage(returnContext.locationId);
-    closeKantoTrainerEncounter();
-    return;
-  }
 
   showPage("homePage");
 }
@@ -21435,22 +19900,6 @@ function reenableCompletedTrainer(trainerId){
   trainer.completed=false;
   trainer.rewardClaimed=false;
 
-  /* Restore the intended route-encounter battle item, if applicable. */
-  if(trainer.routeEncounterId){
-    const encounter=findKantoRouteTrainer(trainer.routeEncounterId);
-    if(encounter){
-      if(String(encounter.battleItem||"").startsWith("X Attack")){
-        trainer.inventory=[{id:"x-attack",quantity:1}];
-      }
-      else if(String(encounter.battleItem||"").startsWith("Potion")){
-        trainer.inventory=[{id:"potion",quantity:1}];
-      }
-      else if(String(encounter.battleItem||"")==="None"){
-        trainer.inventory=[];
-      }
-    }
-  }
-
   savePokemon();
   saveTrainers();
   displayCompletedTrainers();
@@ -22141,184 +20590,10 @@ function resetCampaignToNewInstall() {
   );
 }
 
-installKantoGymButtons();
 
 
 
-/* =========================================================
-   ROUTE TRAINER ENCOUNTERS V23
-   Trainer teams are based on the researched Route 1-25
-   encounter master. Canonical and adapted rows remain labeled.
-========================================================= */
-const kantoRouteTrainerEncounters = [{"route":1,"name":"Youngster Jimmy","class":"Youngster","canonFit":"Adapted to map","pokemon":[{"species":"Rattata","level":4,"moves":["Tackle","Tail Whip"]},{"species":"Pidgey","level":5,"moves":["Gust","Sand Attack"]}],"battleItem":"None","reward":"₽75","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":47,"y":29,"w":8,"h":8,"id":"route-1-youngster-jimmy"},{"route":1,"name":"Lass Daisy","class":"Lass","canonFit":"Adapted to map","pokemon":[{"species":"Pidgey","level":4,"moves":["Gust"]},{"species":"Nidoran♀","level":5,"moves":["Growl","Tackle"]}],"battleItem":"None","reward":"₽75","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":39,"y":45,"w":8,"h":8,"id":"route-1-lass-daisy"},{"route":1,"name":"Youngster Joey","class":"Youngster","canonFit":"Adapted to map","pokemon":[{"species":"Spearow","level":4,"moves":["Peck","Growl"]},{"species":"Rattata","level":5,"moves":["Tackle","Tail Whip"]}],"battleItem":"None","reward":"₽75","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":51,"y":69,"w":8,"h":8,"id":"route-1-youngster-joey"},{"route":3,"name":"Hiker Ned","class":"Hiker","canonFit":"Adapted to map","pokemon":[{"species":"Geodude","level":10,"moves":["Tackle"]},{"species":"Machop","level":11,"moves":["Karate Chop"]}],"battleItem":"None","reward":"₽385","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":27,"y":23,"w":8,"h":8,"id":"route-3-hiker-ned"},{"route":3,"name":"Youngster Cal","class":"Youngster","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Rattata","level":11,"moves":["Tackle","Tail Whip","Quick Attack"]},{"species":"Ekans","level":11,"moves":["Wrap","Leer","Poison Sting"]}],"battleItem":"None","reward":"₽165","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":43,"y":33,"w":8,"h":8,"id":"route-3-youngster-cal"},{"route":3,"name":"Lass Fay","class":"Lass","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Pidgey","level":9,"moves":["Gust","Sand Attack"]},{"species":"Pidgey","level":9,"moves":["Gust","Sand Attack"]}],"battleItem":"None","reward":"₽135","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":40,"y":51,"w":8,"h":8,"id":"route-3-lass-fay"},{"route":3,"name":"Youngster Ben","class":"Youngster","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Spearow","level":14,"moves":["Peck","Growl","Leer"]}],"battleItem":"None","reward":"₽210","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":63,"y":58,"w":8,"h":8,"id":"route-3-youngster-ben"},{"route":3,"name":"Hiker Tim","class":"Hiker","canonFit":"Adapted to map","pokemon":[{"species":"Geodude","level":9,"moves":["Tackle"]},{"species":"Geodude","level":10,"moves":["Tackle"]},{"species":"Machop","level":11,"moves":["Karate Chop"]}],"battleItem":"None","reward":"₽385","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":32,"y":72,"w":8,"h":8,"id":"route-3-hiker-tim"},{"route":4,"name":"Youngster Joey","class":"Youngster","canonFit":"Adapted to map","pokemon":[{"species":"Rattata","level":14,"moves":["Tackle","Tail Whip","Quick Attack","Hyper Fang"]},{"species":"Spearow","level":15,"moves":["Peck","Growl","Leer","Fury Attack"]}],"battleItem":"None","reward":"₽225","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":26,"y":51,"w":8,"h":8,"id":"route-4-youngster-joey"},{"route":4,"name":"Bug Catcher Gene","class":"Bug Catcher","canonFit":"Adapted to map","pokemon":[{"species":"Butterfree","level":15,"moves":["Confusion","Poison Powder"]}],"battleItem":"None","reward":"₽150","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":62,"y":49,"w":8,"h":8,"id":"route-4-bug-catcher-gene"},{"route":6,"name":"Cooltrainer M","class":"Cooltrainer ♂","canonFit":"Adapted to map","pokemon":[{"species":"Spearow","level":16,"moves":["Peck","Growl","Leer","Fury Attack"]},{"species":"Raticate","level":17,"moves":["Tackle","Tail Whip","Quick Attack","Hyper Fang"]}],"battleItem":"X Attack (Gen I AI may use)","reward":"₽595","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":35,"y":24,"w":8,"h":8,"id":"route-6-cooltrainer-m"},{"route":6,"name":"Lass Tina","class":"Lass","canonFit":"Adapted to map","pokemon":[{"species":"Pidgey","level":16,"moves":["Gust","Sand Attack","Quick Attack"]},{"species":"Nidoran♀","level":17,"moves":["Growl","Tackle","Scratch","Poison Sting"]}],"battleItem":"None","reward":"₽255","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":59,"y":31,"w":8,"h":8,"id":"route-6-lass-tina"},{"route":6,"name":"Bug Catcher Rick","class":"Bug Catcher","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Weedle","level":16,"moves":["Poison Sting","String Shot"]},{"species":"Caterpie","level":16,"moves":["String Shot","Tackle"]},{"species":"Weedle","level":16,"moves":["Poison Sting","String Shot"]}],"battleItem":"None","reward":"₽160","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":31,"y":43,"w":8,"h":8,"id":"route-6-bug-catcher-rick"},{"route":6,"name":"Youngster Joey","class":"Youngster","canonFit":"Adapted to map","pokemon":[{"species":"Rattata","level":16,"moves":["Tackle","Tail Whip","Quick Attack","Hyper Fang"]},{"species":"Spearow","level":17,"moves":["Peck","Growl","Leer","Fury Attack"]}],"battleItem":"None","reward":"₽255","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":50,"y":45,"w":8,"h":8,"id":"route-6-youngster-joey"},{"route":6,"name":"Hiker Alan","class":"Hiker","canonFit":"Adapted to map","pokemon":[{"species":"Geodude","level":16,"moves":["Tackle","Defense Curl","Rock Throw"]},{"species":"Onix","level":17,"moves":["Tackle","Screech","Bind"]}],"battleItem":"None","reward":"₽595","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":29,"y":66,"w":8,"h":8,"id":"route-6-hiker-alan"},{"route":6,"name":"Youngster Ben","class":"Youngster","canonFit":"Adapted to map","pokemon":[{"species":"Ekans","level":16,"moves":["Wrap","Leer","Poison Sting"]},{"species":"Sandshrew","level":17,"moves":["Scratch","Sand Attack","Slash"]}],"battleItem":"None","reward":"₽255","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":54,"y":69,"w":8,"h":8,"id":"route-6-youngster-ben"},{"route":8,"name":"Youngster Joey","class":"Youngster","canonFit":"Adapted to map","pokemon":[{"species":"Raticate","level":21,"moves":["Tackle","Tail Whip","Quick Attack","Hyper Fang"]},{"species":"Spearow","level":22,"moves":["Growl","Leer","Fury Attack","Mirror Move"]}],"battleItem":"None","reward":"₽330","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":47,"y":36,"w":8,"h":8,"id":"route-8-youngster-joey"},{"route":8,"name":"Picnicker Dylan","class":"Jr. Trainer ♂","canonFit":"Adapted to map","pokemon":[{"species":"Raticate","level":21,"moves":["Tackle","Tail Whip","Quick Attack","Hyper Fang"]},{"species":"Growlithe","level":22,"moves":["Bite","Roar","Ember"]}],"battleItem":"None","reward":"₽440","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":21,"y":52,"w":8,"h":8,"id":"route-8-picnicker-dylan"},{"route":8,"name":"Sailor Hugh","class":"Sailor","canonFit":"Adapted to map","pokemon":[{"species":"Machop","level":21,"moves":["Karate Chop","Low Kick"]},{"species":"Shellder","level":22,"moves":["Tackle","Withdraw","Supersonic"]}],"battleItem":"None","reward":"₽660","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":71,"y":52,"w":8,"h":8,"id":"route-8-sailor-hugh"},{"route":8,"name":"Lass Amy","class":"Lass","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Nidoran♀","level":23,"moves":["Tackle","Scratch","Poison Sting","Tail Whip"]},{"species":"Nidorina","level":23,"moves":["Tackle","Scratch","Poison Sting","Tail Whip"]}],"battleItem":"None","reward":"₽345","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":40,"y":57,"w":8,"h":8,"id":"route-8-lass-amy"},{"route":9,"name":"Hiker Derek","class":"Hiker","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Geodude","level":21,"moves":["Tackle","Defense Curl","Rock Throw","Self-Destruct"]},{"species":"Onix","level":21,"moves":["Tackle","Screech","Bind","Rock Throw"]}],"battleItem":"None","reward":"₽735","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":38,"y":28,"w":8,"h":8,"id":"route-9-hiker-derek"},{"route":9,"name":"Hiker Evan","class":"Hiker","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Geodude","level":20,"moves":["Tackle","Defense Curl","Rock Throw"]},{"species":"Machop","level":20,"moves":["Karate Chop","Low Kick"]},{"species":"Geodude","level":20,"moves":["Tackle","Defense Curl","Rock Throw"]}],"battleItem":"None","reward":"₽700","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":63,"y":28,"w":8,"h":8,"id":"route-9-hiker-evan"},{"route":9,"name":"Youngster Timmy","class":"Youngster","canonFit":"Adapted to map","pokemon":[{"species":"Raticate","level":19,"moves":["Tackle","Tail Whip","Quick Attack","Hyper Fang"]},{"species":"Spearow","level":20,"moves":["Peck","Growl","Leer","Fury Attack"]}],"battleItem":"None","reward":"₽300","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":18,"y":47,"w":8,"h":8,"id":"route-9-youngster-timmy"},{"route":9,"name":"Picnicker Hanna","class":"Jr. Trainer ♀","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Oddish","level":18,"moves":["Absorb","Poison Powder","Stun Spore"]},{"species":"Bellsprout","level":18,"moves":["Growth","Wrap","Poison Powder","Sleep Powder"]},{"species":"Oddish","level":18,"moves":["Absorb","Poison Powder","Stun Spore"]},{"species":"Bellsprout","level":18,"moves":["Growth","Wrap","Poison Powder","Sleep Powder"]}],"battleItem":"None","reward":"₽360","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":58,"y":56,"w":8,"h":8,"id":"route-9-picnicker-hanna"},{"route":9,"name":"Youngster Joey","class":"Youngster","canonFit":"Adapted to map","pokemon":[{"species":"Sandshrew","level":19,"moves":["Scratch","Sand Attack","Slash"]},{"species":"Zubat","level":20,"moves":["Leech Life","Supersonic","Bite"]}],"battleItem":"None","reward":"₽300","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":62,"y":79,"w":8,"h":8,"id":"route-9-youngster-joey"},{"route":11,"name":"Lass Mandy","class":"Lass","canonFit":"Adapted to map","pokemon":[{"species":"Pidgey","level":17,"moves":["Gust","Sand Attack","Quick Attack"]},{"species":"Nidoran♀","level":18,"moves":["Growl","Tackle","Scratch","Poison Sting"]}],"battleItem":"None","reward":"₽270","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":24,"y":35,"w":8,"h":8,"id":"route-11-lass-mandy"},{"route":11,"name":"Hiker Paul","class":"Hiker","canonFit":"Adapted to map","pokemon":[{"species":"Geodude","level":17,"moves":["Tackle","Defense Curl","Rock Throw"]},{"species":"Onix","level":18,"moves":["Tackle","Screech","Bind"]}],"battleItem":"None","reward":"₽630","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":48,"y":34,"w":8,"h":8,"id":"route-11-hiker-paul"},{"route":11,"name":"Bug Catcher Rick","class":"Bug Catcher","canonFit":"Adapted to map","pokemon":[{"species":"Butterfree","level":18,"moves":["Confusion","Poison Powder","Stun Spore","Sleep Powder"]}],"battleItem":"None","reward":"₽180","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":72,"y":35,"w":8,"h":8,"id":"route-11-bug-catcher-rick"},{"route":11,"name":"Sailor Derek","class":"Sailor","canonFit":"Adapted to map","pokemon":[{"species":"Machop","level":17,"moves":["Karate Chop"]},{"species":"Tentacool","level":18,"moves":["Acid","Supersonic","Wrap","Poison Sting"]}],"battleItem":"None","reward":"₽540","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":21,"y":57,"w":8,"h":8,"id":"route-11-sailor-derek"},{"route":11,"name":"Youngster Timmy","class":"Youngster","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Ekans","level":21,"moves":["Wrap","Leer","Poison Sting","Bite"]}],"battleItem":"None","reward":"₽315","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":46,"y":61,"w":8,"h":8,"id":"route-11-youngster-timmy"},{"route":11,"name":"Lass Daisy","class":"Lass","canonFit":"Adapted to map","pokemon":[{"species":"Oddish","level":16,"moves":["Absorb","Poison Powder"]},{"species":"Pidgey","level":17,"moves":["Gust","Sand Attack","Quick Attack"]},{"species":"Oddish","level":18,"moves":["Absorb","Poison Powder","Stun Spore"]}],"battleItem":"None","reward":"₽270","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":70,"y":61,"w":8,"h":8,"id":"route-11-lass-daisy"},{"route":12,"name":"Fisherman Tully","class":"Fisherman","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Goldeen","level":22,"moves":["Peck","Tail Whip","Supersonic"]},{"species":"Poliwag","level":22,"moves":["Bubble","Hypnosis","Water Gun"]},{"species":"Goldeen","level":22,"moves":["Peck","Tail Whip","Supersonic"]}],"battleItem":"None","reward":"₽770","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":49,"y":24,"w":8,"h":8,"id":"route-12-fisherman-tully"},{"route":12,"name":"Hiker Derek","class":"Hiker","canonFit":"Adapted to map","pokemon":[{"species":"Geodude","level":23,"moves":["Tackle","Defense Curl","Rock Throw","Self-Destruct"]},{"species":"Onix","level":24,"moves":["Tackle","Screech","Bind","Rock Throw"]}],"battleItem":"None","reward":"₽840","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":19,"y":36,"w":8,"h":8,"id":"route-12-hiker-derek"},{"route":12,"name":"Lass Megan","class":"Lass","canonFit":"Adapted to map","pokemon":[{"species":"Nidorina","level":23,"moves":["Tackle","Scratch","Poison Sting","Tail Whip"]},{"species":"Pikachu","level":24,"moves":["Thunder Shock","Growl","Thunder Wave","Quick Attack"]}],"battleItem":"None","reward":"₽360","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":41,"y":42,"w":8,"h":8,"id":"route-12-lass-megan"},{"route":12,"name":"Sailor Ed","class":"Sailor","canonFit":"Adapted to map","pokemon":[{"species":"Machop","level":23,"moves":["Karate Chop","Low Kick"]},{"species":"Shellder","level":24,"moves":["Tackle","Withdraw","Supersonic","Clamp"]}],"battleItem":"None","reward":"₽720","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":22,"y":67,"w":8,"h":8,"id":"route-12-sailor-ed"},{"route":12,"name":"Fisherman Wayne","class":"Fisherman","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Tentacool","level":24,"moves":["Supersonic","Wrap","Poison Sting","Water Gun"]},{"species":"Goldeen","level":24,"moves":["Peck","Tail Whip","Supersonic","Horn Attack"]}],"battleItem":"None","reward":"₽840","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":49,"y":66,"w":8,"h":8,"id":"route-12-fisherman-wayne"},{"route":13,"name":"Hiker Mark","class":"Hiker","canonFit":"Adapted to map","pokemon":[{"species":"Graveler","level":26,"moves":["Tackle","Defense Curl","Rock Throw","Self-Destruct"]},{"species":"Machoke","level":27,"moves":["Karate Chop","Low Kick","Leer"]}],"battleItem":"None","reward":"₽945","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":32,"y":23,"w":8,"h":8,"id":"route-13-hiker-mark"},{"route":13,"name":"Youngster Derek","class":"Youngster","canonFit":"Adapted to map","pokemon":[{"species":"Raticate","level":26,"moves":["Tackle","Tail Whip","Quick Attack","Hyper Fang"]},{"species":"Fearow","level":27,"moves":["Growl","Leer","Fury Attack","Mirror Move"]}],"battleItem":"None","reward":"₽405","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":29,"y":36,"w":8,"h":8,"id":"route-13-youngster-derek"},{"route":13,"name":"Youngster Mia","class":"Youngster","canonFit":"Adapted to map","pokemon":[{"species":"Sandslash","level":26,"moves":["Scratch","Sand Attack","Slash"]},{"species":"Raticate","level":27,"moves":["Tail Whip","Quick Attack","Hyper Fang","Focus Energy"]}],"battleItem":"None","reward":"₽405","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":72,"y":30,"w":8,"h":8,"id":"route-13-youngster-mia"},{"route":13,"name":"Sailor Troy","class":"Sailor","canonFit":"Adapted to map","pokemon":[{"species":"Machop","level":26,"moves":["Karate Chop","Low Kick","Leer"]},{"species":"Shellder","level":27,"moves":["Tackle","Withdraw","Supersonic","Clamp"]}],"battleItem":"None","reward":"₽810","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":46,"y":49,"w":8,"h":8,"id":"route-13-sailor-troy"},{"route":13,"name":"Bug Catcher Evan","class":"Bug Catcher","canonFit":"Adapted to map","pokemon":[{"species":"Butterfree","level":26,"moves":["Stun Spore","Sleep Powder","Supersonic","Whirlwind"]},{"species":"Beedrill","level":27,"moves":["Fury Attack","Focus Energy","Twineedle","Rage"]}],"battleItem":"None","reward":"₽270","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":62,"y":61,"w":8,"h":8,"id":"route-13-bug-catcher-evan"},{"route":14,"name":"Hiker Harold","class":"Hiker","canonFit":"Adapted to map","pokemon":[{"species":"Graveler","level":27,"moves":["Tackle","Defense Curl","Rock Throw","Self-Destruct"]},{"species":"Machoke","level":28,"moves":["Karate Chop","Low Kick","Leer"]}],"battleItem":"None","reward":"₽980","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":50,"y":23,"w":8,"h":8,"id":"route-14-hiker-harold"},{"route":14,"name":"Picnicker Mandy","class":"Jr. Trainer ♀","canonFit":"Adapted to map","pokemon":[{"species":"Pidgeotto","level":27,"moves":["Gust","Sand Attack","Quick Attack","Whirlwind"]},{"species":"Meowth","level":28,"moves":["Growl","Bite","Pay Day","Screech"]}],"battleItem":"None","reward":"₽560","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":55,"y":43,"w":8,"h":8,"id":"route-14-picnicker-mandy"},{"route":14,"name":"Youngster Bobby","class":"Youngster","canonFit":"Adapted to map","pokemon":[{"species":"Raticate","level":27,"moves":["Tail Whip","Quick Attack","Hyper Fang","Focus Energy"]},{"species":"Fearow","level":28,"moves":["Growl","Leer","Fury Attack","Mirror Move"]}],"battleItem":"None","reward":"₽420","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":35,"y":49,"w":8,"h":8,"id":"route-14-youngster-bobby"},{"route":14,"name":"Lass Sally","class":"Lass","canonFit":"Adapted to map","pokemon":[{"species":"Pidgeotto","level":27,"moves":["Gust","Sand Attack","Quick Attack","Whirlwind"]},{"species":"Wigglytuff","level":28,"moves":["Sing","Disable","Defense Curl","Double Slap"]}],"battleItem":"None","reward":"₽420","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":31,"y":64,"w":8,"h":8,"id":"route-14-lass-sally"},{"route":14,"name":"Bug Catcher Rick","class":"Bug Catcher","canonFit":"Adapted to map","pokemon":[{"species":"Butterfree","level":27,"moves":["Stun Spore","Sleep Powder","Supersonic","Whirlwind"]},{"species":"Beedrill","level":28,"moves":["Fury Attack","Focus Energy","Twineedle","Rage"]}],"battleItem":"None","reward":"₽280","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":53,"y":76,"w":8,"h":8,"id":"route-14-bug-catcher-rick"},{"route":15,"name":"Youngster Bobby","class":"Youngster","canonFit":"Adapted to map","pokemon":[{"species":"Raticate","level":28,"moves":["Tail Whip","Quick Attack","Hyper Fang","Focus Energy"]},{"species":"Fearow","level":29,"moves":["Growl","Leer","Fury Attack","Mirror Move"]}],"battleItem":"None","reward":"₽435","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":15,"y":34,"w":8,"h":8,"id":"route-15-youngster-bobby"},{"route":15,"name":"Lass Sally","class":"Lass","canonFit":"Adapted to map","pokemon":[{"species":"Pidgeotto","level":28,"moves":["Gust","Sand Attack","Quick Attack","Whirlwind"]},{"species":"Wigglytuff","level":29,"moves":["Sing","Disable","Defense Curl","Double Slap"]}],"battleItem":"None","reward":"₽435","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":40,"y":32,"w":8,"h":8,"id":"route-15-lass-sally"},{"route":15,"name":"Picnicker Derek","class":"Jr. Trainer ♂","canonFit":"Adapted to map","pokemon":[{"species":"Raticate","level":28,"moves":["Tail Whip","Quick Attack","Hyper Fang","Focus Energy"]},{"species":"Growlithe","level":29,"moves":["Bite","Roar","Ember","Leer"]}],"battleItem":"None","reward":"₽580","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":66,"y":41,"w":8,"h":8,"id":"route-15-picnicker-derek"},{"route":15,"name":"Hiker Stan","class":"Hiker","canonFit":"Adapted to map","pokemon":[{"species":"Graveler","level":28,"moves":["Tackle","Defense Curl","Rock Throw","Self-Destruct"]},{"species":"Machoke","level":29,"moves":["Karate Chop","Low Kick","Leer"]}],"battleItem":"None","reward":"₽1,015","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":34,"y":49,"w":8,"h":8,"id":"route-15-hiker-stan"},{"route":17,"name":"Biker Derek","class":"Biker","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Weezing","level":28,"moves":["Tackle","Smog","Sludge"]},{"species":"Koffing","level":28,"moves":["Tackle","Smog"]},{"species":"Weezing","level":28,"moves":["Tackle","Smog","Sludge"]}],"battleItem":"None","reward":"₽560","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":39,"y":22,"w":8,"h":8,"id":"route-17-biker-derek"},{"route":17,"name":"Biker Corey","class":"Biker","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Muk","level":33,"moves":["Pound","Disable","Poison Gas","Minimize"]}],"battleItem":"None","reward":"₽660","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":54,"y":34,"w":8,"h":8,"id":"route-17-biker-corey"},{"route":17,"name":"Biker Zack","class":"Biker","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Voltorb","level":29,"moves":["Screech","Sonic Boom","Self-Destruct","Light Screen"]},{"species":"Voltorb","level":29,"moves":["Screech","Sonic Boom","Self-Destruct","Light Screen"]}],"battleItem":"None","reward":"₽580","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":34,"y":47,"w":8,"h":8,"id":"route-17-biker-zack"},{"route":17,"name":"Biker Mitch","class":"Biker","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Weezing","level":29,"moves":["Tackle","Smog","Sludge"]},{"species":"Muk","level":29,"moves":["Pound","Disable","Poison Gas"]}],"battleItem":"None","reward":"₽580","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":54,"y":57,"w":8,"h":8,"id":"route-17-biker-mitch"},{"route":17,"name":"Biker Eddie","class":"Biker","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Koffing","level":25,"moves":["Tackle","Smog"]},{"species":"Weezing","level":25,"moves":["Tackle","Smog","Sludge"]},{"species":"Koffing","level":25,"moves":["Tackle","Smog"]},{"species":"Koffing","level":25,"moves":["Tackle","Smog"]},{"species":"Weezing","level":25,"moves":["Tackle","Smog","Sludge"]}],"battleItem":"None","reward":"₽500","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":36,"y":77,"w":8,"h":8,"id":"route-17-biker-eddie"},{"route":18,"name":"Hiker Ned","class":"Hiker","canonFit":"Adapted to map","pokemon":[{"species":"Graveler","level":28,"moves":["Tackle","Defense Curl","Rock Throw","Self-Destruct"]},{"species":"Machoke","level":29,"moves":["Karate Chop","Low Kick","Leer"]}],"battleItem":"None","reward":"₽1,015","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":24,"y":26,"w":8,"h":8,"id":"route-18-hiker-ned"},{"route":18,"name":"Youngster Joey","class":"Youngster","canonFit":"Adapted to map","pokemon":[{"species":"Raticate","level":28,"moves":["Tail Whip","Quick Attack","Hyper Fang","Focus Energy"]},{"species":"Fearow","level":29,"moves":["Growl","Leer","Fury Attack","Mirror Move"]}],"battleItem":"None","reward":"₽435","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":66,"y":29,"w":8,"h":8,"id":"route-18-youngster-joey"},{"route":18,"name":"Lass Amy","class":"Lass","canonFit":"Adapted to map","pokemon":[{"species":"Pidgeotto","level":28,"moves":["Gust","Sand Attack","Quick Attack","Whirlwind"]},{"species":"Wigglytuff","level":29,"moves":["Sing","Disable","Defense Curl","Double Slap"]}],"battleItem":"None","reward":"₽435","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":38,"y":47,"w":8,"h":8,"id":"route-18-lass-amy"},{"route":18,"name":"Bug Catcher Tim","class":"Bug Catcher","canonFit":"Adapted to map","pokemon":[{"species":"Butterfree","level":28,"moves":["Stun Spore","Sleep Powder","Supersonic","Whirlwind"]},{"species":"Beedrill","level":29,"moves":["Fury Attack","Focus Energy","Twineedle","Rage"]}],"battleItem":"None","reward":"₽290","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":64,"y":53,"w":8,"h":8,"id":"route-18-bug-catcher-tim"},{"route":19,"name":"Swimmer Glenn","class":"Swimmer","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Tentacool","level":30,"moves":["Wrap","Poison Sting","Water Gun","Constrict"]},{"species":"Shellder","level":30,"moves":["Withdraw","Supersonic","Clamp","Aurora Beam"]}],"battleItem":"None","reward":"₽150","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":42,"y":32,"w":8,"h":8,"id":"route-19-swimmer-glenn"},{"route":19,"name":"Swimmer Dylan","class":"Swimmer","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Goldeen","level":29,"moves":["Peck","Tail Whip","Supersonic","Horn Attack"]},{"species":"Horsea","level":29,"moves":["Bubble","Smokescreen","Leer"]},{"species":"Staryu","level":29,"moves":["Tackle","Water Gun","Harden","Recover"]}],"battleItem":"None","reward":"₽145","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":56,"y":39,"w":8,"h":8,"id":"route-19-swimmer-dylan"},{"route":19,"name":"Swimmer Mia","class":"Swimmer","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Poliwag","level":30,"moves":["Bubble","Hypnosis","Water Gun","Double Slap"]},{"species":"Poliwhirl","level":30,"moves":["Bubble","Hypnosis","Water Gun","Double Slap"]}],"battleItem":"None","reward":"₽150","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":29,"y":48,"w":8,"h":8,"id":"route-19-swimmer-mia"},{"route":19,"name":"Swimmer Chad","class":"Swimmer","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Horsea","level":27,"moves":["Bubble","Smokescreen","Leer"]},{"species":"Tentacool","level":27,"moves":["Wrap","Poison Sting","Water Gun","Constrict"]},{"species":"Tentacool","level":27,"moves":["Wrap","Poison Sting","Water Gun","Constrict"]},{"species":"Goldeen","level":27,"moves":["Peck","Tail Whip","Supersonic","Horn Attack"]}],"battleItem":"None","reward":"₽135","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":43,"y":53,"w":8,"h":8,"id":"route-19-swimmer-chad"},{"route":19,"name":"Swimmer Evan","class":"Swimmer","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Goldeen","level":29,"moves":["Peck","Tail Whip","Supersonic","Horn Attack"]},{"species":"Shellder","level":29,"moves":["Tackle","Withdraw","Supersonic","Clamp"]},{"species":"Seaking","level":29,"moves":["Peck","Tail Whip","Supersonic","Horn Attack"]}],"battleItem":"None","reward":"₽145","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":56,"y":60,"w":8,"h":8,"id":"route-19-swimmer-evan"},{"route":20,"name":"Swimmer A","class":"Swimmer","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Shellder","level":31,"moves":["Withdraw","Supersonic","Clamp","Aurora Beam"]},{"species":"Cloyster","level":31,"moves":["Withdraw","Supersonic","Clamp","Aurora Beam"]}],"battleItem":"None","reward":"₽155","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":18,"y":19,"w":8,"h":8,"id":"route-20-swimmer-a"},{"route":20,"name":"Swimmer B","class":"Swimmer","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Staryu","level":35,"moves":["Water Gun","Harden","Recover","Swift"]}],"battleItem":"None","reward":"₽175","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":38,"y":21,"w":8,"h":8,"id":"route-20-swimmer-b"},{"route":20,"name":"Swimmer C","class":"Swimmer","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Horsea","level":28,"moves":["Bubble","Smokescreen","Leer"]},{"species":"Horsea","level":28,"moves":["Bubble","Smokescreen","Leer"]},{"species":"Seadra","level":28,"moves":["Bubble","Smokescreen","Leer"]},{"species":"Horsea","level":28,"moves":["Bubble","Smokescreen","Leer"]}],"battleItem":"None","reward":"₽140","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":54,"y":43,"w":8,"h":8,"id":"route-20-swimmer-c"},{"route":20,"name":"Swimmer D","class":"Swimmer","canonFit":"Adapted to map","pokemon":[{"species":"Shellder","level":30,"moves":["Withdraw","Supersonic","Clamp","Aurora Beam"]},{"species":"Cloyster","level":31,"moves":["Withdraw","Supersonic","Clamp","Aurora Beam"]}],"battleItem":"None","reward":"₽155","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":21,"y":59,"w":8,"h":8,"id":"route-20-swimmer-d"},{"route":20,"name":"Swimmer E","class":"Swimmer","canonFit":"Adapted to map","pokemon":[{"species":"Staryu","level":31,"moves":["Tackle","Water Gun","Harden","Recover"]}],"battleItem":"None","reward":"₽155","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":53,"y":68,"w":8,"h":8,"id":"route-20-swimmer-e"},{"route":21,"name":"Swimmer A","class":"Swimmer","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Seadra","level":33,"moves":["Bubble","Smokescreen","Leer","Water Gun"]},{"species":"Tentacruel","level":33,"moves":["Wrap","Poison Sting","Water Gun","Constrict"]}],"battleItem":"None","reward":"₽165","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":46,"y":24,"w":8,"h":8,"id":"route-21-swimmer-a"},{"route":21,"name":"Swimmer B","class":"Swimmer","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Starmie","level":37,"moves":["Tackle","Water Gun","Harden"]}],"battleItem":"None","reward":"₽185","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":56,"y":35,"w":8,"h":8,"id":"route-21-swimmer-b"},{"route":21,"name":"Swimmer C","class":"Swimmer","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Staryu","level":33,"moves":["Water Gun","Harden","Recover","Swift"]},{"species":"Wartortle","level":33,"moves":["Tail Whip","Water Gun","Bite","Withdraw"]}],"battleItem":"None","reward":"₽165","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":35,"y":42,"w":8,"h":8,"id":"route-21-swimmer-c"},{"route":21,"name":"Swimmer D","class":"Swimmer","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Poliwhirl","level":32,"moves":["Bubble","Hypnosis","Water Gun","Double Slap"]},{"species":"Tentacool","level":32,"moves":["Wrap","Poison Sting","Water Gun","Constrict"]},{"species":"Seadra","level":32,"moves":["Bubble","Smokescreen","Leer","Water Gun"]}],"battleItem":"None","reward":"₽160","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":48,"y":55,"w":8,"h":8,"id":"route-21-swimmer-d"},{"route":21,"name":"Swimmer E","class":"Swimmer","canonFit":"Adapted to map","pokemon":[{"species":"Shellder","level":31,"moves":["Withdraw","Supersonic","Clamp","Aurora Beam"]},{"species":"Cloyster","level":32,"moves":["Withdraw","Supersonic","Clamp","Aurora Beam"]}],"battleItem":"None","reward":"₽160","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":39,"y":65,"w":8,"h":8,"id":"route-21-swimmer-e"},{"route":22,"name":"Rival Gary","class":"Rival","canonFit":"Dynamic canonical","pokemon":[],"battleItem":"Varies by encounter","reward":"₽280 early / ₽3,445 late","notes":"Rival Gary has starter-dependent early and late Route 22 teams. Use the Rival Gary reference sheet when choosing the exact encounter.","x":21,"y":44,"w":8,"h":8,"id":"route-22-rival-gary"},{"route":22,"name":"Youngster Timmy","class":"Youngster","canonFit":"Adapted to map","pokemon":[{"species":"Rattata","level":8,"moves":["Tackle","Tail Whip","Quick Attack"]},{"species":"Pidgey","level":9,"moves":["Gust","Sand Attack"]}],"battleItem":"None","reward":"₽135","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":64,"y":45,"w":8,"h":8,"id":"route-22-youngster-timmy"},{"route":22,"name":"Lass Daisy","class":"Lass","canonFit":"Adapted to map","pokemon":[{"species":"Pidgey","level":8,"moves":["Gust","Sand Attack"]},{"species":"Nidoran♀","level":9,"moves":["Growl","Tackle","Scratch"]}],"battleItem":"None","reward":"₽135","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":36,"y":57,"w":8,"h":8,"id":"route-22-lass-daisy"},{"route":24,"name":"Bug Catcher Danny","class":"Bug Catcher","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Caterpie","level":14,"moves":["String Shot","Tackle"]},{"species":"Weedle","level":14,"moves":["Poison Sting","String Shot"]}],"battleItem":"None","reward":"₽140","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":39,"y":27,"w":8,"h":8,"id":"route-24-bug-catcher-danny"},{"route":24,"name":"Hiker Tim","class":"Hiker","canonFit":"Adapted to map","pokemon":[{"species":"Geodude","level":14,"moves":["Tackle","Defense Curl"]},{"species":"Machop","level":15,"moves":["Karate Chop"]}],"battleItem":"None","reward":"₽525","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":40,"y":42,"w":8,"h":8,"id":"route-24-hiker-tim"},{"route":24,"name":"Sailor Doyle","class":"Sailor","canonFit":"Adapted to map","pokemon":[{"species":"Machop","level":14,"moves":["Karate Chop"]},{"species":"Tentacool","level":15,"moves":["Acid","Supersonic","Wrap"]}],"battleItem":"None","reward":"₽450","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":49,"y":56,"w":8,"h":8,"id":"route-24-sailor-doyle"},{"route":24,"name":"Lass Molly","class":"Lass","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Pidgey","level":16,"moves":["Gust","Sand Attack","Quick Attack"]},{"species":"Nidoran♀","level":16,"moves":["Growl","Tackle","Scratch","Poison Sting"]}],"battleItem":"None","reward":"₽240","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":45,"y":68,"w":8,"h":8,"id":"route-24-lass-molly"},{"route":25,"name":"Bug Catcher Will","class":"Bug Catcher","canonFit":"Adapted to map","pokemon":[{"species":"Butterfree","level":15,"moves":["Confusion","Poison Powder"]}],"battleItem":"None","reward":"₽150","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":12,"y":35,"w":8,"h":8,"id":"route-25-bug-catcher-will"},{"route":25,"name":"Youngster Timmy","class":"Youngster","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Rattata","level":15,"moves":["Tackle","Tail Whip","Quick Attack","Hyper Fang"]},{"species":"Spearow","level":15,"moves":["Peck","Growl","Leer","Fury Attack"]}],"battleItem":"None","reward":"₽225","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":18,"y":47,"w":8,"h":8,"id":"route-25-youngster-timmy"},{"route":25,"name":"Hiker Aaron","class":"Hiker","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Machop","level":15,"moves":["Karate Chop"]},{"species":"Geodude","level":15,"moves":["Tackle","Defense Curl"]}],"battleItem":"None","reward":"₽525","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":42,"y":39,"w":8,"h":8,"id":"route-25-hiker-aaron"},{"route":25,"name":"Lass Diana","class":"Lass","canonFit":"Canonical team / custom map name","pokemon":[{"species":"Nidoran♂","level":15,"moves":["Leer","Tackle","Horn Attack","Poison Sting"]},{"species":"Nidoran♀","level":15,"moves":["Growl","Tackle","Scratch","Poison Sting"]}],"battleItem":"None","reward":"₽225","notes":"Exact Red/Blue party for this trainer class on this route; only the personal name comes from the custom map.","x":34,"y":55,"w":8,"h":8,"id":"route-25-lass-diana"},{"route":25,"name":"Picnicker Maya","class":"Jr. Trainer ♀","canonFit":"Adapted to map","pokemon":[{"species":"Rattata","level":14,"moves":["Tackle","Tail Whip","Quick Attack","Hyper Fang"]},{"species":"Pikachu","level":15,"moves":["Thunder Shock","Growl","Thunder Wave"]}],"battleItem":"None","reward":"₽300","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":59,"y":48,"w":8,"h":8,"id":"route-25-picnicker-maya"},{"route":25,"name":"Sailor Troy","class":"Sailor","canonFit":"Adapted to map","pokemon":[{"species":"Machop","level":14,"moves":["Karate Chop"]},{"species":"Tentacool","level":15,"moves":["Acid","Supersonic","Wrap"]}],"battleItem":"None","reward":"₽450","notes":"Custom map trainer not present as this class in Red/Blue; team is adapted to the route's Gen I level curve and trainer-class theme.","x":68,"y":61,"w":8,"h":8,"id":"route-25-sailor-troy"}];
-let selectedKantoRouteTrainerId = null;
-
-function getCurrentKantoRouteNumber(){
-  if(!currentKantoRouteLocationId) return null;
-  const m=String(currentKantoRouteLocationId).match(/route-(\d+)/);
-  return m?Number(m[1]):null;
-}
-
-function ensureKantoTrainerLayer(stage){
-  if(!stage) return null;
-  let layer=stage.querySelector('.kanto-trainer-hotspot-layer');
-  if(!layer){
-    layer=document.createElement('div');
-    layer.className='kanto-trainer-hotspot-layer';
-    stage.appendChild(layer);
-  }
-  return layer;
-}
-
-function installCurrentRouteTrainerHotspots(){
-  const route=getCurrentKantoRouteNumber();
-  const page=document.getElementById('kantoRoutePage');
-  if(!route||!page) return;
-  const shell=page.querySelector('.kanto-town-map-shell');
-  const stage=ensureKantoLocalStage(shell);
-  const layer=ensureKantoTrainerLayer(stage);
-  if(!layer) return;
-  layer.innerHTML='';
-  kantoRouteTrainerEncounters.filter(t=>t.route===route).forEach(function(trainer){
-    const b=document.createElement('button');
-    b.className='kanto-trainer-hotspot';
-    b.style.left=trainer.x+'%'; b.style.top=trainer.y+'%';
-    b.style.width=(trainer.w||8)+'%'; b.style.height=(trainer.h||8)+'%';
-    const loadedTrainer=getLoadedRouteEncounterTrainer(trainer);
-    const defeated=Boolean(loadedTrainer&&loadedTrainer.completed);
-    if(defeated){
-      b.classList.add('defeated');
-      b.setAttribute('aria-label',trainer.name+' — defeated');
-      b.title=trainer.name+' — defeated';
-    }else{
-      b.setAttribute('aria-label','Encounter '+trainer.name);
-      b.title='Encounter '+trainer.name;
-    }
-    b.onclick=function(event){event.stopPropagation();showKantoTrainerEncounter(trainer.id);};
-    layer.appendChild(b);
-  });
-}
-
-function findKantoRouteTrainer(id){return kantoRouteTrainerEncounters.find(t=>t.id===id)||null;}
-function getLoadedRouteEncounterTrainer(encounter){return trainers.find(t=>t.routeEncounterId===encounter.id)||null;}
-
-function escapeEncounterHTML(value){
-  return String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-}
-
-function showKantoTrainerEncounter(id){
-  const encounter=findKantoRouteTrainer(id);
-  const panel=document.getElementById('kantoRouteTrainerPanel');
-  if(!encounter||!panel) return;
-  selectedKantoRouteTrainerId=id;
-  const loaded=getLoadedRouteEncounterTrainer(encounter);
-  const defeated=Boolean(loaded&&loaded.completed);
-  const party=encounter.pokemon&&encounter.pokemon.length?encounter.pokemon.map(function(p){
-    const moves=(p.moves||[]).length?p.moves.join(', '):'No level-up moves listed';
-    return '<div class="route-trainer-mon"><strong>'+escapeEncounterHTML(p.species)+' — Lv. '+p.level+'</strong><div class="route-trainer-moves">Moves: '+escapeEncounterHTML(moves)+'</div></div>';
-  }).join(''):'<div class="route-trainer-mon"><strong>Dynamic Rival encounter</strong><div class="route-trainer-moves">Gary has early/late starter-dependent teams. This encounter is intentionally not auto-created until we add the rival-selection workflow.</div></div>';
-  panel.innerHTML='<div class="route-trainer-panel">'+
-    '<div class="route-trainer-title">'+escapeEncounterHTML(encounter.name)+'</div>'+
-    '<div class="route-trainer-meta">'+escapeEncounterHTML(encounter.class)+' • Route '+encounter.route+'</div>'+
-    '<div style="text-align:center"><span class="route-trainer-fit">'+escapeEncounterHTML(encounter.canonFit)+'</span></div>'+
-    '<div class="route-trainer-team">'+party+'</div>'+
-    '<div class="route-trainer-summary-grid"><div class="route-trainer-summary-box"><strong>Battle Item</strong><br>'+escapeEncounterHTML(encounter.battleItem||'None')+'</div><div class="route-trainer-summary-box"><strong>Reward</strong><br>'+escapeEncounterHTML(encounter.reward||'—')+'</div></div>'+
-    '<div class="route-trainer-actions">'+
-      '<button class="small-button" type="button" '+(defeated?'disabled':'onclick="loadKantoRouteEncounter(\''+encounter.id+'\',false)"')+'>'+(defeated?'Defeated ✓':(loaded?'Encounter Loaded ✓':'Load Encounter'))+'</button>'+
-      '<button class="primary-button" type="button" onclick="'+(defeated?"showPage('completedTrainersPage')":"loadKantoRouteEncounter('"+encounter.id+"',true)")+'">'+(defeated?'Go to Completed Trainers':(loaded?'Open Battles':'Load + Open Battles'))+'</button>'+
-    '</div>'+
-    '<div class="route-trainer-status">'+(defeated?'This trainer has been defeated. Re-enable them from Completed Trainers before a rematch.':(loaded?'This NPC and team are already in Trainers.':'Nothing is added until you choose Load Encounter.'))+'</div>'+
-    '<button class="small-button route-trainer-close" type="button" onclick="closeKantoTrainerEncounter()">Close Encounter</button>'+
-  '</div>';
-  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-function closeKantoTrainerEncounter(){
-  selectedKantoRouteTrainerId=null;
-  const panel=document.getElementById('kantoRouteTrainerPanel');
-  if(panel) panel.innerHTML='';
-}
-
-function getSpeciesForEncounter(name){
-  const clean=String(name).toLowerCase().replace(/♀/g,'f').replace(/♂/g,'m').replace(/[^a-z0-9]/g,'');
-  return pokemonDatabase.find(function(p){
-    return String(p.name).toLowerCase().replace(/♀/g,'f').replace(/♂/g,'m').replace(/[^a-z0-9]/g,'')===clean;
-  })||null;
-}
-
-function buildEncounterPokemon(spec, trainerId, offset){
-  const species=getSpeciesForEncounter(spec.species);
-  if(!species) return null;
-  const level=Math.max(1,Math.min(100,Number(spec.level)||1));
-  const ivs={hp:8,attack:8,defense:8,specialAttack:8,specialDefense:8,speed:8};
-  const evs={hp:0,attack:0,defense:0,specialAttack:0,specialDefense:0,speed:0};
-  const stats={
-    hp:calculateHP(species.baseStats.hp,ivs.hp,evs.hp,level),
-    attack:calculateStat(species.baseStats.attack,ivs.attack,evs.attack,level),
-    defense:calculateStat(species.baseStats.defense,ivs.defense,evs.defense,level),
-    specialAttack:calculateStat(species.baseStats.specialAttack,ivs.specialAttack,evs.specialAttack,level),
-    specialDefense:calculateStat(species.baseStats.specialDefense,ivs.specialDefense,evs.specialDefense,level),
-    speed:calculateStat(species.baseStats.speed,ivs.speed,evs.speed,level)
-  };
-  const moves=(spec.moves||[]).filter(m=>moveDatabase[m]);
-  const movePP={}; moves.forEach(m=>{movePP[m]=moveDatabase[m].pp;});
-  return {id:Date.now()+offset+1,speciesNumber:species.number,speciesName:species.name,nickname:'',level:level,ivs:ivs,evs:evs,stats:stats,currentHP:stats.hp,status:'None',moves:moves,movePP:movePP,trainerId:trainerId,storageLocation:'party',routeEncounterPokemon:true};
-}
-
-function loadKantoRouteEncounter(id,openBattles){
-  const encounter=findKantoRouteTrainer(id);
-  if(!encounter) return;
-  if(encounter.name==='Rival Gary'){
-    alert('Gary has multiple canonical Route 22 teams depending on story timing and starter choice. His hotspot is active, but automatic team loading will be added with a rival-selection screen so the wrong Gary team is never created.');
-    return;
-  }
-  let trainer=getLoadedRouteEncounterTrainer(encounter);
-  if(!trainer){
-    const trainerId=Date.now();
-    let inventory=[];
-    if(String(encounter.battleItem||'').startsWith('X Attack')) inventory=[{id:'x-attack',quantity:1}];
-    else if(String(encounter.battleItem||'').startsWith('Potion')) inventory=[{id:'potion',quantity:1}];
-    trainer={id:trainerId,name:encounter.name,trainerType:'NPC',money:0,inventory:inventory,completed:false,routeEncounterId:encounter.id,routeNumber:encounter.route,encounterReward:encounter.reward,encounterCanonFit:encounter.canonFit};
-    trainers.push(trainer);
-    encounter.pokemon.forEach(function(spec,i){const p=buildEncounterPokemon(spec,trainerId,i);if(p)ownedPokemon.push(p);});
-    saveTrainers(); savePokemon();
-  }
-  showKantoTrainerEncounter(id);
-  if(openBattles){
-    if(trainer.completed){
-      alert(trainer.name+' has already been defeated. Re-enable this trainer from Completed Trainers before starting a rematch.');
-      showPage('completedTrainersPage');
-      return;
-    }
-
-    /* Remember the route map that launched this encounter so the battle
-       returns there when it ends. */
-    battleReturnContext = {
-      type:'route',
-      locationId:currentKantoRouteLocationId,
-      encounterId:encounter.id
-    };
-
-    /* Clear any old active battle before rebuilding Battle Setup. */
-    activeBattlePokemonAId = null;
-    activeBattlePokemonBId = null;
-    resetBattleTemporaryState();
-    lastBattleOpponentSource = 'trainer:' + trainer.id;
-
-    showPage('battlesPage');
-    displayBattleSetup();
-
-    const source=document.getElementById('battleOpponentSourceSelect');
-    if(source){
-      const value='trainer:'+trainer.id;
-      if(Array.from(source.options).some(o=>o.value===value)){
-        source.value=value;
-        lastBattleOpponentSource=value;
-        displayBattleOpponentPokemonOptions();
-      }
-    }
-  }
-}
+/* Legacy route trainer encounter dataset removed for the Kanto rebuild. */
 
 </script>
 
