@@ -8018,8 +8018,9 @@ function renderKantoDetailTrainerHotspots(locationId) {
     button.className = "kanto-detail-trainer-hotspot";
     button.style.left = encounter.x + "%";
     button.style.top = encounter.y + "%";
-    button.style.width = "11%";
-    button.style.height = "14%";
+    // Slightly larger invisible hitboxes make trainer sprites easier to tap on mobile.
+    button.style.width = (encounter.w || 14) + "%";
+    button.style.height = (encounter.h || 18) + "%";
     button.setAttribute("aria-label", "Open encounter with " + encounter.name);
     button.title = encounter.name;
     button.onclick = function(event) {
