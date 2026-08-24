@@ -7899,6 +7899,34 @@ const kantoDetailMaps = {
     buttonLabel: "Open Vermilion Gym Map",
     caption: "Gym 4 — Electric • Trainers: Jolt, Watt • Leader: Amp"
   },
+  "fuchsia-city": {
+    title: "Fuchsia Gym — Gym 5",
+    image: "./assets/maps/fuchsia-gym.png",
+    alt: "Fuchsia Poison Gym map with trainers Nox, Vera, and Gym Leader Rue",
+    buttonLabel: "Open Fuchsia Gym Map",
+    caption: "Gym 5 — Poison • Trainers: Nox, Vera • Leader: Rue"
+  },
+  "saffron-city": {
+    title: "Saffron Gym — Gym 6",
+    image: "./assets/maps/saffron-gym.png",
+    alt: "Saffron Psychic Gym map with trainers Nova, Orin, and Gym Leader Sage",
+    buttonLabel: "Open Saffron Gym Map",
+    caption: "Gym 6 — Psychic • Trainers: Nova, Orin • Leader: Sage"
+  },
+  "celadon-city": {
+    title: "Celadon Gym — Gym 7",
+    image: "./assets/maps/celadon-gym.png",
+    alt: "Celadon Grass Gym map with trainers Poppy, Moss, and Gym Leader Flora",
+    buttonLabel: "Open Celadon Gym Map",
+    caption: "Gym 7 — Grass • Trainers: Poppy, Moss • Leader: Flora"
+  },
+  "cinnabar-island": {
+    title: "Cinnabar Gym — Gym 8",
+    image: "./assets/maps/cinnabar-gym.png",
+    alt: "Cinnabar Fire Gym map with trainers Cinder, Ash, and Gym Leader Blaze",
+    buttonLabel: "Open Cinnabar Gym Map",
+    caption: "Gym 8 — Fire • Trainers: Cinder, Ash • Leader: Blaze"
+  },
   "route-6": {
     title: "Route 6",
     image: "./assets/maps/route-6.png",
@@ -7999,6 +8027,26 @@ const kantoDetailTrainerEncounters = {
     {key:"g4-watt",name:"Watt",role:"Gym Trainer",x:18.0,y:54.0,reward:"₽1300",team:[["Voltorb",27],["Pikachu",27],["Magneton",28],["Electabuzz",28],["Raichu",29]]},
     {key:"g4-amp",name:"Amp",role:"Gym Leader",x:44.5,y:11.0,reward:"₽2500",team:[["Voltorb",28],["Magnemite",28],["Electabuzz",29],["Magneton",29],["Raichu",30]]}
   ],
+  "fuchsia-city": [
+    {key:"g5-nox",name:"Nox",role:"Gym Trainer",x:26.0,y:57.0,reward:"₽1500",team:[["Koffing",32],["Grimer",32],["Ekans",33],["Venonat",33],["Nidorino",34]]},
+    {key:"g5-vera",name:"Vera",role:"Gym Trainer",x:50.0,y:42.0,reward:"₽1750",team:[["Nidorina",33],["Weezing",33],["Arbok",34],["Venomoth",34],["Muk",34]]},
+    {key:"g5-rue",name:"Rue",role:"Gym Leader",x:50.0,y:18.0,reward:"₽3200",team:[["Arbok",34],["Venomoth",34],["Nidoqueen",35],["Weezing",35],["Muk",35],["Nidoking",36]]}
+  ],
+  "saffron-city": [
+    {key:"g6-nova",name:"Nova",role:"Gym Trainer",x:28.0,y:63.0,reward:"₽2000",team:[["Drowzee",37],["Kadabra",37],["Mr. Mime",38],["Slowpoke",38],["Exeggcute",39]]},
+    {key:"g6-orin",name:"Orin",role:"Gym Trainer",x:50.0,y:44.0,reward:"₽2250",team:[["Hypno",38],["Jynx",38],["Slowbro",39],["Kadabra",39],["Mr. Mime",39]]},
+    {key:"g6-sage",name:"Sage",role:"Gym Leader",x:50.0,y:17.0,reward:"₽3800",team:[["Hypno",39],["Mr. Mime",39],["Jynx",40],["Slowbro",40],["Exeggutor",40],["Alakazam",41]]}
+  ],
+  "celadon-city": [
+    {key:"g7-poppy",name:"Poppy",role:"Gym Trainer",x:50.0,y:75.0,reward:"₽2500",team:[["Tangela",40],["Weepinbell",40],["Parasect",41],["Gloom",41],["Exeggcute",42]]},
+    {key:"g7-moss",name:"Moss",role:"Gym Trainer",x:50.0,y:49.0,reward:"₽2750",team:[["Victreebel",41],["Vileplume",41],["Exeggutor",42],["Tangela",42],["Parasect",42]]},
+    {key:"g7-flora",name:"Flora",role:"Gym Leader",x:50.0,y:18.0,reward:"₽4500",team:[["Tangela",42],["Victreebel",42],["Parasect",43],["Vileplume",43],["Exeggutor",43],["Venusaur",44]]}
+  ],
+  "cinnabar-island": [
+    {key:"g8-cinder",name:"Cinder",role:"Gym Trainer",x:47.0,y:70.0,reward:"₽3000",team:[["Growlithe",46],["Ponyta",46],["Magmar",47],["Ninetales",47],["Rapidash",47]]},
+    {key:"g8-ash",name:"Ash",role:"Gym Trainer",x:50.0,y:46.0,reward:"₽3250",team:[["Arcanine",47],["Rapidash",47],["Ninetales",48],["Magmar",48],["Flareon",48]]},
+    {key:"g8-blaze",name:"Blaze",role:"Gym Leader",x:50.0,y:18.0,reward:"₽5500",team:[["Ninetales",48],["Rapidash",48],["Magmar",48],["Flareon",49],["Arcanine",49],["Charizard",49]]}
+  ],
   "route-6": [
     {key:"r6-toby",name:"Toby",role:"Ground Trainer",x:59.7,y:30.5,reward:"₽1300",team:[["Sandshrew",28],["Diglett",28],["Cubone",29],["Rhyhorn",29]]},
     {key:"r6-lark",name:"Lark",role:"Flying Trainer",x:73.5,y:47.0,reward:"₽1450",team:[["Pidgeotto",29],["Fearow",29],["Doduo",30],["Farfetch'd",30]]},
@@ -8010,9 +8058,9 @@ const kantoDetailTrainerEncounters = {
     {key:"r7-quinn",name:"Quinn",role:"Route Ace",x:50.0,y:69.0,reward:"₽1800",team:[["Kadabra",32],["Clefable",32],["Persian",32],["Wigglytuff",33],["Slowpoke",33]]}
   ],
   "route-8": [
-    {key:"r8-pax",name:"Pax",role:"Electric Trainer",x:27.0,y:50.0,reward:"₽1600",team:[["Voltorb",32],["Pikachu",32],["Magnemite",33],["Electrode",33]]},
+    {key:"r8-pax",name:"Pax",role:"Route Ace",x:27.0,y:50.0,reward:"₽1950",team:[["Raichu",33],["Electabuzz",33],["Magneton",34],["Electrode",34],["Pidgeot",34]]},
     {key:"r8-wren",name:"Wren",role:"Electric/Flying Trainer",x:50.5,y:47.5,reward:"₽1750",team:[["Pikachu",32],["Magneton",33],["Dodrio",33],["Electabuzz",34]]},
-    {key:"r8-jace",name:"Jace",role:"Route Ace",x:74.5,y:50.0,reward:"₽1950",team:[["Raichu",33],["Electabuzz",33],["Magneton",34],["Electrode",34],["Pidgeot",34]]}
+    {key:"r8-jace",name:"Jace",role:"Electric Trainer",x:74.5,y:50.0,reward:"₽1600",team:[["Voltorb",32],["Pikachu",32],["Magnemite",33],["Electrode",33]]}
   ],
   "route-9": [
     {key:"r9-mack",name:"Mack",role:"Fighting Trainer",x:34.0,y:70.0,reward:"₽1800",team:[["Primeape",35],["Machoke",35],["Hitmonlee",36],["Raticate",36]]},
