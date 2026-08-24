@@ -7967,6 +7967,20 @@ const kantoDetailMaps = {
     alt: "Route 11 map from Celadon City to the coast with trainers Marlin, Gale, and Brook plus a separate trainer-free coastal path",
     buttonLabel: "Open Route 11 Map",
     caption: "Celadon City → Coast • Trainers: Marlin, Gale, Brook"
+  },
+  "seafoam-islands": {
+    title: "Seafoam Islands",
+    image: "./assets/maps/seafoam-islands.png",
+    alt: "Seafoam Islands map with waterfalls, whirlpools, jagged rocks, and a cave entrance",
+    buttonLabel: "Open Seafoam Islands Map",
+    caption: "Seafoam Islands • Explore the cave entrance to reach the hidden chambers"
+  },
+  "seafoam-cave": {
+    title: "Seafoam Islands Cave",
+    image: "./assets/maps/seafoam-cave.png",
+    alt: "Three connected Seafoam cave chambers with waterfalls, whirlpools, and Articuno in the final chamber",
+    buttonLabel: "Open Seafoam Cave",
+    caption: "Three connected chambers • Legendary encounter: Articuno — Level 65"
   }
 };
 
@@ -8075,6 +8089,9 @@ const kantoDetailTrainerEncounters = {
     {key:"r11-marlin",name:"Marlin",role:"Water Trainer",x:60.0,y:43.0,reward:"₽2250",team:[["Goldeen",41],["Horsea",41],["Seel",42],["Fearow",42],["Raticate",42]]},
     {key:"r11-gale",name:"Gale",role:"Flying/Water Trainer",x:57.0,y:63.0,reward:"₽2450",team:[["Dodrio",42],["Seadra",42],["Seaking",43],["Kangaskhan",43],["Pidgeot",43]]},
     {key:"r11-brook",name:"Brook",role:"Route Ace",x:54.5,y:82.5,reward:"₽2700",team:[["Dewgong",43],["Seadra",43],["Dodrio",43],["Tauros",44],["Seaking",44],["Kangaskhan",44]]}
+  ],
+  "seafoam-cave": [
+    {key:"legend-articuno",name:"Articuno",role:"Legendary Pokémon",x:84.5,y:19.5,w:18,h:22,reward:"—",team:[["Articuno",65]]}
   ]
 };
 
@@ -8129,6 +8146,12 @@ const kantoDetailLocationHotspots = {
   "route-11": [
     {name:"Celadon City",target:"celadon-city",x:62,y:8,w:39,h:18},
     {name:"Coast / Route 12",target:"route-12",x:48,y:94,w:30,h:15}
+  ],
+  "seafoam-islands": [
+    {name:"Seafoam Cave",target:"seafoam-cave",x:19.0,y:57.0,w:15,h:18}
+  ],
+  "seafoam-cave": [
+    {name:"Seafoam Islands",target:"seafoam-islands",x:20.5,y:88.5,w:13,h:15}
   ]
 };
 
@@ -8168,6 +8191,10 @@ function renderKantoDetailTrainerHotspots(locationId) {
     button.title = encounter.name;
     button.onclick = function(event) {
       event.stopPropagation();
+      if (encounter.key === "legend-articuno") {
+        prepareKantoMapTrainerBattle(encounter.key);
+        return;
+      }
       selectKantoDetailTrainer(encounter.key);
     };
     layer.appendChild(button);
@@ -8196,7 +8223,7 @@ function openKantoDetailLocationHotspot(locationId) {
   const destination = (kantoMapLocations || []).find(function(location) {
     return location.id === locationId;
   });
-  const destinationName = destination ? destination.name : "this location";
+  const destinationName = destination ? destination.name : ((kantoDetailMaps[locationId] && kantoDetailMaps[locationId].title) || "this location");
   const currentMap = activeKantoDetailMapId && kantoDetailMaps[activeKantoDetailMapId]
     ? kantoDetailMaps[activeKantoDetailMapId].title
     : "this map";
