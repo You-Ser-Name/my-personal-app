@@ -7999,6 +7999,13 @@ const kantoDetailMaps = {
     caption: "Mt. Moon → Cerulean City • North branch: Victory Road • Trainers: Finn, Cora, Sol"
   },
   "cerulean-city": {
+    title: "Cerulean City",
+    image: "./assets/maps/cerulean-city.png",
+    alt: "Cerulean City map with the Gym, Poké Center, Poké Mart, Bike Shop, burglarized house, and homes",
+    buttonLabel: "Open Cerulean City Map",
+    caption: "Cerulean City • Cerulean Gym, Poké Center, Poké Mart, Bike Shop, burglarized house, and paths to Routes 4 and 5"
+  },
+  "cerulean-gym": {
     title: "Cerulean Gym — Gym 3",
     image: "./assets/maps/cerulean-gym.png",
     alt: "Cerulean Water Gym map with trainers Marina, Reef, and Gym Leader Coral",
@@ -8160,7 +8167,8 @@ const kantoDetailTrainerEncounters = {
     {key:"r4-cora",name:"Cora",role:"Bird Keeper",x:21.0,y:49.0,reward:"₽800",team:[["Pidgeotto",22],["Fearow",22],["Drowzee",22],["Meowth",23]]},
     {key:"r4-sol",name:"Sol",role:"Route Ace",x:61.0,y:48.0,reward:"₽950",team:[["Kadabra",22],["Persian",23],["Fearow",23],["Clefable",23]]}
   ],
-  "cerulean-city": [
+  "cerulean-city": [],
+  "cerulean-gym": [
     {key:"g3-marina",name:"Marina",role:"Gym Trainer",x:39.5,y:36.0,reward:"₽850",team:[["Goldeen",22],["Horsea",22],["Shellder",23],["Psyduck",23]]},
     {key:"g3-reef",name:"Reef",role:"Gym Trainer",x:40.5,y:60.0,reward:"₽1000",team:[["Poliwag",23],["Krabby",23],["Staryu",24],["Seel",24]]},
     {key:"g3-coral",name:"Coral",role:"Gym Leader",x:44.5,y:11.0,reward:"₽1800",team:[["Psyduck",24],["Staryu",24],["Seadra",25],["Poliwhirl",25],["Starmie",26]]}
@@ -8276,6 +8284,11 @@ const kantoDetailLocationHotspots = {
     {name:"Mt. Moon",target:"mt-moon",x:0,y:19,w:18,h:40},
     {name:"Cerulean City",target:"cerulean-city",x:81,y:16,w:19,h:61},
     {name:"Victory Road",target:"victory-road",x:41,y:0,w:18,h:25}
+  ],
+  "cerulean-city": [
+    {name:"Cerulean Gym",target:"cerulean-gym",x:17,y:7,w:28,h:25},
+    {name:"Route 4",target:"route-4",x:0,y:34,w:11,h:20},
+    {name:"Route 5",target:"route-5",x:43,y:89,w:14,h:11}
   ],
   "route-5": [
     {name:"Cerulean City",target:"cerulean-city",x:35,y:0,w:30,h:27},
@@ -8419,7 +8432,8 @@ function getKantoLocationDescription(locationId) {
     "route-3":"Route 3 connects Pewter City to Mt. Moon. Trainers: Theo, Maya, and Knox.",
     "mt-moon":"Mt. Moon connects Route 3 to Route 4. Trainers: Dex, Mira, and Vex.",
     "route-4":"Route 4 connects Mt. Moon to Cerulean City, with a north branch toward Victory Road. Trainers: Finn, Cora, and Sol.",
-    "cerulean-city":"Cerulean City contains Gym 3, a Water-type gym led by Coral.",
+    "cerulean-city":"Cerulean City includes the Cerulean Gym, Poké Center, Poké Mart, Bike Shop, burglarized house, and the bridge leading south.",
+    "cerulean-gym":"Cerulean Gym is Gym 3, a Water-type gym led by Coral.",
     "route-5":"Route 5 runs south from Cerulean City, then splits east toward Vermilion City and west toward Celadon City. Trainers: Ivy, Basil, and Lane.",
     "vermilion-city":"Vermilion City contains Gym 4, an Electric-type gym led by Amp.",
     "route-6":"Route 6 connects Vermilion City to Lavender Town. Trainers: Toby, Lark, and Reese.",
