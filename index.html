@@ -188,6 +188,14 @@ select {
 .poke-mart-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:center; padding:10px; border:1px solid #ddd; border-radius:10px; background:#fff; }
 .poke-mart-row small { color:#666; }
 .poke-mart-price { font-weight:800; white-space:nowrap; }
+.city-inline-tool { display:none; grid-column:1 / -1; margin-top:10px; padding-top:10px; border-top:1px solid #ddd; text-align:left; }
+.city-inline-tool h3 { margin:0 0 10px; text-align:left; }
+.city-inline-tool .money-display { text-align:left; margin:8px 0 12px; font-size:18px; }
+.city-inline-tool .poke-mart-row { background:#f8f8f8; }
+.city-inline-section-title { font-weight:800; margin:12px 0 7px; }
+.city-pc-grid { display:grid; gap:8px; }
+.city-pc-card { background:#f4f4f4; border-radius:8px; padding:9px; }
+.city-pc-card button { margin-top:7px; width:100%; padding:10px 8px; }
 .transfer-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .campaign-xp-progress { height:14px; border-radius:999px; overflow:hidden; background:#ddd; margin:8px 0 5px; }
 .campaign-xp-progress > div { height:100%; background:#cc0000; width:0%; transition:width .2s ease; }
@@ -2800,8 +2808,29 @@ select {
             <button class="primary-button small-button" type="button" onclick="healPartyPokemonFromCityCenter()">Heal Party Pokémon</button>
             <button class="small-button" type="button" onclick="openPCFromCityCenter()">Access PC</button>
           </div>
+          <div id="kantoDetailPokemonCenterPC" class="city-inline-tool">
+            <h3>Pokémon PC</h3>
+            <div class="form-row" style="margin-bottom:10px;">
+              <label>Player Character</label>
+              <select id="cityPokemonCenterTrainerSelect" onchange="displayCityCenterPCStorage()"></select>
+            </div>
+            <div id="cityPokemonCenterSharedPartyArea"></div>
+            <div id="cityPokemonCenterStorageArea"></div>
+          </div>
           <div id="kantoDetailPokeMartActions" style="display:none;grid-column:1 / -1;">
             <button class="primary-button small-button" style="width:100%;" type="button" onclick="openActiveCityPokeMart()">Shop at Poké Mart</button>
+          </div>
+          <div id="kantoDetailPokeMartShop" class="city-inline-tool">
+            <h3 id="cityPokeMartTitle">Poké Mart</h3>
+            <div class="form-row" style="margin-bottom:8px;">
+              <label>Player Character</label>
+              <select id="cityPokeMartTrainerSelect" onchange="displayPokeMart()"></select>
+            </div>
+            <div class="money-display"><strong>Money:</strong> ₽<span id="cityPokeMartMoney">0</span></div>
+            <div class="city-inline-section-title">Buy</div>
+            <div id="cityPokeMartStock" class="poke-mart-grid"></div>
+            <div class="city-inline-section-title">Sell</div>
+            <div id="cityPokeMartSellList" class="poke-mart-grid"></div>
           </div>
         </div>
       </div>
@@ -8599,10 +8628,14 @@ function openCityPokemonCenterLandmark(cityName) {
   const openButton = document.getElementById("kantoDetailLocationOpenButton");
   const pokemonCenterActions = document.getElementById("kantoDetailPokemonCenterActions");
   const pokeMartActions = document.getElementById("kantoDetailPokeMartActions");
+  const pcPanel = document.getElementById("kantoDetailPokemonCenterPC");
+  const martShop = document.getElementById("kantoDetailPokeMartShop");
   const trainerPanel = document.getElementById("kantoDetailTrainerPanel");
 
   if (!panel || !name || !type || !description || !openButton || !pokemonCenterActions) return;
   if (pokeMartActions) pokeMartActions.style.display = "none";
+  if (pcPanel) pcPanel.style.display = "none";
+  if (martShop) martShop.style.display = "none";
 
   if (trainerPanel) {
     trainerPanel.style.display = "none";
@@ -8665,11 +8698,17 @@ function healPartyPokemonFromCityCenter() {
 }
 
 function openPCFromCityCenter() {
-  showPage("pokemonCenterPage");
-  const storageDetails = document.getElementById("pokemonCenterStorageDetails");
-  if (storageDetails) storageDetails.open = true;
-  if (typeof displayPokemonCenterStorage === "function") displayPokemonCenterStorage();
-  window.scrollTo(0,0);
+  const pcPanel = document.getElementById("kantoDetailPokemonCenterPC");
+  if (!pcPanel) return;
+  const martShop = document.getElementById("kantoDetailPokeMartShop");
+  if (martShop) martShop.style.display = "none";
+  const opening = pcPanel.style.display !== "block";
+  pcPanel.style.display = opening ? "block" : "none";
+  if (opening) {
+    populateCityPokemonCenterTrainerSelect();
+    displayCityCenterPCStorage();
+    pcPanel.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
 }
 
 
@@ -8701,6 +8740,8 @@ function openCityPokeMartLandmark(martId,cityName) {
   const openButton=document.getElementById("kantoDetailLocationOpenButton");
   const centerActions=document.getElementById("kantoDetailPokemonCenterActions");
   const martActions=document.getElementById("kantoDetailPokeMartActions");
+  const pcPanel=document.getElementById("kantoDetailPokemonCenterPC");
+  const martShop=document.getElementById("kantoDetailPokeMartShop");
   const trainerPanel=document.getElementById("kantoDetailTrainerPanel");
   if(!panel||!name||!type||!description||!openButton||!martActions)return;
   if(trainerPanel){trainerPanel.style.display="none";trainerPanel.innerHTML="";}
@@ -8710,6 +8751,8 @@ function openCityPokeMartLandmark(martId,cityName) {
   description.textContent="Buy Generation I shop items or sell items from a player character's inventory.";
   openButton.style.display="none";
   if(centerActions)centerActions.style.display="none";
+  if(pcPanel)pcPanel.style.display="none";
+  if(martShop)martShop.style.display="none";
   martActions.style.display="block";
   panel.style.display="block";
   panel.scrollIntoView({behavior:"smooth",block:"nearest"});
@@ -8717,11 +8760,17 @@ function openCityPokeMartLandmark(martId,cityName) {
 
 function openActiveCityPokeMart(){
   if(!activeCityPokeMartId)return;
-  pokeMartReturnLocationId=activeKantoDetailMapId;
-  showPage("pokeMartPage");
-  populatePokeMartTrainerSelect();
-  displayPokeMart();
-  window.scrollTo(0,0);
+  const shop=document.getElementById("kantoDetailPokeMartShop");
+  if(!shop)return;
+  const pcPanel=document.getElementById("kantoDetailPokemonCenterPC");
+  if(pcPanel)pcPanel.style.display="none";
+  const opening=shop.style.display!=="block";
+  shop.style.display=opening?"block":"none";
+  if(opening){
+    populatePokeMartTrainerSelect();
+    displayPokeMart();
+    shop.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
 }
 
 function returnFromPokeMart(){
@@ -8731,18 +8780,22 @@ function returnFromPokeMart(){
 }
 
 function getPokeMartTrainer(){
-  const select=document.getElementById("pokeMartTrainerSelect");
+  const inlineSelect=document.getElementById("cityPokeMartTrainerSelect");
+  const pageSelect=document.getElementById("pokeMartTrainerSelect");
+  const shop=document.getElementById("kantoDetailPokeMartShop");
+  const select=(inlineSelect&&shop&&shop.style.display==="block")?inlineSelect:pageSelect;
   if(!select||!select.value)return null;
   return getTrainerById(Number(select.value));
 }
 
 function populatePokeMartTrainerSelect(){
-  const select=document.getElementById("pokeMartTrainerSelect");
-  if(!select)return;
-  const previous=select.value;
+  const selects=[document.getElementById("cityPokeMartTrainerSelect"),document.getElementById("pokeMartTrainerSelect")].filter(Boolean);
   const pcs=trainers.filter(t=>t.trainerType==="PC").sort((a,b)=>a.name.localeCompare(b.name));
-  select.innerHTML=pcs.length?pcs.map(t=>`<option value="${t.id}">${t.name}</option>`).join(""):`<option value="">No player characters</option>`;
-  if(pcs.some(t=>String(t.id)===previous))select.value=previous;
+  selects.forEach(function(select){
+    const previous=select.value;
+    select.innerHTML=pcs.length?pcs.map(t=>`<option value="${t.id}">${t.name}</option>`).join(""):`<option value="">No player characters</option>`;
+    if(pcs.some(t=>String(t.id)===previous))select.value=previous;
+  });
 }
 
 function addItemToTrainerInventory(trainer,itemId,quantity){
@@ -8781,23 +8834,32 @@ function sellPokeMartItem(itemId){
   displayPokeMart();
 }
 
-function displayPokeMart(){
-  const header=document.getElementById("pokeMartHeader");
-  const city=document.getElementById("pokeMartCityName");
-  const money=document.getElementById("pokeMartMoney");
-  const stockBox=document.getElementById("pokeMartStock");
-  const sellBox=document.getElementById("pokeMartSellList");
-  if(!header||!city||!money||!stockBox||!sellBox)return;
+function renderPokeMartInto(selectId,moneyId,stockId,sellId,titleId){
+  const select=document.getElementById(selectId);
+  const money=document.getElementById(moneyId);
+  const stockBox=document.getElementById(stockId);
+  const sellBox=document.getElementById(sellId);
+  const title=document.getElementById(titleId);
+  if(!select||!money||!stockBox||!sellBox)return;
   const place=activeCityPokeMartName||"Poké Mart";
-  header.textContent=place.includes("Celadon")?"Celadon Department Store":place+" Poké Mart";
-  city.textContent=header.textContent;
-  populatePokeMartTrainerSelect();
-  const trainer=getPokeMartTrainer();
+  if(title)title.textContent=place.includes("Celadon")?"Celadon Department Store":place+" Poké Mart";
+  const trainer=select.value?getTrainerById(Number(select.value)):null;
   money.textContent=trainer?(Number(trainer.money)||0).toLocaleString():"0";
   const stock=(gen1PokeMartStock[activeCityPokeMartId]||[]).map(id=>itemDatabase.find(item=>item.id===id)).filter(Boolean);
   stockBox.innerHTML=stock.length?stock.map(item=>`<div class="poke-mart-row"><div><strong>${item.name}</strong><br><small>${item.description}</small></div><div><div class="poke-mart-price">₽${Number(item.buyPrice||0).toLocaleString()}</div><button class="small-button" type="button" ${!trainer?"disabled":""} onclick="buyPokeMartItem('${item.id}')">Buy</button></div></div>`).join(""):`<p class="empty-message">No shop inventory configured.</p>`;
   const owned=trainer&&Array.isArray(trainer.inventory)?trainer.inventory.filter(entry=>Number(entry.quantity)>0):[];
   sellBox.innerHTML=owned.length?owned.map(entry=>{const db=itemDatabase.find(item=>item.id===entry.itemId);const sell=db?db.sellPrice:null;return `<div class="poke-mart-row"><div><strong>${entry.name}</strong><br><small>Owned: ${entry.quantity}${sell===null?" • Cannot be sold":" • Sell ₽"+Number(sell).toLocaleString()}</small></div><button class="small-button" type="button" ${sell===null?"disabled":""} onclick="sellPokeMartItem('${entry.itemId}')">Sell 1</button></div>`;}).join(""):`<p class="empty-message">This trainer has no items to sell.</p>`;
+}
+
+function displayPokeMart(){
+  const header=document.getElementById("pokeMartHeader");
+  const city=document.getElementById("pokeMartCityName");
+  const place=activeCityPokeMartName||"Poké Mart";
+  if(header)header.textContent=place.includes("Celadon")?"Celadon Department Store":place+" Poké Mart";
+  if(city&&header)city.textContent=header.textContent;
+  populatePokeMartTrainerSelect();
+  renderPokeMartInto("cityPokeMartTrainerSelect","cityPokeMartMoney","cityPokeMartStock","cityPokeMartSellList","cityPokeMartTitle");
+  renderPokeMartInto("pokeMartTrainerSelect","pokeMartMoney","pokeMartStock","pokeMartSellList","pokeMartCityName");
 }
 
 function openKantoDetailLocationHotspot(locationId) {
@@ -8811,6 +8873,8 @@ function openKantoDetailLocationHotspot(locationId) {
   const openButton = document.getElementById("kantoDetailLocationOpenButton");
   const pokemonCenterActions = document.getElementById("kantoDetailPokemonCenterActions");
   const pokeMartActions = document.getElementById("kantoDetailPokeMartActions");
+  const pcPanel = document.getElementById("kantoDetailPokemonCenterPC");
+  const martShop = document.getElementById("kantoDetailPokeMartShop");
   const trainerPanel = document.getElementById("kantoDetailTrainerPanel");
 
   if (!panel || !name || !type || !description || !openButton) return;
@@ -8818,6 +8882,8 @@ function openKantoDetailLocationHotspot(locationId) {
   openButton.style.display = "block";
   if (pokemonCenterActions) pokemonCenterActions.style.display = "none";
   if (pokeMartActions) pokeMartActions.style.display = "none";
+  if (pcPanel) pcPanel.style.display = "none";
+  if (martShop) martShop.style.display = "none";
 
   if (trainerPanel) {
     trainerPanel.style.display = "none";
@@ -8862,10 +8928,14 @@ function closeKantoDetailLocationPanel() {
   const panel = document.getElementById("kantoDetailLocationPanel");
   const centerActions = document.getElementById("kantoDetailPokemonCenterActions");
   const martActions = document.getElementById("kantoDetailPokeMartActions");
+  const pcPanel = document.getElementById("kantoDetailPokemonCenterPC");
+  const martShop = document.getElementById("kantoDetailPokeMartShop");
   const openButton = document.getElementById("kantoDetailLocationOpenButton");
   if (panel) panel.style.display = "none";
   if (centerActions) centerActions.style.display = "none";
   if (martActions) martActions.style.display = "none";
+  if (pcPanel) pcPanel.style.display = "none";
+  if (martShop) martShop.style.display = "none";
   if (openButton) openButton.style.display = "block";
 }
 
@@ -10279,6 +10349,30 @@ function getTrainerPartyPokemon(
   );
 }
 
+function populateCityPokemonCenterTrainerSelect() {
+  const select=document.getElementById("cityPokemonCenterTrainerSelect");
+  if(!select)return;
+  const previous=select.value;
+  const pcs=getPCTrainers();
+  select.innerHTML=pcs.length?pcs.map(t=>`<option value="${t.id}">${t.name}</option>`).join(""):`<option value="">No Player Characters created</option>`;
+  if(pcs.some(t=>String(t.id)===String(previous)))select.value=previous;
+}
+
+function displayCityCenterPCStorage() {
+  const sharedArea=document.getElementById("cityPokemonCenterSharedPartyArea");
+  const area=document.getElementById("cityPokemonCenterStorageArea");
+  const select=document.getElementById("cityPokemonCenterTrainerSelect");
+  if(!sharedArea||!area||!select)return;
+  const sharedParty=getSharedPartyPokemon();
+  const selectedTrainerId=select.value;
+  const selectedTrainer=trainers.find(t=>String(t.id)===String(selectedTrainerId));
+  const selectedStored=selectedTrainerId?getTrainerPokemon(selectedTrainerId).filter(p=>p.storageLocation==="pc"):[];
+  const sharedHTML=sharedParty.length?sharedParty.map(p=>{const t=getTrainerById(p.trainerId);return `<div class="city-pc-card"><strong>${getPokemonName(p)}</strong> — Lv. ${p.level}<br><small>Trainer: ${t?t.name:"Unassigned"} • HP ${p.currentHP}/${p.stats.hp}</small><button class="small-button" type="button" onclick="storePokemonInPC('${p.id}')">Store in PC</button></div>`}).join(""):`<p class="empty-message">No Pokémon currently in the shared party.</p>`;
+  const storedHTML=selectedStored.length?selectedStored.map(p=>`<div class="city-pc-card"><strong>${getPokemonName(p)}</strong> — Lv. ${p.level}<br><small>HP ${p.currentHP}/${p.stats.hp}</small><button class="small-button" type="button" ${sharedParty.length>=6?"disabled":""} onclick="withdrawPokemonFromPC('${p.id}')">Add to Shared Party</button></div>`).join(""):`<p class="empty-message">${selectedTrainer?selectedTrainer.name+" has no Pokémon in PC Storage.":"Select a player character."}</p>`;
+  sharedArea.innerHTML=`<div class="city-inline-section-title">Shared Party (${sharedParty.length} / 6)</div><div class="city-pc-grid">${sharedHTML}</div>`;
+  area.innerHTML=`<div class="city-inline-section-title">${selectedTrainer?selectedTrainer.name+" PC Storage":"PC Storage"}</div><div class="city-pc-grid">${storedHTML}</div>`;
+}
+
 function getTrainerStoredPokemon(
   trainerId
 ) {
@@ -10394,6 +10488,7 @@ function storePokemonInPC(
 
   savePokemon();
   displayPokemonCenterStorage();
+  displayCityCenterPCStorage();
 
   if (document.getElementById("ownedPokemonList")) {
     refreshPokemonManagementPages();
@@ -10447,6 +10542,7 @@ function withdrawPokemonFromPC(
 
   savePokemon();
   displayPokemonCenterStorage();
+  displayCityCenterPCStorage();
 
   if (document.getElementById("ownedPokemonList")) {
     refreshPokemonManagementPages();
