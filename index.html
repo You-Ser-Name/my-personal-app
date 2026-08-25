@@ -8020,6 +8020,13 @@ const kantoDetailMaps = {
     caption: "Cerulean City → Vermilion City • West branch: Celadon City • Trainers: Ivy, Basil, Lane"
   },
   "vermilion-city": {
+    title: "Vermilion City",
+    image: "./assets/maps/vermilion-city.png",
+    alt: "Vermilion City harbor map with the Vermilion Gym, Poké Center, Poké Mart, Fan Club, Fishing Guru house, generic homes, and docks over the water",
+    buttonLabel: "Open Vermilion City Map",
+    caption: "Vermilion City • Harbor city on docks with the Gym, Poké Center, Poké Mart, Fan Club, Fishing Guru house, and bridge routes west and east"
+  },
+  "vermilion-gym": {
     title: "Vermilion Gym — Gym 4",
     image: "./assets/maps/vermilion-gym.png",
     alt: "Vermilion Electric Gym map with trainers Jolt, Watt, and Gym Leader Amp",
@@ -8178,7 +8185,8 @@ const kantoDetailTrainerEncounters = {
     {key:"r5-basil",name:"Basil",role:"Jr. Trainer",x:41.0,y:49.0,reward:"₽1050",team:[["Gloom",25],["Weepinbell",25],["Venomoth",26],["Parasect",26]]},
     {key:"r5-lane",name:"Lane",role:"Route Ace",x:41.0,y:63.0,reward:"₽1250",team:[["Scyther",25],["Pinsir",26],["Gloom",26],["Weepinbell",27],["Venomoth",27]]}
   ],
-  "vermilion-city": [
+  "vermilion-city": [],
+  "vermilion-gym": [
     {key:"g4-jolt",name:"Jolt",role:"Gym Trainer",x:44.5,y:37.0,reward:"₽1100",team:[["Pikachu",26],["Magnemite",26],["Voltorb",27],["Electabuzz",28]]},
     {key:"g4-watt",name:"Watt",role:"Gym Trainer",x:18.0,y:54.0,reward:"₽1300",team:[["Voltorb",27],["Pikachu",27],["Magneton",28],["Electabuzz",28],["Raichu",29]]},
     {key:"g4-amp",name:"Amp",role:"Gym Leader",x:44.5,y:11.0,reward:"₽2500",team:[["Voltorb",28],["Magnemite",28],["Electabuzz",29],["Magneton",29],["Raichu",30]]}
@@ -8294,6 +8302,11 @@ const kantoDetailLocationHotspots = {
     {name:"Cerulean City",target:"cerulean-city",x:35,y:0,w:30,h:27},
     {name:"Vermilion City",target:"vermilion-city",x:77,y:53,w:23,h:38},
     {name:"Celadon City",target:"celadon-city",x:0,y:65,w:21,h:24}
+  ],
+  "vermilion-city": [
+    {name:"Vermilion Gym",target:"vermilion-gym",x:20,y:6,w:29,h:26},
+    {name:"Route 5",target:"route-5",x:0,y:40,w:17,h:16},
+    {name:"Route 6",target:"route-6",x:82,y:39,w:18,h:16}
   ],
   "route-6": [
     {name:"Vermilion City",target:"vermilion-city",x:12,y:17,w:25,h:30},
@@ -8435,7 +8448,8 @@ function getKantoLocationDescription(locationId) {
     "cerulean-city":"Cerulean City includes the Cerulean Gym, Poké Center, Poké Mart, Bike Shop, burglarized house, and the bridge leading south.",
     "cerulean-gym":"Cerulean Gym is Gym 3, a Water-type gym led by Coral.",
     "route-5":"Route 5 runs south from Cerulean City, then splits east toward Vermilion City and west toward Celadon City. Trainers: Ivy, Basil, and Lane.",
-    "vermilion-city":"Vermilion City contains Gym 4, an Electric-type gym led by Amp.",
+    "vermilion-city":"Vermilion City is a harbor city built on docks over the water, with the Gym, Poké Center, Poké Mart, Fan Club, Fishing Guru house, and the S.S. Anne harbor.",
+    "vermilion-gym":"Vermilion Gym is Gym 4, an Electric-type gym led by Amp.",
     "route-6":"Route 6 connects Vermilion City to Lavender Town. Trainers: Toby, Lark, and Reese.",
     "lavender-town":"Lavender Town is a campaign location connected to Routes 6 and 7.",
     "route-7":"Route 7 connects Lavender Town to the Safari Zone. Trainers: Emery, Kellan, and Quinn.",
