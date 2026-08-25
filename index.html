@@ -183,6 +183,16 @@ select {
   margin: 7px 0;
 }
 
+/* Poké Mart, transfers, campaign experience, and preload UI */
+.poke-mart-grid { display:grid; gap:10px; }
+.poke-mart-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:center; padding:10px; border:1px solid #ddd; border-radius:10px; background:#fff; }
+.poke-mart-row small { color:#666; }
+.poke-mart-price { font-weight:800; white-space:nowrap; }
+.transfer-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.campaign-xp-progress { height:14px; border-radius:999px; overflow:hidden; background:#ddd; margin:8px 0 5px; }
+.campaign-xp-progress > div { height:100%; background:#cc0000; width:0%; transition:width .2s ease; }
+@media(max-width:600px){ .transfer-grid{grid-template-columns:1fr;} .poke-mart-row{grid-template-columns:minmax(0,1fr) auto;} }
+
 .inventory-item {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -2626,6 +2636,11 @@ select {
       <p>Checks the currently deployed GitHub Pages app, clears app caches, and reloads the newest copy without needing a version-file change.</p>
       <button class="primary-button" style="width:100%;" type="button" onclick="refreshAppFromGitHub(this)">Refresh App from GitHub</button>
       <div id="githubRefreshStatus" style="margin-top:10px;font-weight:700;text-align:center;"></div>
+      <hr style="margin:18px 0;">
+      <h3 style="margin-bottom:6px;">Map Image Preload</h3>
+      <p style="margin-top:0;line-height:1.4;">Map and badge images preload automatically after the app opens. Use this button to manually reload them into the browser image cache if needed.</p>
+      <button class="small-button" style="width:100%;" type="button" onclick="preloadAllAppImages(true)">Preload All Images</button>
+      <div id="imagePreloadStatus" style="margin-top:10px;font-weight:700;text-align:center;"></div>
     </div>
 
 
@@ -2784,6 +2799,9 @@ select {
           <div id="kantoDetailPokemonCenterActions" style="display:none;grid-column:1 / -1;grid-template-columns:1fr 1fr;gap:10px;">
             <button class="primary-button small-button" type="button" onclick="healPartyPokemonFromCityCenter()">Heal Party Pokémon</button>
             <button class="small-button" type="button" onclick="openPCFromCityCenter()">Access PC</button>
+          </div>
+          <div id="kantoDetailPokeMartActions" style="display:none;grid-column:1 / -1;">
+            <button class="primary-button small-button" style="width:100%;" type="button" onclick="openActiveCityPokeMart()">Shop at Poké Mart</button>
           </div>
         </div>
       </div>
@@ -3296,6 +3314,13 @@ select {
         <span id="pcPokemonLevelDisplay">5</span>
       </div>
 
+      <div class="money-display" style="margin-top:6px;">
+        <strong>Shared Experience:</strong>
+        <span id="campaignExperienceDisplay">0 / 100 XP</span>
+        <div class="campaign-xp-progress"><div id="campaignExperienceBar"></div></div>
+        <small id="campaignExperienceNote">Experience earned from defeated wild Pokémon and NPC trainer teams is shared by the campaign.</small>
+      </div>
+
       <div style="display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;">
         <button
           class="small-button"
@@ -3410,6 +3435,52 @@ select {
       <h3>Items</h3>
       <div id="trainerInventoryList"></div>
 
+    </div>
+
+    <div class="form-card">
+      <h2 style="margin-top:0;">Trade / Gift</h2>
+      <p style="line-height:1.4;">Transfer money or items from this trainer to another player character.</p>
+      <div class="form-row">
+        <label>Recipient</label>
+        <select id="inventoryTransferRecipient"></select>
+      </div>
+      <div class="transfer-grid">
+        <div>
+          <h3>Money</h3>
+          <div class="form-row"><label>Amount</label><input id="inventoryTransferMoneyAmount" type="number" min="1" value="1"></div>
+          <button class="small-button" style="width:100%;" type="button" onclick="transferMoneyFromActiveTrainer()">Gift Money</button>
+        </div>
+        <div>
+          <h3>Items</h3>
+          <div class="form-row"><label>Item</label><select id="inventoryTransferItem"></select></div>
+          <div class="form-row"><label>Quantity</label><input id="inventoryTransferItemQuantity" type="number" min="1" value="1"></div>
+          <button class="small-button" style="width:100%;" type="button" onclick="transferItemFromActiveTrainer()">Gift Item</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- POKÉ MART -->
+<div id="pokeMartPage" style="display:none;">
+  <header><h1 id="pokeMartHeader">Poké Mart</h1></header>
+  <div class="page-content">
+    <button class="back-button" type="button" onclick="returnFromPokeMart()">← Back</button>
+    <div class="form-card">
+      <h2 id="pokeMartCityName" style="margin-top:0;">Poké Mart</h2>
+      <div class="form-row">
+        <label>Player Character</label>
+        <select id="pokeMartTrainerSelect" onchange="displayPokeMart()"></select>
+      </div>
+      <div class="money-display"><strong>Money:</strong> ₽<span id="pokeMartMoney">0</span></div>
+    </div>
+    <div class="form-card">
+      <h2 style="margin-top:0;">Buy</h2>
+      <div id="pokeMartStock" class="poke-mart-grid"></div>
+    </div>
+    <div class="form-card">
+      <h2 style="margin-top:0;">Sell</h2>
+      <div id="pokeMartSellList" class="poke-mart-grid"></div>
     </div>
   </div>
 </div>
@@ -6323,17 +6394,37 @@ const itemDatabase = [
 
 {name:"Repel",id:"repel",category:"Field Items",description:"Wards off wild Pokémon.",buyPrice:350,sellPrice:175},
 {name:"Super Repel",id:"super-repel",category:"Field Items",description:"Wards off wild Pokémon for longer.",buyPrice:500,sellPrice:250},
-{name:"Fire Stone",id:"fire-stone",category:"Evolution Items",description:"Used to evolve certain Pokémon.",buyPrice:null,sellPrice:null},
-{name:"Water Stone",id:"water-stone",category:"Evolution Items",description:"Used to evolve certain Pokémon.",buyPrice:null,sellPrice:null},
-{name:"Thunder Stone",id:"thunder-stone",category:"Evolution Items",description:"Used to evolve certain Pokémon.",buyPrice:null,sellPrice:null},
-{name:"Leaf Stone",id:"leaf-stone",category:"Evolution Items",description:"Used to evolve certain Pokémon.",buyPrice:null,sellPrice:null},
+{name:"Max Repel",id:"max-repel",category:"Field Items",description:"Wards off wild Pokémon for the longest duration.",buyPrice:700,sellPrice:350},
+{name:"Escape Rope",id:"escape-rope",category:"Field Items",description:"Escapes from caves and enclosed areas.",buyPrice:550,sellPrice:275},
+{name:"Revive",id:"revive",category:"Medicine",description:"Revives a fainted Pokémon with half HP.",buyPrice:1500,sellPrice:750},
+{name:"Poké Doll",id:"poke-doll",category:"Field Items",description:"Can be used to escape from a wild Pokémon.",buyPrice:1000,sellPrice:500},
+{name:"Fire Stone",id:"fire-stone",category:"Evolution Items",description:"Used to evolve certain Pokémon.",buyPrice:2100,sellPrice:1050},
+{name:"Water Stone",id:"water-stone",category:"Evolution Items",description:"Used to evolve certain Pokémon.",buyPrice:2100,sellPrice:1050},
+{name:"Thunder Stone",id:"thunder-stone",category:"Evolution Items",description:"Used to evolve certain Pokémon.",buyPrice:2100,sellPrice:1050},
+{name:"Leaf Stone",id:"leaf-stone",category:"Evolution Items",description:"Used to evolve certain Pokémon.",buyPrice:2100,sellPrice:1050},
 {name:"Moon Stone",id:"moon-stone",category:"Evolution Items",description:"Used to evolve certain Pokémon.",buyPrice:null,sellPrice:null},
 
 {name:"X Accuracy",id:"x-accuracy",category:"Battle Items",description:"Temporarily boosts a Pokémon's accuracy by 2 stages.",buyPrice:950,sellPrice:475},
 {name:"X Attack",id:"x-attack",category:"Battle Items",description:"Temporarily boosts a Pokémon's Attack by 1 stage.",buyPrice:500,sellPrice:250},
 {name:"X Defense",id:"x-defense",category:"Battle Items",description:"Temporarily boosts a Pokémon's Defense by 1 stage.",buyPrice:550,sellPrice:275},
 {name:"X Special",id:"x-special",category:"Battle Items",description:"Temporarily boosts Special Attack and Special Defense by 1 stage.",buyPrice:350,sellPrice:175},
-{name:"X Speed",id:"x-speed",category:"Battle Items",description:"Temporarily boosts Speed by 1 stage.",buyPrice:350,sellPrice:175}
+{name:"X Speed",id:"x-speed",category:"Battle Items",description:"Temporarily boosts Speed by 1 stage.",buyPrice:350,sellPrice:175},
+{name:"Guard Spec.",id:"guard-spec",category:"Battle Items",description:"Temporarily prevents stat reduction.",buyPrice:700,sellPrice:350},
+{name:"Dire Hit",id:"dire-hit",category:"Battle Items",description:"Raises the chance of critical hits.",buyPrice:650,sellPrice:325},
+{name:"HP Up",id:"hp-up",category:"Vitamins",description:"Raises HP stat experience.",buyPrice:9800,sellPrice:4900},
+{name:"Protein",id:"protein",category:"Vitamins",description:"Raises Attack stat experience.",buyPrice:9800,sellPrice:4900},
+{name:"Iron",id:"iron",category:"Vitamins",description:"Raises Defense stat experience.",buyPrice:9800,sellPrice:4900},
+{name:"Carbos",id:"carbos",category:"Vitamins",description:"Raises Speed stat experience.",buyPrice:9800,sellPrice:4900},
+{name:"Calcium",id:"calcium",category:"Vitamins",description:"Raises Special stat experience.",buyPrice:9800,sellPrice:4900},
+{name:"TM32 — Double Team",id:"tm32-double-team",category:"TMs",description:"TM32: Double Team.",buyPrice:1000,sellPrice:500},
+{name:"TM33 — Reflect",id:"tm33-reflect",category:"TMs",description:"TM33: Reflect.",buyPrice:1000,sellPrice:500},
+{name:"TM02 — Razor Wind",id:"tm02-razor-wind",category:"TMs",description:"TM02: Razor Wind.",buyPrice:2000,sellPrice:1000},
+{name:"TM07 — Horn Drill",id:"tm07-horn-drill",category:"TMs",description:"TM07: Horn Drill.",buyPrice:2000,sellPrice:1000},
+{name:"TM37 — Egg Bomb",id:"tm37-egg-bomb",category:"TMs",description:"TM37: Egg Bomb.",buyPrice:2000,sellPrice:1000},
+{name:"TM01 — Mega Punch",id:"tm01-mega-punch",category:"TMs",description:"TM01: Mega Punch.",buyPrice:3000,sellPrice:1500},
+{name:"TM05 — Mega Kick",id:"tm05-mega-kick",category:"TMs",description:"TM05: Mega Kick.",buyPrice:3000,sellPrice:1500},
+{name:"TM09 — Take Down",id:"tm09-take-down",category:"TMs",description:"TM09: Take Down.",buyPrice:3000,sellPrice:1500},
+{name:"TM17 — Submission",id:"tm17-submission",category:"TMs",description:"TM17: Submission.",buyPrice:3000,sellPrice:1500}
 
 ];
 
@@ -8271,6 +8362,7 @@ const kantoDetailLocationHotspots = {
   ],
   "viridian-city": [
     {name:"Viridian Poké Center",action:"pokemon-center",cityName:"Viridian City",x:56,y:5,w:28,h:28},
+    {name:"Viridian Poké Mart",action:"poke-mart",cityName:"Viridian City",martId:"viridian-city",x:59,y:31,w:25,h:25},
     {name:"Viridian Gym",target:"viridian-gym",x:18,y:9,w:27,h:24},
     {name:"Route 1",target:"route-1",x:0,y:42,w:10,h:18},
     {name:"Route 2",target:"route-2",x:43,y:0,w:14,h:11},
@@ -8282,6 +8374,7 @@ const kantoDetailLocationHotspots = {
   ],
   "pewter-city": [
     {name:"Pewter Poké Center",action:"pokemon-center",cityName:"Pewter City",x:49,y:6,w:29,h:29},
+    {name:"Pewter Poké Mart",action:"poke-mart",cityName:"Pewter City",martId:"pewter-city",x:57,y:31,w:23,h:23},
     {name:"Pewter Gym",target:"pewter-gym",x:32,y:19,w:36,h:31},
     {name:"Route 2",target:"route-2",x:43,y:96,w:24,h:12},
     {name:"Route 3",target:"route-3",x:96,y:35,w:12,h:24}
@@ -8301,6 +8394,7 @@ const kantoDetailLocationHotspots = {
   ],
   "cerulean-city": [
     {name:"Cerulean Poké Center",action:"pokemon-center",cityName:"Cerulean City",x:59,y:5,w:27,h:29},
+    {name:"Cerulean Poké Mart",action:"poke-mart",cityName:"Cerulean City",martId:"cerulean-city",x:73,y:31,w:24,h:25},
     {name:"Cerulean Gym",target:"cerulean-gym",x:30,y:18,w:38,h:30},
     {name:"Route 4",target:"route-4",x:5,y:43,w:20,h:24},
     {name:"Route 5",target:"route-5",x:50,y:84,w:24,h:23}
@@ -8312,6 +8406,7 @@ const kantoDetailLocationHotspots = {
   ],
   "vermilion-city": [
     {name:"Vermilion Poké Center",action:"pokemon-center",cityName:"Vermilion City",x:55,y:3,w:29,h:30},
+    {name:"Vermilion Poké Mart",action:"poke-mart",cityName:"Vermilion City",martId:"vermilion-city",x:61,y:27,w:22,h:23},
     {name:"Vermilion Gym",target:"vermilion-gym",x:16,y:4,w:33,h:29},
     {name:"Route 5",target:"route-5",x:0,y:34,w:23,h:25},
     {name:"Route 6",target:"route-6",x:77,y:34,w:23,h:25}
@@ -8421,6 +8516,9 @@ function renderKantoDetailTrainerHotspots(locationId) {
       if (location.action === "pokemon-center") {
         openCityPokemonCenterLandmark(location.cityName || location.name);
       }
+      else if (location.action === "poke-mart") {
+        openCityPokeMartLandmark(location.martId || activeKantoDetailMapId, location.cityName || location.name);
+      }
       else {
         openKantoDetailLocationHotspot(location.target);
       }
@@ -8500,9 +8598,11 @@ function openCityPokemonCenterLandmark(cityName) {
   const description = document.getElementById("kantoDetailLocationDescription");
   const openButton = document.getElementById("kantoDetailLocationOpenButton");
   const pokemonCenterActions = document.getElementById("kantoDetailPokemonCenterActions");
+  const pokeMartActions = document.getElementById("kantoDetailPokeMartActions");
   const trainerPanel = document.getElementById("kantoDetailTrainerPanel");
 
   if (!panel || !name || !type || !description || !openButton || !pokemonCenterActions) return;
+  if (pokeMartActions) pokeMartActions.style.display = "none";
 
   if (trainerPanel) {
     trainerPanel.style.display = "none";
@@ -8572,6 +8672,134 @@ function openPCFromCityCenter() {
   window.scrollTo(0,0);
 }
 
+
+/* Generation I Red/Blue Poké Mart inventories. Celadon uses the Department Store. */
+const gen1PokeMartStock = {
+  "viridian-city":["poke-ball","antidote","paralyze-heal","burn-heal"],
+  "pewter-city":["poke-ball","potion","escape-rope","antidote","burn-heal","awakening","paralyze-heal"],
+  "cerulean-city":["poke-ball","potion","repel","antidote","burn-heal","awakening","paralyze-heal"],
+  "vermilion-city":["poke-ball","super-potion","ice-heal","awakening","paralyze-heal","repel"],
+  "lavender-town":["great-ball","super-potion","revive","escape-rope","super-repel","antidote","burn-heal","ice-heal","paralyze-heal"],
+  "fuchsia-city":["ultra-ball","great-ball","super-potion","revive","full-heal","super-repel"],
+  "saffron-city":["great-ball","hyper-potion","max-repel","escape-rope","full-heal","revive"],
+  "cinnabar-island":["ultra-ball","great-ball","hyper-potion","max-repel","escape-rope","full-heal","revive"],
+  "celadon-city":["great-ball","super-potion","revive","super-repel","antidote","burn-heal","ice-heal","awakening","paralyze-heal","poke-doll","fire-stone","thunder-stone","water-stone","leaf-stone","x-accuracy","guard-spec","dire-hit","x-attack","x-defense","x-speed","x-special","hp-up","protein","iron","carbos","calcium","tm32-double-team","tm33-reflect","tm02-razor-wind","tm07-horn-drill","tm37-egg-bomb","tm01-mega-punch","tm05-mega-kick","tm09-take-down","tm17-submission"]
+};
+
+let activeCityPokeMartId = null;
+let activeCityPokeMartName = null;
+let pokeMartReturnLocationId = null;
+
+function openCityPokeMartLandmark(martId,cityName) {
+  activeCityPokeMartId = martId;
+  activeCityPokeMartName = cityName || "City";
+  selectedKantoLocationId = null;
+  const panel=document.getElementById("kantoDetailLocationPanel");
+  const name=document.getElementById("kantoDetailLocationName");
+  const type=document.getElementById("kantoDetailLocationType");
+  const description=document.getElementById("kantoDetailLocationDescription");
+  const openButton=document.getElementById("kantoDetailLocationOpenButton");
+  const centerActions=document.getElementById("kantoDetailPokemonCenterActions");
+  const martActions=document.getElementById("kantoDetailPokeMartActions");
+  const trainerPanel=document.getElementById("kantoDetailTrainerPanel");
+  if(!panel||!name||!type||!description||!openButton||!martActions)return;
+  if(trainerPanel){trainerPanel.style.display="none";trainerPanel.innerHTML="";}
+  selectedKantoDetailTrainerKey=null;
+  type.textContent="Poké Mart";
+  name.textContent=activeCityPokeMartName + (activeCityPokeMartName.includes("Celadon") ? " Department Store" : " Poké Mart");
+  description.textContent="Buy Generation I shop items or sell items from a player character's inventory.";
+  openButton.style.display="none";
+  if(centerActions)centerActions.style.display="none";
+  martActions.style.display="block";
+  panel.style.display="block";
+  panel.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function openActiveCityPokeMart(){
+  if(!activeCityPokeMartId)return;
+  pokeMartReturnLocationId=activeKantoDetailMapId;
+  showPage("pokeMartPage");
+  populatePokeMartTrainerSelect();
+  displayPokeMart();
+  window.scrollTo(0,0);
+}
+
+function returnFromPokeMart(){
+  const target=pokeMartReturnLocationId;
+  if(target&&kantoDetailMaps[target])openKantoDetailMap(target);
+  else showPage("homePage");
+}
+
+function getPokeMartTrainer(){
+  const select=document.getElementById("pokeMartTrainerSelect");
+  if(!select||!select.value)return null;
+  return getTrainerById(Number(select.value));
+}
+
+function populatePokeMartTrainerSelect(){
+  const select=document.getElementById("pokeMartTrainerSelect");
+  if(!select)return;
+  const previous=select.value;
+  const pcs=trainers.filter(t=>t.trainerType==="PC").sort((a,b)=>a.name.localeCompare(b.name));
+  select.innerHTML=pcs.length?pcs.map(t=>`<option value="${t.id}">${t.name}</option>`).join(""):`<option value="">No player characters</option>`;
+  if(pcs.some(t=>String(t.id)===previous))select.value=previous;
+}
+
+function addItemToTrainerInventory(trainer,itemId,quantity){
+  if(!trainer||quantity<=0)return;
+  const db=itemDatabase.find(item=>item.id===itemId);
+  if(!db)return;
+  if(!Array.isArray(trainer.inventory))trainer.inventory=[];
+  const existing=trainer.inventory.find(item=>item.itemId===itemId);
+  if(existing)existing.quantity=(Number(existing.quantity)||0)+quantity;
+  else trainer.inventory.push({id:Date.now()+Math.floor(Math.random()*100000),itemId:db.id,name:db.name,quantity:quantity});
+}
+
+function buyPokeMartItem(itemId){
+  const trainer=getPokeMartTrainer();
+  const item=itemDatabase.find(entry=>entry.id===itemId);
+  const stock=gen1PokeMartStock[activeCityPokeMartId]||[];
+  if(!trainer||!item||!stock.includes(itemId)||item.buyPrice===null)return;
+  const price=Number(item.buyPrice)||0;
+  if((Number(trainer.money)||0)<price){alert(trainer.name+" does not have enough money.");return;}
+  trainer.money=(Number(trainer.money)||0)-price;
+  addItemToTrainerInventory(trainer,itemId,1);
+  saveTrainers();
+  displayPokeMart();
+}
+
+function sellPokeMartItem(itemId){
+  const trainer=getPokeMartTrainer();
+  if(!trainer||!Array.isArray(trainer.inventory))return;
+  const entry=trainer.inventory.find(item=>item.itemId===itemId&&Number(item.quantity)>0);
+  const db=itemDatabase.find(item=>item.id===itemId);
+  if(!entry||!db||db.sellPrice===null){alert("This item cannot be sold.");return;}
+  entry.quantity-=1;
+  if(entry.quantity<=0)trainer.inventory=trainer.inventory.filter(item=>item!==entry);
+  trainer.money=(Number(trainer.money)||0)+(Number(db.sellPrice)||0);
+  saveTrainers();
+  displayPokeMart();
+}
+
+function displayPokeMart(){
+  const header=document.getElementById("pokeMartHeader");
+  const city=document.getElementById("pokeMartCityName");
+  const money=document.getElementById("pokeMartMoney");
+  const stockBox=document.getElementById("pokeMartStock");
+  const sellBox=document.getElementById("pokeMartSellList");
+  if(!header||!city||!money||!stockBox||!sellBox)return;
+  const place=activeCityPokeMartName||"Poké Mart";
+  header.textContent=place.includes("Celadon")?"Celadon Department Store":place+" Poké Mart";
+  city.textContent=header.textContent;
+  populatePokeMartTrainerSelect();
+  const trainer=getPokeMartTrainer();
+  money.textContent=trainer?(Number(trainer.money)||0).toLocaleString():"0";
+  const stock=(gen1PokeMartStock[activeCityPokeMartId]||[]).map(id=>itemDatabase.find(item=>item.id===id)).filter(Boolean);
+  stockBox.innerHTML=stock.length?stock.map(item=>`<div class="poke-mart-row"><div><strong>${item.name}</strong><br><small>${item.description}</small></div><div><div class="poke-mart-price">₽${Number(item.buyPrice||0).toLocaleString()}</div><button class="small-button" type="button" ${!trainer?"disabled":""} onclick="buyPokeMartItem('${item.id}')">Buy</button></div></div>`).join(""):`<p class="empty-message">No shop inventory configured.</p>`;
+  const owned=trainer&&Array.isArray(trainer.inventory)?trainer.inventory.filter(entry=>Number(entry.quantity)>0):[];
+  sellBox.innerHTML=owned.length?owned.map(entry=>{const db=itemDatabase.find(item=>item.id===entry.itemId);const sell=db?db.sellPrice:null;return `<div class="poke-mart-row"><div><strong>${entry.name}</strong><br><small>Owned: ${entry.quantity}${sell===null?" • Cannot be sold":" • Sell ₽"+Number(sell).toLocaleString()}</small></div><button class="small-button" type="button" ${sell===null?"disabled":""} onclick="sellPokeMartItem('${entry.itemId}')">Sell 1</button></div>`;}).join(""):`<p class="empty-message">This trainer has no items to sell.</p>`;
+}
+
 function openKantoDetailLocationHotspot(locationId) {
   selectedKantoLocationId = locationId;
 
@@ -8582,12 +8810,14 @@ function openKantoDetailLocationHotspot(locationId) {
   const description = document.getElementById("kantoDetailLocationDescription");
   const openButton = document.getElementById("kantoDetailLocationOpenButton");
   const pokemonCenterActions = document.getElementById("kantoDetailPokemonCenterActions");
+  const pokeMartActions = document.getElementById("kantoDetailPokeMartActions");
   const trainerPanel = document.getElementById("kantoDetailTrainerPanel");
 
   if (!panel || !name || !type || !description || !openButton) return;
 
   openButton.style.display = "block";
   if (pokemonCenterActions) pokemonCenterActions.style.display = "none";
+  if (pokeMartActions) pokeMartActions.style.display = "none";
 
   if (trainerPanel) {
     trainerPanel.style.display = "none";
@@ -8627,12 +8857,16 @@ function openSelectedKantoDetailLocationFromPanel() {
 
 function closeKantoDetailLocationPanel() {
   activeCityPokemonCenterName = null;
+  activeCityPokeMartId = null;
+  activeCityPokeMartName = null;
   const panel = document.getElementById("kantoDetailLocationPanel");
+  const centerActions = document.getElementById("kantoDetailPokemonCenterActions");
+  const martActions = document.getElementById("kantoDetailPokeMartActions");
   const openButton = document.getElementById("kantoDetailLocationOpenButton");
-  const pokemonCenterActions = document.getElementById("kantoDetailPokemonCenterActions");
   if (panel) panel.style.display = "none";
+  if (centerActions) centerActions.style.display = "none";
+  if (martActions) martActions.style.display = "none";
   if (openButton) openButton.style.display = "block";
-  if (pokemonCenterActions) pokemonCenterActions.style.display = "none";
 }
 
 function selectKantoDetailTrainer(trainerKey) {
@@ -9108,7 +9342,8 @@ function showPage(pageId) {
     "campaignPage",
     "settingsPage",
     "inventoryPage",
-    "trainerInventoryPage"
+    "trainerInventoryPage",
+    "pokeMartPage"
   ].forEach(function(id) {
     document.getElementById(id).style.display = "none";
   });
@@ -9193,6 +9428,7 @@ function showPage(pageId) {
     displayAutomaticBackups();
   }
   if (pageId === "inventoryPage") displayInventoryTrainerList();
+  if (pageId === "pokeMartPage") { populatePokeMartTrainerSelect(); displayPokeMart(); }
 }
 
 
@@ -16614,6 +16850,16 @@ function handleBattleConclusionIfNeeded() {
   let message =
     conclusion.message;
 
+  if (conclusion.result === "won") {
+    const xpResult = awardCampaignExperience(calculateBattleVictoryExperience(conclusion));
+    if (xpResult.gained > 0) {
+      message += "\n\nShared campaign experience: +" + xpResult.gained.toLocaleString() + " XP.";
+      if (xpResult.levels > 0) {
+        message += "\nCampaign level increased to " + pcPokemonLevel + "! All PC Pokémon were updated to the new campaign level.";
+      }
+    }
+  }
+
   if (
     conclusion.result === "won" &&
     conclusion.defeatedTrainer
@@ -18422,6 +18668,50 @@ function adjustPCPokemonLevel(
   );
 }
 
+function getCampaignExperience(){
+  const progress=getKantoMapProgress();
+  const value=Number(progress.__campaignExperience);
+  return Number.isFinite(value)&&value>=0?Math.floor(value):0;
+}
+
+function saveCampaignExperience(value){
+  const progress=getKantoMapProgress();
+  progress.__campaignExperience=Math.max(0,Math.floor(Number(value)||0));
+  saveKantoMapProgress(progress);
+}
+
+function campaignExperienceNeededForLevel(level){
+  return Math.max(100,Math.floor((Number(level)||1)*60));
+}
+
+function awardCampaignExperience(amount){
+  let gained=Math.max(0,Math.floor(Number(amount)||0));
+  if(gained<=0)return {gained:0,levels:0};
+  let pool=getCampaignExperience()+gained;
+  let levels=0;
+  while(pcPokemonLevel<100){
+    const needed=campaignExperienceNeededForLevel(pcPokemonLevel);
+    if(pool<needed)break;
+    pool-=needed;
+    setPCPokemonLevel(pcPokemonLevel+1);
+    levels+=1;
+  }
+  if(pcPokemonLevel>=100)pool=0;
+  saveCampaignExperience(pool);
+  displayCampaignPage();
+  return {gained:gained,levels:levels};
+}
+
+function calculateBattleVictoryExperience(conclusion){
+  if(!conclusion||conclusion.result!=="won")return 0;
+  if(conclusion.defeatedTrainer){
+    return getTrainerPokemon(conclusion.defeatedTrainer.id).reduce((sum,p)=>sum+Math.max(1,Number(p.level)||1),0)*5;
+  }
+  const sideB=getBattlePokemon("B");
+  if(sideB&&sideB.temporaryWild)return Math.max(1,Number(sideB.level)||1)*5;
+  return 0;
+}
+
 function displayCampaignPage() {
   const display=document.getElementById("pcPokemonLevelDisplay");
   const input=document.getElementById("pcPokemonLevelInput");
@@ -18429,6 +18719,12 @@ function displayCampaignPage() {
     display.textContent=pcPokemonLevel;
     input.value=pcPokemonLevel;
   }
+  const xp=getCampaignExperience();
+  const needed=campaignExperienceNeededForLevel(pcPokemonLevel);
+  const xpDisplay=document.getElementById("campaignExperienceDisplay");
+  const xpBar=document.getElementById("campaignExperienceBar");
+  if(xpDisplay)xpDisplay.textContent=pcPokemonLevel>=100?"MAX LEVEL":xp.toLocaleString()+" / "+needed.toLocaleString()+" XP";
+  if(xpBar)xpBar.style.width=(pcPokemonLevel>=100?100:Math.max(0,Math.min(100,(xp/needed)*100)))+"%";
   displayGymBadgeProgress();
 }
 
@@ -21072,6 +21368,19 @@ function displayTrainerPokemonManager() {
     <button class="small-button" type="button" style="width:100%;" ${unassigned.length ? "" : "disabled"} onclick="assignPokemonFromTrainerManager()">
       Assign Pokémon
     </button>
+    <hr style="margin:18px 0;">
+    <h3>Trade / Gift Pokémon</h3>
+    <div class="transfer-grid">
+      <div class="form-row" style="margin-bottom:0;">
+        <label>Pokémon</label>
+        <select id="trainerPokemonTransferPokemon"></select>
+      </div>
+      <div class="form-row" style="margin-bottom:0;">
+        <label>Recipient</label>
+        <select id="trainerPokemonTransferRecipient"></select>
+      </div>
+    </div>
+    <button class="small-button" type="button" style="width:100%;margin-top:10px;" onclick="transferPokemonFromTrainerManager()">Trade / Gift Pokémon</button>
   `;
 
   const pokemonList = getTrainerPokemon(trainer.id)
@@ -21098,6 +21407,32 @@ function displayTrainerPokemonManager() {
       </div>
     </section>
   `;
+  populateTrainerPokemonTransferControls();
+}
+
+function populateTrainerPokemonTransferControls(){
+  const source=getTrainerById(activeModifyTrainerId);
+  const pokemonSelect=document.getElementById("trainerPokemonTransferPokemon");
+  const recipientSelect=document.getElementById("trainerPokemonTransferRecipient");
+  if(!source||!pokemonSelect||!recipientSelect)return;
+  const mons=getTrainerPokemon(source.id).sort((a,b)=>a.speciesNumber-b.speciesNumber);
+  pokemonSelect.innerHTML=mons.length?mons.map(p=>`<option value="${p.id}">${getPokemonName(p)} — Lv. ${p.level}${p.storageLocation==="pc"?" (PC)":""}</option>`).join(""):`<option value="">No Pokémon</option>`;
+  const recipients=trainers.filter(t=>t.trainerType==="PC"&&t.id!==source.id).sort((a,b)=>a.name.localeCompare(b.name));
+  recipientSelect.innerHTML=recipients.length?recipients.map(t=>`<option value="${t.id}">${t.name}</option>`).join(""):`<option value="">No other PCs</option>`;
+}
+
+function transferPokemonFromTrainerManager(){
+  const source=getTrainerById(activeModifyTrainerId);
+  const pokemonSelect=document.getElementById("trainerPokemonTransferPokemon");
+  const recipientSelect=document.getElementById("trainerPokemonTransferRecipient");
+  if(!source||!pokemonSelect||!recipientSelect||!pokemonSelect.value||!recipientSelect.value){alert("Select a Pokémon and recipient first.");return;}
+  const pokemon=ownedPokemon.find(p=>String(p.id)===String(pokemonSelect.value));
+  const recipient=getTrainerById(Number(recipientSelect.value));
+  if(!pokemon||String(pokemon.trainerId)!==String(source.id)||!recipient||recipient.trainerType!=="PC")return;
+  pokemon.trainerId=recipient.id;
+  savePokemon();
+  alert(getPokemonName(pokemon)+" was transferred from "+source.name+" to "+recipient.name+".");
+  displayTrainerPokemonManager();
 }
 
 function assignPokemonFromTrainerManager() {
@@ -21465,6 +21800,7 @@ function openTrainerInventory(trainerId) {
 
   displayItemBrowser();
   displayTrainerInventory();
+  populateInventoryTransferControls();
 }
 
 function getActiveInventoryTrainer() {
@@ -21781,6 +22117,58 @@ function displayTrainerInventory() {
   });
 }
 
+
+function populateInventoryTransferControls(){
+  const source=getActiveInventoryTrainer();
+  const recipient=document.getElementById("inventoryTransferRecipient");
+  const itemSelect=document.getElementById("inventoryTransferItem");
+  if(!source||!recipient||!itemSelect)return;
+  const previousRecipient=recipient.value;
+  const recipients=trainers.filter(t=>t.trainerType==="PC"&&t.id!==source.id).sort((a,b)=>a.name.localeCompare(b.name));
+  recipient.innerHTML=recipients.length?recipients.map(t=>`<option value="${t.id}">${t.name}</option>`).join(""):`<option value="">No other PCs</option>`;
+  if(recipients.some(t=>String(t.id)===previousRecipient))recipient.value=previousRecipient;
+  const items=(source.inventory||[]).filter(item=>Number(item.quantity)>0);
+  itemSelect.innerHTML=items.length?items.map(item=>`<option value="${item.itemId}">${item.name} ×${item.quantity}</option>`).join(""):`<option value="">No items</option>`;
+}
+
+function getInventoryTransferRecipient(){
+  const select=document.getElementById("inventoryTransferRecipient");
+  return select&&select.value?getTrainerById(Number(select.value)):null;
+}
+
+function transferMoneyFromActiveTrainer(){
+  const source=getActiveInventoryTrainer();
+  const recipient=getInventoryTransferRecipient();
+  const input=document.getElementById("inventoryTransferMoneyAmount");
+  const amount=Math.floor(Number(input?input.value:0));
+  if(!source||!recipient||!Number.isFinite(amount)||amount<1){alert("Choose a recipient and enter a valid amount.");return;}
+  if((Number(source.money)||0)<amount){alert(source.name+" does not have enough money.");return;}
+  source.money=(Number(source.money)||0)-amount;
+  recipient.money=(Number(recipient.money)||0)+amount;
+  saveTrainers();
+  document.getElementById("moneyAmount").textContent=source.money;
+  document.getElementById("moneyInput").value=source.money;
+  alert("Transferred ₽"+amount.toLocaleString()+" from "+source.name+" to "+recipient.name+".");
+}
+
+function transferItemFromActiveTrainer(){
+  const source=getActiveInventoryTrainer();
+  const recipient=getInventoryTransferRecipient();
+  const itemSelect=document.getElementById("inventoryTransferItem");
+  const qtyInput=document.getElementById("inventoryTransferItemQuantity");
+  const quantity=Math.floor(Number(qtyInput?qtyInput.value:0));
+  if(!source||!recipient||!itemSelect||!itemSelect.value||!Number.isFinite(quantity)||quantity<1){alert("Choose an item, recipient, and valid quantity.");return;}
+  const entry=(source.inventory||[]).find(item=>item.itemId===itemSelect.value);
+  if(!entry||Number(entry.quantity)<quantity){alert("Not enough of that item to transfer.");return;}
+  entry.quantity-=quantity;
+  if(entry.quantity<=0)source.inventory=source.inventory.filter(item=>item!==entry);
+  addItemToTrainerInventory(recipient,itemSelect.value,quantity);
+  saveTrainers();
+  displayTrainerInventory();
+  populateInventoryTransferControls();
+  alert("Transferred "+quantity+" × "+entry.name+" from "+source.name+" to "+recipient.name+".");
+}
+
 function changeItemQuantity(
   itemId,
   amount
@@ -21810,6 +22198,7 @@ function changeItemQuantity(
 
   saveTrainers();
   displayTrainerInventory();
+  populateInventoryTransferControls();
 }
 
 function removeInventoryItem(itemId) {
@@ -21826,6 +22215,7 @@ function removeInventoryItem(itemId) {
 
   saveTrainers();
   displayTrainerInventory();
+  populateInventoryTransferControls();
 }
 
 
@@ -21834,6 +22224,51 @@ function removeInventoryItem(itemId) {
 ========================================================= */
 
 displayPokemonDatabase();
+
+
+/* =========================================================
+   IMAGE PRELOADING
+========================================================= */
+let imagePreloadInProgress=false;
+
+function getAllAppImageUrls(){
+  const urls=new Set();
+  document.querySelectorAll("img[src]").forEach(img=>{if(img.getAttribute("src"))urls.add(img.getAttribute("src"));});
+  if(typeof kantoDetailMaps!=="undefined")Object.values(kantoDetailMaps).forEach(map=>{if(map&&map.image)urls.add(map.image);});
+  if(typeof kantoGymBadges!=="undefined")kantoGymBadges.forEach(b=>{if(b.color)urls.add(b.color);if(b.gray)urls.add(b.gray);});
+  ["./assets/maps/kanto-map.png?v=20260823","./icons/icon-180.png","./icons/icon-192.png","./icons/icon-512.png"].forEach(url=>urls.add(url));
+  return Array.from(urls).filter(Boolean);
+}
+
+function preloadOneImage(url){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>resolve(true);
+    img.onerror=()=>resolve(false);
+    img.src=url;
+  });
+}
+
+async function preloadAllAppImages(showStatus=false){
+  if(imagePreloadInProgress)return;
+  imagePreloadInProgress=true;
+  const status=document.getElementById("imagePreloadStatus");
+  const urls=getAllAppImageUrls();
+  let completed=0,failed=0,next=0;
+  if(showStatus&&status)status.textContent="Preloading 0 / "+urls.length+" images…";
+  async function worker(){
+    while(true){
+      const index=next++;
+      if(index>=urls.length)return;
+      const ok=await preloadOneImage(urls[index]);
+      completed+=1;if(!ok)failed+=1;
+      if(showStatus&&status)status.textContent="Preloading "+completed+" / "+urls.length+" images…";
+    }
+  }
+  await Promise.all([worker(),worker(),worker()]);
+  imagePreloadInProgress=false;
+  if(showStatus&&status)status.textContent=failed?"Preload finished. "+failed+" image(s) could not be loaded.":"All "+urls.length+" images preloaded.";
+}
 
 /* =========================================================
    RESET CAMPAIGN DATA V32
@@ -21937,6 +22372,12 @@ async function refreshAppFromGitHub(button){
   The app itself continues to use localStorage for campaign data.
   This does NOT delete Pokémon, trainers, inventory, or backups.
 */
+window.addEventListener("load", function() {
+  setTimeout(function(){
+    if (typeof preloadAllAppImages === "function") preloadAllAppImages(false);
+  }, 350);
+});
+
 window.addEventListener("load", async function() {
   try {
     if ("serviceWorker" in navigator) {
