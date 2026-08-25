@@ -2014,10 +2014,10 @@ select {
    KANTO OVERVIEW MAP — CLEAN REBUILD V34R1
    Legacy town/route/local-navigation/trainer map CSS removed.
 ========================================================= */
-#kantoMapPage .page-content {
+.home-kanto-map-wrap {
   max-width:1400px;
   margin:0 auto;
-  padding:6px;
+  padding:6px 6px 0;
 }
 
 .kanto-map-shell {
@@ -2282,7 +2282,7 @@ select {
 }
 
 @media (max-width:600px) {
-  #kantoMapPage .page-content { padding:4px; }
+  .home-kanto-map-wrap { padding:4px 4px 0; }
   .kanto-map-shell { border-radius:8px; }
   .kanto-hotspot { min-width:28px; min-height:28px; }
   .kanto-location-panel { padding:7px; margin-top:5px; }
@@ -2515,8 +2515,40 @@ select {
 <div id="homePage">
   <header><h1>Pokémon Campaign</h1></header>
 
+  <div class="home-kanto-map-wrap">
+    <div id="kantoMapShell" class="kanto-map-shell">
+      <img
+        id="kantoMainMap"
+        class="kanto-map-image"
+        src="./assets/maps/kanto-map.png?v=20260823"
+        alt="Kanto campaign map"
+        draggable="false">
+      <div id="kantoHotspotLayer" class="kanto-hotspot-layer"></div>
+    </div>
+
+    <div id="kantoLocationPanel" class="kanto-location-panel" style="display:none;">
+      <div class="kanto-location-panel-header">
+        <div>
+          <div id="kantoLocationType" class="kanto-location-type"></div>
+          <div id="kantoLocationName" class="kanto-location-name"></div>
+        </div>
+        <button class="small-button" type="button" onclick="closeKantoLocationPanel()">✕</button>
+      </div>
+
+      <div id="kantoLocationDescription" class="kanto-location-description"></div>
+
+      <div class="kanto-location-actions">
+        <button id="kantoDetailMapButton" class="primary-button small-button" type="button" style="display:none;grid-column:1 / -1;" onclick="openSelectedKantoDetailMap()">Open Detailed Map</button>
+        <button id="kantoVisitedButton" class="small-button" type="button" onclick="toggleKantoVisited()">Mark Visited</button>
+        <button id="kantoCompletedButton" class="small-button" type="button" onclick="toggleKantoCompleted()">Mark Completed</button>
+      </div>
+
+      <div id="kantoLocationStatus" class="kanto-location-status"></div>
+      <div class="kanto-rebuild-note">Tap any route, city, gym, or landmark on the Kanto map to open its campaign details.</div>
+    </div>
+  </div>
+
   <div class="menu">
-    <button onclick="showPage('kantoMapPage')">Kanto Map</button>
     <button onclick="showPage('pokemonPage')">Pokémon</button>
     <button onclick="showPage('trainersPage')">Trainers</button>
     <button onclick="showPage('inventoryPage')">Inventory</button>
@@ -2557,51 +2589,13 @@ select {
 </div>
 
 
-<!-- KANTO MAP — CLEAN REBUILD -->
-<div id="kantoMapPage" style="display:none;">
-  <header><h1>Kanto Map</h1></header>
-
-  <div class="page-content">
-    <div id="kantoMapShell" class="kanto-map-shell">
-      <img
-        id="kantoMainMap"
-        class="kanto-map-image"
-        src="./assets/maps/kanto-map.png?v=20260823"
-        alt="Kanto campaign map"
-        draggable="false">
-      <div id="kantoHotspotLayer" class="kanto-hotspot-layer"></div>
-    </div>
-
-    <div id="kantoLocationPanel" class="kanto-location-panel" style="display:none;">
-      <div class="kanto-location-panel-header">
-        <div>
-          <div id="kantoLocationType" class="kanto-location-type"></div>
-          <div id="kantoLocationName" class="kanto-location-name"></div>
-        </div>
-        <button class="small-button" type="button" onclick="closeKantoLocationPanel()">✕</button>
-      </div>
-
-      <div id="kantoLocationDescription" class="kanto-location-description"></div>
-
-      <div class="kanto-location-actions">
-        <button id="kantoDetailMapButton" class="primary-button small-button" type="button" style="display:none;grid-column:1 / -1;" onclick="openSelectedKantoDetailMap()">Open Detailed Map</button>
-        <button id="kantoVisitedButton" class="small-button" type="button" onclick="toggleKantoVisited()">Mark Visited</button>
-        <button id="kantoCompletedButton" class="small-button" type="button" onclick="toggleKantoCompleted()">Mark Completed</button>
-      </div>
-
-      <div id="kantoLocationStatus" class="kanto-location-status"></div>
-      <div class="kanto-rebuild-note">Detailed maps are available through Gym 4, including Route 3, Mt. Moon, Route 4, Cerulean Gym, Route 5, and Vermilion Gym.</div>
-    </div>
-
-    <button class="back-button kanto-bottom-back" type="button" onclick="showPage('homePage')">← Back</button>
-  </div>
-</div>
+<!-- KANTO MAP IS EMBEDDED ON THE HOME SCREEN -->
 
 <!-- KANTO DETAILED MAP VIEWER -->
 <div id="kantoDetailMapPage" style="display:none;">
   <header><h1 id="kantoDetailMapTitle">Detailed Map</h1></header>
   <div class="page-content kanto-detail-map-wrap">
-    <button class="back-button" type="button" onclick="showPage('kantoMapPage')">← Back to Kanto Map</button>
+    <button class="back-button" type="button" onclick="showPage('homePage')">← Back to Kanto Map</button>
     <div class="kanto-detail-map-card">
       <div class="kanto-detail-map-stage">
         <img id="kantoDetailMapImage" class="kanto-detail-map-image" src="" alt="" draggable="false">
@@ -8181,7 +8175,7 @@ const kantoDetailLocationHotspots = {
   ],
   "seafoam-islands": [
     {name:"Route 13",target:"route-13",x:5,y:50,w:10,h:90},
-    {name:"Seafoam Cave",target:"seafoam-cave",x:19.0,y:57.0,w:15,h:18},
+    {name:"Seafoam Cave",target:"seafoam-cave",x:23.5,y:22.5,w:18,h:18},
     {name:"Route 12",target:"route-12",x:95,y:50,w:10,h:90}
   ],
   "seafoam-cave": [
@@ -8273,7 +8267,7 @@ function openKantoDetailLocationHotspot(locationId) {
     return;
   }
 
-  showPage("kantoMapPage");
+  showPage("homePage");
   selectKantoLocation(locationId);
   window.scrollTo(0,0);
 }
@@ -8654,6 +8648,12 @@ function cleanupLegacyKantoMapData() {
 
 cleanupLegacyKantoMapData();
 
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", renderKantoHotspots);
+} else {
+  renderKantoHotspots();
+}
+
 /* Campaign badge tracking is intentionally retained; it is independent of the retired detailed-map system. */
 const kantoGymBadges = [
   {id:"viridian", city:"Viridian City", gymKey:"gym-viridian-city", badge:"Earth Badge", color:"./assets/badges/earth-badge.png", gray:"./assets/badges/earth-badge-gray.png"},
@@ -8713,7 +8713,6 @@ function showPage(pageId) {
 
   [
     "homePage",
-    "kantoMapPage",
     "kantoDetailMapPage",
     "pokemonPage",
     "createPokemonPage",
@@ -8784,7 +8783,7 @@ function showPage(pageId) {
   if (pageId === "unassignedPokemonPage") displayUnassignedPokemonPage();
   if (pageId === "trainersPage") displayTrainers();
   if (pageId === "completedTrainersPage") displayCompletedTrainers();
-  if (pageId === "kantoMapPage") {
+  if (pageId === "homePage") {
     closeKantoLocationPanel();
     renderKantoHotspots();
   }
