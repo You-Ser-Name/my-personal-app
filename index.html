@@ -2600,6 +2600,9 @@ select {
 <div id="settingsPage" style="display:none;">
   <header><h1>Settings</h1></header>
   <div class="page-content">
+    <div class="compact-top-actions">
+      <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
+    </div>
     <div class="card" style="margin-top:14px;">
       <h2 style="margin-top:0;">App Updates</h2>
       <p>Checks the currently deployed GitHub Pages app, clears app caches, and reloads the newest copy without needing a version-file change.</p>
@@ -2729,9 +2732,6 @@ select {
       </div>
     </details>
 
-    <div class="battle-bottom-nav">
-      <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
-    </div>
   </div>
 </div>
 
@@ -2996,14 +2996,12 @@ select {
 
   <div class="page-content">
     <div class="compact-top-actions">
+      <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
       <button class="primary-button" onclick="showPage('createTrainerPage')">+ Create Trainer</button>
       <button class="small-button" onclick="showPage('completedTrainersPage')">Defeated Trainers</button>
     </div>
     <h2>Trainer List</h2>
     <div id="trainerList"></div>
-    <div class="battle-bottom-nav">
-      <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
-    </div>
   </div>
 </div>
 
@@ -3078,6 +3076,9 @@ select {
   <header><h1>Poké Center</h1></header>
 
   <div class="page-content">
+    <div class="compact-top-actions">
+      <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
+    </div>
     <div class="form-card">
       <h2 style="text-align:center;">
         Heal All Pokémon
@@ -3122,9 +3123,6 @@ select {
       </div>
     </details>
 
-    <div class="battle-bottom-nav">
-      <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
-    </div>
   </div>
 </div>
 
@@ -3134,6 +3132,9 @@ select {
   <header><h1>Battles</h1></header>
 
   <div class="page-content">
+    <div class="compact-top-actions">
+      <button class="small-button" onclick="battleBack()">← Back</button>
+    </div>
     <div class="form-card" id="battleSetupCard">
       <h2 style="text-align:center;">Battle Setup</h2>
 
@@ -3224,12 +3225,6 @@ select {
     <div
       id="battleBottomNav"
       class="battle-bottom-nav">
-      <button
-        class="small-button"
-        onclick="battleBack()">
-        ← Back
-      </button>
-
       <button id="endBattleButton" class="small-button" style="display:none;" onclick="endBattle()">End Battle</button>
     </div>
   </div>
@@ -3241,6 +3236,9 @@ select {
   <header><h1>Campaign</h1></header>
 
   <div class="page-content">
+    <div class="compact-top-actions">
+      <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
+    </div>
     <div class="form-card campaign-progress-card">
       <h2 style="text-align:center;margin-top:0;">Campaign Progress</h2>
       <div id="gymProgressSummary" class="gym-progress-summary">0 / 8 Gym Badges Earned</div>
@@ -3290,9 +3288,6 @@ select {
 
     </div>
 
-    <div class="battle-bottom-nav">
-      <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
-    </div>
   </div>
 </div>
 
