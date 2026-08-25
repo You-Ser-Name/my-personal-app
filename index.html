@@ -2573,7 +2573,12 @@ select {
     </div>
 
 
-<div class="form-card">
+<details class="form-card">
+      <summary style="font-size:22px;font-weight:bold;cursor:pointer;text-align:center;list-style-position:inside;">
+        Backup & Restore
+      </summary>
+
+      <div style="margin-top:18px;">
       <h2 style="text-align:center;">Backup Files</h2>
 
       <p style="text-align:center;line-height:1.5;">
@@ -2631,7 +2636,8 @@ select {
         class="battle-note"
         style="display:none;text-align:center;margin-top:12px;">
       </div>
-    </div>
+      </div>
+    </details>
 
     <div class="form-card" style="display:none;">
       <details open>
@@ -2752,7 +2758,7 @@ select {
   <header><h1>Create Pokémon</h1></header>
 
   <div class="page-content">
-    <button class="back-button" onclick="showPage('pokemonPage')">
+    <button class="back-button" onclick="cancelCreatePokemon()">
       ← Back
     </button>
 
@@ -2985,14 +2991,6 @@ select {
         <input id="trainerNameInput" type="text" placeholder="Trainer name">
       </div>
 
-      <div class="form-row">
-        <label>Trainer Type</label>
-        <select id="trainerTypeInput">
-          <option value="PC">Player Character (PC)</option>
-          <option value="NPC">Non-Player Character (NPC)</option>
-        </select>
-      </div>
-
       <button
         class="primary-button"
         style="width:100%"
@@ -3001,6 +2999,21 @@ select {
       </button>
 
     </div>
+  </div>
+</div>
+
+<!-- MODIFY TRAINER POKÉMON -->
+<div id="trainerPokemonManagePage" style="display:none;">
+  <header><h1 id="trainerPokemonManageHeader">Modify Pokémon</h1></header>
+
+  <div class="page-content">
+    <div class="compact-top-actions">
+      <button class="back-button" type="button" onclick="showPage('trainersPage')">← Back</button>
+      <button class="primary-button" type="button" onclick="openCreatePokemonForActiveTrainer()">+ Create Pokémon</button>
+    </div>
+
+    <div id="trainerPokemonManageAssign" class="form-card" style="margin-top:12px;"></div>
+    <div id="trainerPokemonManageList" style="margin-top:12px;"></div>
   </div>
 </div>
 
@@ -8712,6 +8725,7 @@ function showPage(pageId) {
     "trainersPage",
     "completedTrainersPage",
     "createTrainerPage",
+    "trainerPokemonManagePage",
     "battlesPage",
     "pokemonCenterPage",
     "campaignPage",
@@ -8764,12 +8778,21 @@ function showPage(pageId) {
       pcPokemonLevel;
 
     populateCreatePokemonTrainerDropdown();
+
+    if (createPokemonPresetTrainerId !== null) {
+      const trainerSelect = document.getElementById("createPokemonTrainerSelect");
+      if (trainerSelect) {
+        trainerSelect.value = String(createPokemonPresetTrainerId);
+        handleCreatePokemonTrainerChange();
+      }
+    }
   }
 
   if (pageId === "partyPokemonPage") displayPartyPokemonPage();
   if (pageId === "trainerPokemonPage") displayTrainerPokemonPage();
   if (pageId === "unassignedPokemonPage") displayUnassignedPokemonPage();
   if (pageId === "trainersPage") displayTrainers();
+  if (pageId === "trainerPokemonManagePage") displayTrainerPokemonManager();
   if (pageId === "completedTrainersPage") displayCompletedTrainers();
   if (pageId === "homePage") {
     closeKantoLocationPanel();
@@ -18425,7 +18448,13 @@ function createPokemon() {
 
   savePokemon();
 
-  if (
+  if (createPokemonReturnPage === "trainerPokemonManagePage") {
+    const destination = createPokemonReturnPage;
+    createPokemonReturnPage = "pokemonPage";
+    createPokemonPresetTrainerId = null;
+    showPage(destination);
+  }
+  else if (
     assignedTrainer &&
     assignedTrainer.trainerType === "NPC"
   ) {
@@ -18760,6 +18789,7 @@ function evolvePokemon(
   savePokemon();
 
   refreshPokemonManagementPages();
+  if (activeModifyTrainerId !== null) displayTrainerPokemonManager();
 }
 
 /* =========================================================
@@ -18792,7 +18822,9 @@ function pokemonHasAvailableEvolution(
 function buildCompactPokemonRowHTML(
   pokemon,
   allowTrainerAssignment = false,
-  sortedTrainers = []
+  sortedTrainers = [],
+  sourcePageOverride = "",
+  showNicknameEditor = false
 ) {
 
   const moveNames =
@@ -18878,6 +18910,19 @@ function buildCompactPokemonRowHTML(
       </div>
     `;
   }
+
+  const nicknameEditorHTML = showNicknameEditor
+    ? `
+      <div class="form-row" style="margin-top:12px;">
+        <label>Pokémon Name / Nickname</label>
+        <div class="trainer-edit-row">
+          <input id="pokemonNicknameEdit${pokemon.id}" type="text" value="${String(pokemon.nickname || "").replace(/&/g,"&amp;").replace(/"/g,"&quot;")}" placeholder="${pokemon.speciesName}">
+          <button class="small-button" type="button" onclick="savePokemonNickname(${pokemon.id})">Save</button>
+        </div>
+        <div class="item-info">Leave blank to use the species name.</div>
+      </div>
+    `
+    : "";
 
   let pcStorageControlHTML = "";
 
@@ -19016,10 +19061,12 @@ function buildCompactPokemonRowHTML(
           ${moveNames}
         </p>
 
+        ${nicknameEditorHTML}
+
         <button
           class="primary-button"
           style="width:100%;margin-top:8px;"
-          onclick="openMoveManager(${pokemon.id},'${isPCOwned ? "partyPokemonPage" : (owner ? "trainerPokemonPage" : "unassignedPokemonPage")}')">
+          onclick="openMoveManager(${pokemon.id},'${sourcePageOverride || (isPCOwned ? "partyPokemonPage" : (owner ? "trainerPokemonPage" : "unassignedPokemonPage"))}')">
           Manage Moves
         </button>
 
@@ -19492,6 +19539,7 @@ function deletePokemon(id) {
 
   savePokemon();
   refreshPokemonManagementPages();
+  if (activeModifyTrainerId !== null) displayTrainerPokemonManager();
 }
 
 
@@ -20398,18 +20446,10 @@ function createTrainer() {
     return;
   }
 
-  const trainerType =
-    document.getElementById(
-      "trainerTypeInput"
-    ).value;
-
   trainers.push({
     id:Date.now(),
     name:name,
-    trainerType:
-      trainerType === "NPC"
-      ? "NPC"
-      : "PC",
+    trainerType:"PC",
     money:0,
     inventory:[],
     completed:false
@@ -20418,10 +20458,6 @@ function createTrainer() {
   saveTrainers();
 
   input.value = "";
-
-  document.getElementById(
-    "trainerTypeInput"
-  ).value = "PC";
 
   showPage("trainersPage");
 }
@@ -20579,16 +20615,6 @@ function displayTrainers() {
           </p>
         `;
 
-      const pcSelected =
-        trainer.trainerType === "PC"
-        ? "selected"
-        : "";
-
-      const npcSelected =
-        trainer.trainerType === "NPC"
-        ? "selected"
-        : "";
-
       const unassignedOptions =
         unassigned.length
         ? `
@@ -20632,41 +20658,20 @@ function displayTrainers() {
           </button>
         </div>
 
-        <div class="form-row" style="margin-top:14px;">
-          <label>Trainer Type</label>
-          <select
-            onchange="changeTrainerType(${trainer.id},this.value)">
-            <option value="PC" ${pcSelected}>
-              Player Character (PC)
-            </option>
-            <option value="NPC" ${npcSelected}>
-              Non-Player Character (NPC)
-            </option>
-          </select>
-        </div>
-
         <div class="trainer-team">
           <strong>Owned Pokémon</strong>
           ${teamHTML}
         </div>
 
-        <div class="form-row" style="margin-top:14px;">
-          <label>Assign Unassigned Pokémon</label>
-          <select id="trainerAssignPokemon${trainer.id}">
-            ${unassignedOptions}
-          </select>
-        </div>
-
         <button
           class="small-button"
-          style="width:100%;"
-          ${unassigned.length ? "" : "disabled"}
-          onclick="assignUnassignedPokemonToTrainer(${trainer.id})">
-          Assign Pokémon
+          style="width:100%;margin-top:12px;"
+          onclick="openTrainerPokemonManager(${trainer.id})">
+          Modify Pokémon
         </button>
 
         <button
-          class="primary-button"
+          class="small-button"
           style="width:100%;margin-top:8px;"
           onclick="openTrainerInventory(${trainer.id})">
           Inventory
@@ -20679,6 +20684,110 @@ function displayTrainers() {
       );
     }
   );
+}
+
+
+
+let activeModifyTrainerId = null;
+let createPokemonReturnPage = "pokemonPage";
+let createPokemonPresetTrainerId = null;
+
+function openTrainerPokemonManager(trainerId) {
+  const trainer = getTrainerById(trainerId);
+  if (!trainer || trainer.trainerType !== "PC") return;
+  activeModifyTrainerId = Number(trainerId);
+  showPage("trainerPokemonManagePage");
+}
+
+function displayTrainerPokemonManager() {
+  const trainer = getTrainerById(activeModifyTrainerId);
+  const header = document.getElementById("trainerPokemonManageHeader");
+  const assignBox = document.getElementById("trainerPokemonManageAssign");
+  const list = document.getElementById("trainerPokemonManageList");
+  if (!header || !assignBox || !list) return;
+
+  if (!trainer || trainer.trainerType !== "PC") {
+    header.textContent = "Modify Pokémon";
+    assignBox.innerHTML = "";
+    list.innerHTML = `<p class="empty-message">Trainer not found.</p>`;
+    return;
+  }
+
+  header.textContent = trainer.name + " — Pokémon";
+
+  const unassigned = ownedPokemon
+    .filter(pokemon => !getTrainerById(pokemon.trainerId))
+    .sort((a,b) => a.speciesNumber - b.speciesNumber);
+
+  assignBox.innerHTML = `
+    <h3 style="margin-top:0;">Assign Existing Pokémon</h3>
+    <div class="form-row" style="margin-bottom:8px;">
+      <label>Unassigned Pokémon</label>
+      <select id="trainerModifyAssignPokemon">
+        ${unassigned.length
+          ? `<option value="">Select Pokémon...</option>` + unassigned.map(pokemon => `
+              <option value="${pokemon.id}">
+                #${String(pokemon.speciesNumber).padStart(3,"0")} ${getPokemonName(pokemon)} — Lv. ${pokemon.level}
+              </option>`).join("")
+          : `<option value="">No unassigned Pokémon</option>`}
+      </select>
+    </div>
+    <button class="small-button" type="button" style="width:100%;" ${unassigned.length ? "" : "disabled"} onclick="assignPokemonFromTrainerManager()">
+      Assign Pokémon
+    </button>
+  `;
+
+  const pokemonList = getTrainerPokemon(trainer.id)
+    .sort((a,b) => a.speciesNumber - b.speciesNumber);
+
+  list.innerHTML = `
+    <section class="my-pokemon-section">
+      <h2 class="my-pokemon-section-title">Current Pokémon (${pokemonList.length})</h2>
+      <div class="party-pokemon-panel">
+        ${pokemonList.length
+          ? pokemonList.map(pokemon => buildCompactPokemonRowHTML(pokemon,false,[],"trainerPokemonManagePage",true)).join("")
+          : `<p class="empty-message">No Pokémon assigned to ${trainer.name}.</p>`}
+      </div>
+    </section>
+  `;
+}
+
+function assignPokemonFromTrainerManager() {
+  const select = document.getElementById("trainerModifyAssignPokemon");
+  if (!select || !select.value || activeModifyTrainerId === null) return;
+  assignTrainer(Number(select.value), String(activeModifyTrainerId));
+  displayTrainerPokemonManager();
+}
+
+function savePokemonNickname(pokemonId) {
+  const pokemon = ownedPokemon.find(entry => entry.id === pokemonId);
+  const input = document.getElementById("pokemonNicknameEdit" + pokemonId);
+  if (!pokemon || !input) return;
+  pokemon.nickname = input.value.trim();
+  savePokemon();
+  refreshPokemonManagementPages();
+  displayTrainerPokemonManager();
+}
+
+function openCreatePokemonForActiveTrainer() {
+  if (activeModifyTrainerId === null) return;
+  const trainer = getTrainerById(activeModifyTrainerId);
+  if (!trainer || trainer.trainerType !== "PC") return;
+  createPokemonReturnPage = "trainerPokemonManagePage";
+  createPokemonPresetTrainerId = activeModifyTrainerId;
+  showPage("createPokemonPage");
+  const select = document.getElementById("createPokemonTrainerSelect");
+  if (select) {
+    select.value = String(activeModifyTrainerId);
+    handleCreatePokemonTrainerChange();
+  }
+}
+
+function cancelCreatePokemon() {
+  const destination = createPokemonReturnPage || "pokemonPage";
+  createPokemonReturnPage = "pokemonPage";
+  createPokemonPresetTrainerId = null;
+  showPage(destination);
 }
 
 
