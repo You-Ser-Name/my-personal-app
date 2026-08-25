@@ -48,6 +48,24 @@ header {
   line-height: 1.15;
 }
 
+#pokemonPage .pokedex-sticky-controls {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #f4f4f4;
+  padding: 10px 0 8px;
+  margin: -4px 0 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+#pokemonPage .pokedex-sticky-controls .compact-top-actions {
+  margin-bottom: 8px;
+}
+
+#pokemonPage .pokedex-sticky-controls .form-row {
+  margin-bottom: 0 !important;
+}
+
 button {
   padding: 18px 10px;
   font-size: 17px;
@@ -2856,17 +2874,11 @@ select {
       <button class="section-button" onclick="showPage('unassignedPokemonPage')">Unassigned Pokémon</button>
       <button id="viewPokedexButton" class="section-button" onclick="togglePokedex()">View Pokédex</button>
     </div>
-    <div id="pokedexTopControls" class="compact-top-actions" style="display:block;">
-      <button class="small-button" onclick="showPage('homePage')">← Back</button>
-    </div>
-    <div id="pokedexSection" style="display:block;margin-top:8px;">
-      <h2>Pokédex</h2>
-
-      <p style="text-align:center;font-size:12px;color:#666;margin-top:-6px;">
-        Pokémon artwork loaded from Pokémon Wiki / Fandom.
-      </p>
-
-      <div class="form-row" style="max-width:520px;margin:0 auto 14px auto;">
+    <div class="pokedex-sticky-controls">
+      <div id="pokedexTopControls" class="compact-top-actions" style="display:block;">
+        <button class="small-button" onclick="showPage('homePage')">← Back</button>
+      </div>
+      <div class="form-row" style="max-width:520px;margin:0 auto;">
         <label>Search Pokédex</label>
         <input
           id="pokedexSearchInput"
@@ -2875,6 +2887,13 @@ select {
           oninput="displayPokemonDatabase()"
           autocomplete="off">
       </div>
+    </div>
+    <div id="pokedexSection" style="display:block;margin-top:8px;">
+      <h2>Pokédex</h2>
+
+      <p style="text-align:center;font-size:12px;color:#666;margin-top:-6px;">
+        Pokémon artwork loaded from Pokémon Wiki / Fandom.
+      </p>
 
       <div id="pokemonList"></div>
     </div>
@@ -10358,6 +10377,12 @@ function populateCityPokemonCenterTrainerSelect() {
   if(pcs.some(t=>String(t.id)===String(previous)))select.value=previous;
 }
 
+let cityActivePokemonExpanded = true;
+
+function setCityActivePokemonExpanded(details) {
+  cityActivePokemonExpanded = !!(details && details.open);
+}
+
 function displayCityCenterPCStorage() {
   const sharedArea=document.getElementById("cityPokemonCenterSharedPartyArea");
   const area=document.getElementById("cityPokemonCenterStorageArea");
@@ -10369,7 +10394,7 @@ function displayCityCenterPCStorage() {
   const selectedStored=selectedTrainerId?getTrainerPokemon(selectedTrainerId).filter(p=>p.storageLocation==="pc"):[];
   const sharedHTML=sharedParty.length?sharedParty.map(p=>{const t=getTrainerById(p.trainerId);return `<div class="city-pc-card"><strong>${getPokemonName(p)}</strong> — Lv. ${p.level}<br><small>Trainer: ${t?t.name:"Unassigned"} • HP ${p.currentHP}/${p.stats.hp}</small><button class="small-button" type="button" onclick="storePokemonInPC('${p.id}')">Store in PC</button></div>`}).join(""):`<p class="empty-message">No Pokémon currently in the shared party.</p>`;
   const storedHTML=selectedStored.length?selectedStored.map(p=>`<div class="city-pc-card"><strong>${getPokemonName(p)}</strong> — Lv. ${p.level}<br><small>HP ${p.currentHP}/${p.stats.hp}</small><button class="small-button" type="button" ${sharedParty.length>=6?"disabled":""} onclick="withdrawPokemonFromPC('${p.id}')">Add to Shared Party</button></div>`).join(""):`<p class="empty-message">${selectedTrainer?selectedTrainer.name+" has no Pokémon in PC Storage.":"Select a player character."}</p>`;
-  sharedArea.innerHTML=`<details class="city-inline-collapsible" open><summary class="city-inline-section-title" style="cursor:pointer;">Active Pokémon (${sharedParty.length} / 6)</summary><div class="city-pc-grid">${sharedHTML}</div></details>`;
+  sharedArea.innerHTML=`<details class="city-inline-collapsible" ${cityActivePokemonExpanded ? "open" : ""} ontoggle="setCityActivePokemonExpanded(this)"><summary class="city-inline-section-title" style="cursor:pointer;">Active Pokémon (${sharedParty.length} / 6)</summary><div class="city-pc-grid">${sharedHTML}</div></details>`;
   area.innerHTML=`<div class="city-inline-section-title">${selectedTrainer?selectedTrainer.name+" PC Storage":"PC Storage"}</div><div class="city-pc-grid">${storedHTML}</div>`;
 }
 
