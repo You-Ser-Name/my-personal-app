@@ -8325,6 +8325,7 @@ function renderKantoDetailTrainerHotspots(locationId) {
     button.title = encounter.name;
     button.onclick = function(event) {
       event.stopPropagation();
+      closeKantoDetailLocationPanel();
       if (encounter.key === "legend-articuno") {
         prepareKantoMapTrainerBattle(encounter.key);
         return;
@@ -8347,6 +8348,7 @@ function renderKantoDetailTrainerHotspots(locationId) {
     button.title = location.name;
     button.onclick = function(event) {
       event.stopPropagation();
+      closeKantoDetailLocationPanel();
       openKantoDetailLocationHotspot(location.target);
     };
     layer.appendChild(button);
@@ -8741,6 +8743,14 @@ function openKantoDetailMap(locationId) {
 
   const detailLocationPanel = document.getElementById("kantoDetailLocationPanel");
   if (detailLocationPanel) detailLocationPanel.style.display = "none";
+
+  const detailStage = document.querySelector("#kantoDetailMapPage .kanto-detail-map-stage");
+  if (detailStage) {
+    detailStage.onclick = function() {
+      closeKantoDetailLocationPanel();
+      closeKantoDetailTrainerPanel();
+    };
+  }
 
   renderKantoDetailTrainerHotspots(locationId);
   showPage("kantoDetailMapPage");
