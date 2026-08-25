@@ -2574,7 +2574,7 @@ select {
 
 
 <details class="form-card">
-      <summary style="font-size:22px;font-weight:bold;cursor:pointer;text-align:center;list-style-position:inside;">
+      <summary style="font-size:22px;font-weight:bold;cursor:pointer;text-align:left;list-style-position:inside;">
         Backup & Restore
       </summary>
 
@@ -2678,17 +2678,21 @@ select {
       </details>
     </div>
 
-    <div class="card danger-zone-card" style="margin-top:14px;">
-      <h2 style="margin-top:0;color:#b71c1c;">Reset Campaign</h2>
-      <p style="line-height:1.5;">
-        Permanently erase all saved campaign data on this device and return the app
-        to a brand-new campaign: Pokémon, trainers, completed trainers, inventories,
-        money, battle/encounter state, visited/completed map locations, gym badges,
-        local backup snapshots, and campaign level.
-      </p>
-      <p style="font-weight:800;">Export a backup first if you may want this campaign again.</p>
-      <button class="danger-button" type="button" onclick="resetCampaignToNewInstall()">Reset All Campaign Data</button>
-    </div>
+    <details class="card danger-zone-card" style="margin-top:14px;">
+      <summary style="font-size:22px;font-weight:bold;cursor:pointer;text-align:left;list-style-position:inside;color:#b71c1c;">
+        Reset Campaign
+      </summary>
+      <div style="margin-top:18px;">
+        <p style="line-height:1.5;">
+          Permanently erase all saved campaign data on this device and return the app
+          to a brand-new campaign: Pokémon, trainers, completed trainers, inventories,
+          money, battle/encounter state, visited/completed map locations, gym badges,
+          local backup snapshots, and campaign level.
+        </p>
+        <p style="font-weight:800;">Export a backup first if you may want this campaign again.</p>
+        <button class="danger-button" type="button" onclick="resetCampaignToNewInstall()">Reset All Campaign Data</button>
+      </div>
+    </details>
   </div>
 </div>
 
@@ -20564,25 +20568,27 @@ function displayTrainers() {
     card.innerHTML = `
       <h3>${trainer.name}</h3>
 
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:4px;">
+        <button
+          class="small-button"
+          style="width:100%;margin:0;"
+          onclick="openTrainerPokemonManager(${trainer.id})">
+          Pokémon
+        </button>
+
+        <button
+          class="small-button"
+          style="width:100%;margin:0;"
+          onclick="openTrainerInventory(${trainer.id})">
+          Inventory
+        </button>
+      </div>
+
       <button
         class="small-button"
-        style="width:100%;margin-top:4px;"
+        style="width:100%;margin-top:8px;background:#e5e5e5;color:#222;border-color:#c8c8c8;"
         onclick="openTrainerModifyPage(${trainer.id})">
         Modify Trainer
-      </button>
-
-      <button
-        class="small-button"
-        style="width:100%;margin-top:8px;"
-        onclick="openTrainerPokemonManager(${trainer.id})">
-        Pokémon
-      </button>
-
-      <button
-        class="small-button"
-        style="width:100%;margin-top:8px;"
-        onclick="openTrainerInventory(${trainer.id})">
-        Inventory
       </button>
     `;
 
