@@ -7896,6 +7896,17 @@ const kantoMapLocations = [
   {id:"route-13",name:"Route 13",type:"Route",x:19.0,y:75.5,w:4.0,h:5.0}
 ];
 
+const kantoGymOrderHotspots = [
+  {name:"Gym 1 — Viridian", locationId:"viridian-city", x:7.0,  y:95.0, w:11.0, h:7.0},
+  {name:"Gym 2 — Pewter",   locationId:"pewter-city",   x:19.3, y:95.0, w:11.0, h:7.0},
+  {name:"Gym 3 — Cerulean", locationId:"cerulean-city", x:31.7, y:95.0, w:11.0, h:7.0},
+  {name:"Gym 4 — Vermilion",locationId:"vermilion-city",x:44.0, y:95.0, w:11.0, h:7.0},
+  {name:"Gym 5 — Fuchsia",  locationId:"fuchsia-city",  x:56.3, y:95.0, w:11.0, h:7.0},
+  {name:"Gym 6 — Saffron",  locationId:"saffron-city",  x:68.7, y:95.0, w:11.0, h:7.0},
+  {name:"Gym 7 — Celadon",  locationId:"celadon-city",  x:81.0, y:95.0, w:11.0, h:7.0},
+  {name:"Gym 8 — Cinnabar", locationId:"cinnabar-island",x:93.3,y:95.0, w:11.0, h:7.0}
+];
+
 const kantoDetailMaps = {
   "route-1": {
     title: "Route 1",
@@ -8539,6 +8550,29 @@ function renderKantoHotspots() {
     button.onclick = function(event) {
       event.stopPropagation();
       selectKantoLocation(location.id);
+    };
+    layer.appendChild(button);
+  });
+
+  /*
+    The campaign-order Gym labels are printed across the bottom of the
+    Kanto artwork. These invisible hotspots open the corresponding Gym
+    map directly instead of first opening the normal location panel.
+  */
+  kantoGymOrderHotspots.forEach(function(gym) {
+    const button = document.createElement("button");
+    button.className = "kanto-hotspot";
+    button.type = "button";
+    button.style.left = gym.x + "%";
+    button.style.top = gym.y + "%";
+    button.style.width = gym.w + "%";
+    button.style.height = gym.h + "%";
+    button.setAttribute("aria-label", "Open " + gym.name + " map");
+    button.title = "Open " + gym.name + " map";
+    button.onclick = function(event) {
+      event.stopPropagation();
+      closeKantoLocationPanel();
+      openKantoDetailMap(gym.locationId);
     };
     layer.appendChild(button);
   });
