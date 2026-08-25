@@ -7928,6 +7928,13 @@ const kantoGymOrderHotspots = [
 ];
 
 const kantoDetailMaps = {
+  "pallet-town": {
+    title: "Pallet Town",
+    image: "./assets/maps/pallet-town.png",
+    alt: "Pallet Town map with Mom's House, Professor Oak's Lab, Rival's House, and the south exit to Route 1",
+    buttonLabel: "Open Pallet Town Map",
+    caption: "Pallet Town • Mom's House • Professor Oak's Lab • South exit to Route 1"
+  },
   "route-1": {
     title: "Route 1",
     image: "./assets/maps/route-1.png?v=20260823b",
@@ -8221,6 +8228,9 @@ const kantoDetailTrainerEncounters = {
 
 /* City/town hotspots embedded on Route 1 and Route 2 detailed maps. */
 const kantoDetailLocationHotspots = {
+  "pallet-town": [
+    {name:"Route 1",target:"route-1",x:50,y:95,w:28,h:10}
+  ],
   "route-1": [
     {name:"Pallet Town",target:"pallet-town",x:31,y:8,w:36,h:18},
     {name:"Viridian City",target:"viridian-city",x:80,y:88,w:34,h:20}
