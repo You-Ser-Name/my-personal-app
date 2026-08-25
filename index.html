@@ -2549,7 +2549,7 @@ select {
   </div>
 
   <div class="menu">
-    <button onclick="showPage('pokemonPage')">Pokémon</button>
+    <button onclick="openPokedexPage()">Pokédex</button>
     <button onclick="showPage('trainersPage')">Trainers</button>
     <button onclick="battleReturnContext=null;showPage('battlesPage')">Battles</button>
     <button onclick="showPage('campaignPage')">Campaign</button>
@@ -2716,12 +2716,13 @@ select {
 </div>
 
 
-<!-- POKEMON -->
+<!-- POKEDEX -->
 <div id="pokemonPage" style="display:none;">
-  <header><h1>Pokémon</h1></header>
+  <header><h1>Pokédex</h1></header>
 
   <div class="page-content">
-    <div id="pokemonDefaultControls">
+    <!-- Legacy Pokémon-management controls remain in the code but are intentionally hidden from the UI. -->
+    <div id="pokemonDefaultControls" style="display:none;">
       <button class="back-button" onclick="showPage('homePage')">← Back</button>
       <br>
       <button class="section-button primary-button" onclick="showPage('createPokemonPage')">+ Create Pokémon</button>
@@ -2730,11 +2731,10 @@ select {
       <button class="section-button" onclick="showPage('unassignedPokemonPage')">Unassigned Pokémon</button>
       <button id="viewPokedexButton" class="section-button" onclick="togglePokedex()">View Pokédex</button>
     </div>
-    <div id="pokedexTopControls" class="compact-top-actions" style="display:none;">
+    <div id="pokedexTopControls" class="compact-top-actions" style="display:block;">
       <button class="back-button" onclick="showPage('homePage')">← Back</button>
-      <button class="small-button" onclick="togglePokedex()">Hide Pokédex</button>
     </div>
-    <div id="pokedexSection" style="display:none;margin-top:8px;">
+    <div id="pokedexSection" style="display:block;margin-top:8px;">
       <h2>Pokédex</h2>
 
       <p style="text-align:center;font-size:12px;color:#666;margin-top:-6px;">
@@ -3341,6 +3341,11 @@ select {
 
 
 <script>
+
+
+function openPokedexPage() {
+  showPage("pokemonPage");
+}
 
 /* =========================================================
    POKEMON DATABASE
@@ -8753,25 +8758,17 @@ function showPage(pageId) {
 
   document.getElementById(pageId).style.display = "block";
 
-  if (
-    pageId === "pokemonPage"
-  ) {
-
+  if (pageId === "pokemonPage") {
     const pokedexSection = document.getElementById("pokedexSection");
     const defaultControls = document.getElementById("pokemonDefaultControls");
     const pokedexTopControls = document.getElementById("pokedexTopControls");
-    if (pokedexSection) pokedexSection.style.display = "none";
-    if (defaultControls) defaultControls.style.display = "block";
-    if (pokedexTopControls) pokedexTopControls.style.display = "none";
+    if (pokedexSection) pokedexSection.style.display = "block";
+    if (defaultControls) defaultControls.style.display = "none";
+    if (pokedexTopControls) pokedexTopControls.style.display = "block";
 
-    const pokedexSearch =
-      document.getElementById(
-        "pokedexSearchInput"
-      );
-
-    if (pokedexSearch) {
-      pokedexSearch.value = "";
-    }
+    const pokedexSearch = document.getElementById("pokedexSearchInput");
+    if (pokedexSearch) pokedexSearch.value = "";
+    displayPokemonDatabase();
   }
 
   if (pageId === "createPokemonPage") {
