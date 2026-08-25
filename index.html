@@ -2810,11 +2810,11 @@ select {
           </div>
           <div id="kantoDetailPokemonCenterPC" class="city-inline-tool">
             <h3>Pokémon PC</h3>
+            <div id="cityPokemonCenterSharedPartyArea"></div>
             <div class="form-row" style="margin-bottom:10px;">
               <label>Player Character</label>
               <select id="cityPokemonCenterTrainerSelect" onchange="displayCityCenterPCStorage()"></select>
             </div>
-            <div id="cityPokemonCenterSharedPartyArea"></div>
             <div id="cityPokemonCenterStorageArea"></div>
           </div>
           <div id="kantoDetailPokeMartActions" style="display:none;grid-column:1 / -1;">
@@ -10369,7 +10369,7 @@ function displayCityCenterPCStorage() {
   const selectedStored=selectedTrainerId?getTrainerPokemon(selectedTrainerId).filter(p=>p.storageLocation==="pc"):[];
   const sharedHTML=sharedParty.length?sharedParty.map(p=>{const t=getTrainerById(p.trainerId);return `<div class="city-pc-card"><strong>${getPokemonName(p)}</strong> — Lv. ${p.level}<br><small>Trainer: ${t?t.name:"Unassigned"} • HP ${p.currentHP}/${p.stats.hp}</small><button class="small-button" type="button" onclick="storePokemonInPC('${p.id}')">Store in PC</button></div>`}).join(""):`<p class="empty-message">No Pokémon currently in the shared party.</p>`;
   const storedHTML=selectedStored.length?selectedStored.map(p=>`<div class="city-pc-card"><strong>${getPokemonName(p)}</strong> — Lv. ${p.level}<br><small>HP ${p.currentHP}/${p.stats.hp}</small><button class="small-button" type="button" ${sharedParty.length>=6?"disabled":""} onclick="withdrawPokemonFromPC('${p.id}')">Add to Shared Party</button></div>`).join(""):`<p class="empty-message">${selectedTrainer?selectedTrainer.name+" has no Pokémon in PC Storage.":"Select a player character."}</p>`;
-  sharedArea.innerHTML=`<div class="city-inline-section-title">Shared Party (${sharedParty.length} / 6)</div><div class="city-pc-grid">${sharedHTML}</div>`;
+  sharedArea.innerHTML=`<details class="city-inline-collapsible" open><summary class="city-inline-section-title" style="cursor:pointer;">Active Pokémon (${sharedParty.length} / 6)</summary><div class="city-pc-grid">${sharedHTML}</div></details>`;
   area.innerHTML=`<div class="city-inline-section-title">${selectedTrainer?selectedTrainer.name+" PC Storage":"PC Storage"}</div><div class="city-pc-grid">${storedHTML}</div>`;
 }
 
