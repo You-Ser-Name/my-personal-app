@@ -3002,9 +3002,19 @@ select {
   </div>
 </div>
 
-<!-- MODIFY TRAINER POKÉMON -->
+<!-- MODIFY TRAINER -->
+<div id="trainerModifyPage" style="display:none;">
+  <header><h1 id="trainerModifyHeader">Modify Trainer</h1></header>
+
+  <div class="page-content">
+    <button class="back-button" type="button" onclick="showPage('trainersPage')">← Back</button>
+    <div id="trainerModifyContent" class="form-card"></div>
+  </div>
+</div>
+
+<!-- TRAINER POKÉMON -->
 <div id="trainerPokemonManagePage" style="display:none;">
-  <header><h1 id="trainerPokemonManageHeader">Modify Pokémon</h1></header>
+  <header><h1 id="trainerPokemonManageHeader">Pokémon</h1></header>
 
   <div class="page-content">
     <div class="compact-top-actions">
@@ -8725,6 +8735,7 @@ function showPage(pageId) {
     "trainersPage",
     "completedTrainersPage",
     "createTrainerPage",
+    "trainerModifyPage",
     "trainerPokemonManagePage",
     "battlesPage",
     "pokemonCenterPage",
@@ -8792,6 +8803,7 @@ function showPage(pageId) {
   if (pageId === "trainerPokemonPage") displayTrainerPokemonPage();
   if (pageId === "unassignedPokemonPage") displayUnassignedPokemonPage();
   if (pageId === "trainersPage") displayTrainers();
+  if (pageId === "trainerModifyPage") displayTrainerModifyPage();
   if (pageId === "trainerPokemonManagePage") displayTrainerPokemonManager();
   if (pageId === "completedTrainersPage") displayCompletedTrainers();
   if (pageId === "homePage") {
@@ -9789,12 +9801,12 @@ function storePokemonInPC(
   savePokemon();
   displayPokemonCenterStorage();
 
-  if (
-    document.getElementById(
-      "ownedPokemonList"
-    )
-  ) {
+  if (document.getElementById("ownedPokemonList")) {
     refreshPokemonManagementPages();
+  }
+  const trainerManagerPage = document.getElementById("trainerPokemonManagePage");
+  if (trainerManagerPage && trainerManagerPage.style.display !== "none") {
+    displayTrainerPokemonManager();
   }
 }
 
@@ -9842,12 +9854,12 @@ function withdrawPokemonFromPC(
   savePokemon();
   displayPokemonCenterStorage();
 
-  if (
-    document.getElementById(
-      "ownedPokemonList"
-    )
-  ) {
+  if (document.getElementById("ownedPokemonList")) {
     refreshPokemonManagementPages();
+  }
+  const trainerManagerPage = document.getElementById("trainerPokemonManagePage");
+  if (trainerManagerPage && trainerManagerPage.style.display !== "none") {
+    displayTrainerPokemonManager();
   }
 }
 
@@ -20533,157 +20545,122 @@ function assignUnassignedPokemonToTrainer(
 
 function displayTrainers() {
 
-  const list =
-    document.getElementById(
-      "trainerList"
-    );
-
+  const list = document.getElementById("trainerList");
   list.innerHTML = "";
 
-  const pcTrainerCount = trainers.filter(trainer => trainer.trainerType === "PC").length;
+  const sortedTrainers = trainers
+    .filter(trainer => trainer.trainerType === "PC")
+    .sort((a,b) => a.name.localeCompare(b.name));
 
-  if (!pcTrainerCount) {
-    list.innerHTML = `
-      <p class="empty-message">
-        No player characters created yet.
-      </p>
-    `;
+  if (!sortedTrainers.length) {
+    list.innerHTML = `<p class="empty-message">No player characters created yet.</p>`;
     return;
   }
 
-  const sortedTrainers =
-    trainers
-      .filter(trainer => trainer.trainerType === "PC")
-      .sort(function(a,b) {
-        return a.name.localeCompare(b.name);
-      });
+  sortedTrainers.forEach(function(trainer) {
+    const card = document.createElement("div");
+    card.className = "card";
 
-  const unassigned =
-    ownedPokemon.filter(
-      pokemon =>
-        !getTrainerById(
-          pokemon.trainerId
-        )
-    ).sort(
-      function(a,b) {
-        return (
-          a.speciesNumber -
-          b.speciesNumber
-        );
-      }
-    );
+    card.innerHTML = `
+      <h3>${trainer.name}</h3>
 
-  sortedTrainers.forEach(
-    function(trainer) {
+      <button
+        class="small-button"
+        style="width:100%;margin-top:4px;"
+        onclick="openTrainerModifyPage(${trainer.id})">
+        Modify Trainer
+      </button>
 
-      const team =
-        getTrainerPokemon(
-          trainer.id
-        ).sort(
-          function(a,b) {
-            return (
-              a.speciesNumber -
-              b.speciesNumber
-            );
-          }
-        );
+      <button
+        class="small-button"
+        style="width:100%;margin-top:8px;"
+        onclick="openTrainerPokemonManager(${trainer.id})">
+        Pokémon
+      </button>
 
-      const card =
-        document.createElement(
-          "div"
-        );
+      <button
+        class="small-button"
+        style="width:100%;margin-top:8px;"
+        onclick="openTrainerInventory(${trainer.id})">
+        Inventory
+      </button>
+    `;
 
-      card.className =
-        "card";
+    list.appendChild(card);
+  });
+}
 
-      const teamHTML =
-        team.length
-        ? team.map(
-            pokemon => `
-              <div class="team-member">
-                <strong>
-                  #${String(pokemon.speciesNumber).padStart(3,"0")}
-                  ${getPokemonName(pokemon)}
-                </strong>
-                — Level ${pokemon.level}
-              </div>
-            `
-          ).join("")
-        : `
-          <p class="empty-message">
-            No Pokémon assigned.
-          </p>
-        `;
+let activeTrainerModifyId = null;
 
-      const unassignedOptions =
-        unassigned.length
-        ? `
-          <option value="">
-            Select Pokémon...
-          </option>
-          ${
-            unassigned.map(
-              pokemon => `
-                <option value="${pokemon.id}">
-                  #${String(pokemon.speciesNumber).padStart(3,"0")}
-                  ${getPokemonName(pokemon)}
-                  — Lv. ${pokemon.level}
-                </option>
-              `
-            ).join("")
-          }
-        `
-        : `
-          <option value="">
-            No unassigned Pokémon
-          </option>
-        `;
+function openTrainerModifyPage(trainerId) {
+  const trainer = getTrainerById(trainerId);
+  if (!trainer || trainer.trainerType !== "PC") return;
+  activeTrainerModifyId = Number(trainerId);
+  showPage("trainerModifyPage");
+}
 
-      card.innerHTML = `
-        <h3>${trainer.name}</h3>
+function displayTrainerModifyPage() {
+  const trainer = getTrainerById(activeTrainerModifyId);
+  const header = document.getElementById("trainerModifyHeader");
+  const content = document.getElementById("trainerModifyContent");
+  if (!header || !content) return;
 
-        <div class="trainer-edit-row">
-          <div class="form-row" style="margin:0;">
-            <label>Edit Name</label>
-            <input
-              id="trainerNameEdit${trainer.id}"
-              type="text"
-              value="${trainer.name.replace(/"/g,"&quot;")}">
-          </div>
+  if (!trainer || trainer.trainerType !== "PC") {
+    header.textContent = "Modify Trainer";
+    content.innerHTML = `<p class="empty-message">Trainer not found.</p>`;
+    return;
+  }
 
-          <button
-            class="small-button"
-            onclick="renameTrainer(${trainer.id})">
-            Save
-          </button>
-        </div>
+  header.textContent = trainer.name + " — Modify Trainer";
+  content.innerHTML = `
+    <div class="form-row">
+      <label>Trainer Name</label>
+      <input
+        id="trainerNameEdit${trainer.id}"
+        type="text"
+        value="${trainer.name.replace(/&/g,"&amp;").replace(/"/g,"&quot;")}">
+    </div>
 
-        <div class="trainer-team">
-          <strong>Owned Pokémon</strong>
-          ${teamHTML}
-        </div>
+    <button
+      class="primary-button"
+      type="button"
+      style="width:100%;"
+      onclick="renameTrainerFromModifyPage(${trainer.id})">
+      Save Trainer
+    </button>
 
-        <button
-          class="small-button"
-          style="width:100%;margin-top:12px;"
-          onclick="openTrainerPokemonManager(${trainer.id})">
-          Modify Pokémon
-        </button>
+    <button
+      class="delete-button"
+      type="button"
+      onclick="deleteTrainerFromModifyPage(${trainer.id})">
+      Delete Trainer
+    </button>
+  `;
+}
 
-        <button
-          class="small-button"
-          style="width:100%;margin-top:8px;"
-          onclick="openTrainerInventory(${trainer.id})">
-          Inventory
-        </button>
-        <button class="delete-button" onclick="deleteTrainer(${trainer.id})">Delete Trainer</button>
-      `;
+function renameTrainerFromModifyPage(trainerId) {
+  renameTrainer(trainerId);
+  const trainer = getTrainerById(trainerId);
+  if (trainer) {
+    activeTrainerModifyId = Number(trainerId);
+    displayTrainerModifyPage();
+  }
+}
 
-      list.appendChild(
-        card
-      );
-    }
-  );
+function deleteTrainerFromModifyPage(trainerId) {
+  const trainer = getTrainerById(trainerId);
+  if (!trainer) return;
+  const name = trainer.name;
+  if (!confirm(`Delete trainer "${name}"?\n\nTheir Pokémon will become unassigned.`)) return;
+
+  ownedPokemon.forEach(function(pokemon) {
+    if (pokemon.trainerId === trainerId) pokemon.trainerId = null;
+  });
+  trainers = trainers.filter(entry => entry.id !== trainerId);
+  savePokemon();
+  saveTrainers();
+  activeTrainerModifyId = null;
+  showPage("trainersPage");
 }
 
 
@@ -20707,7 +20684,7 @@ function displayTrainerPokemonManager() {
   if (!header || !assignBox || !list) return;
 
   if (!trainer || trainer.trainerType !== "PC") {
-    header.textContent = "Modify Pokémon";
+    header.textContent = "Pokémon";
     assignBox.innerHTML = "";
     list.innerHTML = `<p class="empty-message">Trainer not found.</p>`;
     return;
@@ -20739,14 +20716,25 @@ function displayTrainerPokemonManager() {
 
   const pokemonList = getTrainerPokemon(trainer.id)
     .sort((a,b) => a.speciesNumber - b.speciesNumber);
+  const partyPokemon = pokemonList.filter(pokemon => pokemon.storageLocation !== "pc");
+  const storedPokemon = pokemonList.filter(pokemon => pokemon.storageLocation === "pc");
 
   list.innerHTML = `
     <section class="my-pokemon-section">
-      <h2 class="my-pokemon-section-title">Current Pokémon (${pokemonList.length})</h2>
+      <h2 class="my-pokemon-section-title">Shared Party (${partyPokemon.length})</h2>
       <div class="party-pokemon-panel">
-        ${pokemonList.length
-          ? pokemonList.map(pokemon => buildCompactPokemonRowHTML(pokemon,false,[],"trainerPokemonManagePage",true)).join("")
-          : `<p class="empty-message">No Pokémon assigned to ${trainer.name}.</p>`}
+        ${partyPokemon.length
+          ? partyPokemon.map(pokemon => buildCompactPokemonRowHTML(pokemon,false,[],"trainerPokemonManagePage",true)).join("")
+          : `<p class="empty-message">No Pokémon from ${trainer.name} are currently in the shared party.</p>`}
+      </div>
+    </section>
+
+    <section class="my-pokemon-section" style="margin-top:16px;">
+      <h2 class="my-pokemon-section-title">PC Storage (${storedPokemon.length})</h2>
+      <div class="party-pokemon-panel">
+        ${storedPokemon.length
+          ? storedPokemon.map(pokemon => buildCompactPokemonRowHTML(pokemon,false,[],"trainerPokemonManagePage",true)).join("")
+          : `<p class="empty-message">No Pokémon from ${trainer.name} are stored in the PC.</p>`}
       </div>
     </section>
   `;
