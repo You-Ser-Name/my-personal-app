@@ -2781,6 +2781,10 @@ select {
 
         <div class="kanto-location-actions">
           <button id="kantoDetailLocationOpenButton" class="primary-button small-button" type="button" style="grid-column:1 / -1;" onclick="openSelectedKantoDetailLocationFromPanel()">Open Detailed Map</button>
+          <div id="kantoDetailPokemonCenterActions" style="display:none;grid-column:1 / -1;grid-template-columns:1fr 1fr;gap:10px;">
+            <button class="primary-button small-button" type="button" onclick="healPartyPokemonFromCityCenter()">Heal Party Pokémon</button>
+            <button class="small-button" type="button" onclick="openPCFromCityCenter()">Access PC</button>
+          </div>
         </div>
       </div>
 
@@ -3138,7 +3142,7 @@ select {
       </div>
     </div>
 
-    <details class="form-card">
+    <details id="pokemonCenterStorageDetails" class="form-card">
       <summary style="font-size:22px;font-weight:bold;cursor:pointer;text-align:left;list-style-position:inside;">Pokémon PC Storage</summary>
       <div style="margin-top:16px;">
       <p style="text-align:center;line-height:1.5;">
@@ -8266,6 +8270,7 @@ const kantoDetailLocationHotspots = {
     {name:"Viridian City",target:"viridian-city",x:80,y:88,w:34,h:20}
   ],
   "viridian-city": [
+    {name:"Viridian Poké Center",action:"pokemon-center",cityName:"Viridian City",x:56,y:5,w:28,h:28},
     {name:"Viridian Gym",target:"viridian-gym",x:18,y:9,w:27,h:24},
     {name:"Route 1",target:"route-1",x:0,y:42,w:10,h:18},
     {name:"Route 2",target:"route-2",x:43,y:0,w:14,h:11},
@@ -8276,6 +8281,7 @@ const kantoDetailLocationHotspots = {
     {name:"Viridian City",target:"viridian-city",x:54,y:91,w:46,h:18}
   ],
   "pewter-city": [
+    {name:"Pewter Poké Center",action:"pokemon-center",cityName:"Pewter City",x:49,y:6,w:29,h:29},
     {name:"Pewter Gym",target:"pewter-gym",x:32,y:19,w:36,h:31},
     {name:"Route 2",target:"route-2",x:43,y:96,w:24,h:12},
     {name:"Route 3",target:"route-3",x:96,y:35,w:12,h:24}
@@ -8294,6 +8300,7 @@ const kantoDetailLocationHotspots = {
     {name:"Victory Road",target:"victory-road",x:41,y:0,w:18,h:25}
   ],
   "cerulean-city": [
+    {name:"Cerulean Poké Center",action:"pokemon-center",cityName:"Cerulean City",x:59,y:5,w:27,h:29},
     {name:"Cerulean Gym",target:"cerulean-gym",x:30,y:18,w:38,h:30},
     {name:"Route 4",target:"route-4",x:5,y:43,w:20,h:24},
     {name:"Route 5",target:"route-5",x:50,y:84,w:24,h:23}
@@ -8304,6 +8311,7 @@ const kantoDetailLocationHotspots = {
     {name:"Celadon City",target:"celadon-city",x:0,y:65,w:21,h:24}
   ],
   "vermilion-city": [
+    {name:"Vermilion Poké Center",action:"pokemon-center",cityName:"Vermilion City",x:55,y:3,w:29,h:30},
     {name:"Vermilion Gym",target:"vermilion-gym",x:16,y:4,w:33,h:29},
     {name:"Route 5",target:"route-5",x:0,y:34,w:23,h:25},
     {name:"Route 6",target:"route-6",x:77,y:34,w:23,h:25}
@@ -8410,7 +8418,12 @@ function renderKantoDetailTrainerHotspots(locationId) {
     button.onclick = function(event) {
       event.stopPropagation();
       closeKantoDetailLocationPanel();
-      openKantoDetailLocationHotspot(location.target);
+      if (location.action === "pokemon-center") {
+        openCityPokemonCenterLandmark(location.cityName || location.name);
+      }
+      else {
+        openKantoDetailLocationHotspot(location.target);
+      }
     };
     layer.appendChild(button);
   });
@@ -8475,6 +8488,90 @@ function getKantoLocationDescription(locationId) {
     : "This location is active on the Kanto campaign map.");
 }
 
+let activeCityPokemonCenterName = null;
+
+function openCityPokemonCenterLandmark(cityName) {
+  activeCityPokemonCenterName = cityName || "City";
+  selectedKantoLocationId = null;
+
+  const panel = document.getElementById("kantoDetailLocationPanel");
+  const name = document.getElementById("kantoDetailLocationName");
+  const type = document.getElementById("kantoDetailLocationType");
+  const description = document.getElementById("kantoDetailLocationDescription");
+  const openButton = document.getElementById("kantoDetailLocationOpenButton");
+  const pokemonCenterActions = document.getElementById("kantoDetailPokemonCenterActions");
+  const trainerPanel = document.getElementById("kantoDetailTrainerPanel");
+
+  if (!panel || !name || !type || !description || !openButton || !pokemonCenterActions) return;
+
+  if (trainerPanel) {
+    trainerPanel.style.display = "none";
+    trainerPanel.innerHTML = "";
+  }
+  selectedKantoDetailTrainerKey = null;
+
+  type.textContent = "Poké Center";
+  name.textContent = activeCityPokemonCenterName + " Poké Center";
+  description.textContent = "Heal your active party or access shared Pokémon PC Storage.";
+  openButton.style.display = "none";
+  pokemonCenterActions.style.display = "grid";
+  panel.style.display = "block";
+  panel.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function healPartyPokemonFromCityCenter() {
+  if (activeBattlePokemonAId !== null || activeBattlePokemonBId !== null) {
+    alert("End the current battle before using the Poké Center.");
+    return;
+  }
+
+  const party = getSharedPartyPokemon();
+  let changedCount = 0;
+
+  party.forEach(function(pokemon) {
+    let changed = false;
+    if (pokemon.currentHP !== pokemon.stats.hp) {
+      pokemon.currentHP = pokemon.stats.hp;
+      changed = true;
+    }
+    if (pokemon.status !== "None") {
+      pokemon.status = "None";
+      changed = true;
+    }
+    if (!pokemon.movePP || typeof pokemon.movePP !== "object" || Array.isArray(pokemon.movePP)) {
+      pokemon.movePP = {};
+      changed = true;
+    }
+    if (Array.isArray(pokemon.moves)) {
+      pokemon.moves.forEach(function(moveName) {
+        const move = moveDatabase[moveName];
+        if (move && pokemon.movePP[moveName] !== move.pp) {
+          pokemon.movePP[moveName] = move.pp;
+          changed = true;
+        }
+      });
+    }
+    if (changed) changedCount += 1;
+  });
+
+  savePokemon();
+
+  const description = document.getElementById("kantoDetailLocationDescription");
+  if (description) {
+    if (party.length === 0) description.textContent = "There are no Pokémon in the active party to heal.";
+    else if (changedCount === 0) description.textContent = "Your active party is already fully healed.";
+    else description.textContent = "Your active party is fully healed. HP, PP, and major status conditions were restored.";
+  }
+}
+
+function openPCFromCityCenter() {
+  showPage("pokemonCenterPage");
+  const storageDetails = document.getElementById("pokemonCenterStorageDetails");
+  if (storageDetails) storageDetails.open = true;
+  if (typeof displayPokemonCenterStorage === "function") displayPokemonCenterStorage();
+  window.scrollTo(0,0);
+}
+
 function openKantoDetailLocationHotspot(locationId) {
   selectedKantoLocationId = locationId;
 
@@ -8484,9 +8581,13 @@ function openKantoDetailLocationHotspot(locationId) {
   const type = document.getElementById("kantoDetailLocationType");
   const description = document.getElementById("kantoDetailLocationDescription");
   const openButton = document.getElementById("kantoDetailLocationOpenButton");
+  const pokemonCenterActions = document.getElementById("kantoDetailPokemonCenterActions");
   const trainerPanel = document.getElementById("kantoDetailTrainerPanel");
 
   if (!panel || !name || !type || !description || !openButton) return;
+
+  openButton.style.display = "block";
+  if (pokemonCenterActions) pokemonCenterActions.style.display = "none";
 
   if (trainerPanel) {
     trainerPanel.style.display = "none";
@@ -8525,8 +8626,13 @@ function openSelectedKantoDetailLocationFromPanel() {
 }
 
 function closeKantoDetailLocationPanel() {
+  activeCityPokemonCenterName = null;
   const panel = document.getElementById("kantoDetailLocationPanel");
+  const openButton = document.getElementById("kantoDetailLocationOpenButton");
+  const pokemonCenterActions = document.getElementById("kantoDetailPokemonCenterActions");
   if (panel) panel.style.display = "none";
+  if (openButton) openButton.style.display = "block";
+  if (pokemonCenterActions) pokemonCenterActions.style.display = "none";
 }
 
 function selectKantoDetailTrainer(trainerKey) {
