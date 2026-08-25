@@ -48,10 +48,20 @@ header {
   line-height: 1.15;
 }
 
-#pokemonPage .pokedex-sticky-controls {
+#pokemonPage > header {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 60;
+}
+
+#pokemonPage > header h1 {
+  margin: 0;
+}
+
+#pokemonPage .pokedex-sticky-controls {
+  position: sticky;
+  top: 78px;
+  z-index: 55;
   background: #f4f4f4;
   padding: 10px 0 8px;
   margin: -4px 0 8px;
@@ -2890,10 +2900,6 @@ select {
     </div>
     <div id="pokedexSection" style="display:block;margin-top:8px;">
       <h2>Pokédex</h2>
-
-      <p style="text-align:center;font-size:12px;color:#666;margin-top:-6px;">
-        Pokémon artwork loaded from Pokémon Wiki / Fandom.
-      </p>
 
       <div id="pokemonList"></div>
     </div>
