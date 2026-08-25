@@ -2767,6 +2767,23 @@ select {
         <div id="kantoDetailHotspotLayer" class="kanto-detail-hotspot-layer"></div>
       </div>
       <div id="kantoDetailMapCaption" class="kanto-detail-map-caption"></div>
+
+      <div id="kantoDetailLocationPanel" class="kanto-location-panel" style="display:none;margin-top:8px;">
+        <div class="kanto-location-panel-header">
+          <div>
+            <div id="kantoDetailLocationType" class="kanto-location-type"></div>
+            <div id="kantoDetailLocationName" class="kanto-location-name"></div>
+          </div>
+          <button class="small-button" type="button" onclick="closeKantoDetailLocationPanel()">✕</button>
+        </div>
+
+        <div id="kantoDetailLocationDescription" class="kanto-location-description"></div>
+
+        <div class="kanto-location-actions">
+          <button id="kantoDetailLocationOpenButton" class="primary-button small-button" type="button" style="grid-column:1 / -1;" onclick="openSelectedKantoDetailLocationFromPanel()">Open Detailed Map</button>
+        </div>
+      </div>
+
       <div id="kantoDetailTrainerPanel" class="kanto-detail-trainer-panel" style="display:none;"></div>
     </div>
   </div>
@@ -8336,22 +8353,101 @@ function renderKantoDetailTrainerHotspots(locationId) {
   });
 }
 
-function openKantoDetailLocationHotspot(locationId) {
-  const destination = (kantoMapLocations || []).find(function(location) {
+function getKantoLocationDisplayData(locationId) {
+  const mapped = (kantoMapLocations || []).find(function(location) {
     return location.id === locationId;
   });
-  const destinationName = destination ? destination.name : ((kantoDetailMaps[locationId] && kantoDetailMaps[locationId].title) || "this location");
-  const currentMap = activeKantoDetailMapId && kantoDetailMaps[activeKantoDetailMapId]
-    ? kantoDetailMaps[activeKantoDetailMapId].title
-    : "this map";
+  if (mapped) return mapped;
 
-  const confirmed = window.confirm(
-    "Leave " + currentMap + " and go to " + destinationName + "?"
-  );
-  if (!confirmed) return;
+  const detail = kantoDetailMaps[locationId] || null;
+  if (detail) {
+    return {
+      id: locationId,
+      name: detail.title,
+      type: locationId.indexOf("route-") === 0 ? "Route" : "Landmark"
+    };
+  }
+
+  return {id:locationId,name:"Location",type:"Landmark"};
+}
+
+function getKantoLocationDescription(locationId) {
+  const descriptions = {
+    "route-1":"Route 1 connects Pallet Town to Viridian City. Trainers: Cal, Penny, and Riley.",
+    "viridian-city":"Viridian City contains Gym 1, a Grass-type gym led by Fern.",
+    "route-2":"Route 2 connects Viridian City to Pewter City. Trainers: Nate, Skye, and Wade.",
+    "pewter-city":"Pewter City contains Gym 2, a Rock-type gym led by Flint.",
+    "route-3":"Route 3 connects Pewter City to Mt. Moon. Trainers: Theo, Maya, and Knox.",
+    "mt-moon":"Mt. Moon connects Route 3 to Route 4. Trainers: Dex, Mira, and Vex.",
+    "route-4":"Route 4 connects Mt. Moon to Cerulean City, with a north branch toward Victory Road. Trainers: Finn, Cora, and Sol.",
+    "cerulean-city":"Cerulean City contains Gym 3, a Water-type gym led by Coral.",
+    "route-5":"Route 5 runs south from Cerulean City, then splits east toward Vermilion City and west toward Celadon City. Trainers: Ivy, Basil, and Lane.",
+    "vermilion-city":"Vermilion City contains Gym 4, an Electric-type gym led by Amp.",
+    "route-6":"Route 6 connects Vermilion City to Lavender Town. Trainers: Toby, Lark, and Reese.",
+    "lavender-town":"Lavender Town is a campaign location connected to Routes 6 and 7.",
+    "route-7":"Route 7 connects Lavender Town to the Safari Zone. Trainers: Emery, Kellan, and Quinn.",
+    "safari-zone":"The Safari Zone connects Routes 7 and 8 in the campaign progression.",
+    "route-8":"Route 8 connects the Safari Zone to Fuchsia City. Trainers: Pax, Wren, and Jace.",
+    "fuchsia-city":"Fuchsia City contains Gym 5, a Poison-type gym led by Rue.",
+    "route-9":"Route 9 connects Fuchsia City to Saffron City. Trainers: Mack, Tess, and Rook.",
+    "saffron-city":"Saffron City contains Gym 6, a Psychic-type gym led by Sage.",
+    "route-10":"Route 10 connects Saffron City to Celadon City. Trainers: Ember, Dune, and Slate.",
+    "celadon-city":"Celadon City contains Gym 7, a Grass-type gym led by Flora.",
+    "route-11":"Route 11 connects Celadon City to the coast. Trainers: Marlin, Gale, and Brook.",
+    "route-12":"Route 12 is an ocean route between the coast and Seafoam Islands. Swimmers: Kai, Pearl, and Tide.",
+    "seafoam-islands":"Seafoam Islands contains the entrance to the Seafoam cave system.",
+    "seafoam-cave":"The Seafoam cave system contains three connected chambers and a Level 65 Articuno encounter.",
+    "route-13":"Route 13 is an ocean route between Seafoam Islands and Cinnabar Island. Swimmers: Finnick, Neri, and Cove.",
+    "cinnabar-island":"Cinnabar Island contains Gym 8, a Fire-type gym led by Blaze.",
+    "victory-road":"Victory Road leads toward Indigo Plateau.",
+    "pallet-town":"Pallet Town is the starting town for the campaign."
+  };
+  const location = getKantoLocationDisplayData(locationId);
+  return descriptions[locationId] || (location.type === "Route"
+    ? "This route is active on the Kanto campaign map."
+    : "This location is active on the Kanto campaign map.");
+}
+
+function openKantoDetailLocationHotspot(locationId) {
+  selectedKantoLocationId = locationId;
+
+  const location = getKantoLocationDisplayData(locationId);
+  const panel = document.getElementById("kantoDetailLocationPanel");
+  const name = document.getElementById("kantoDetailLocationName");
+  const type = document.getElementById("kantoDetailLocationType");
+  const description = document.getElementById("kantoDetailLocationDescription");
+  const openButton = document.getElementById("kantoDetailLocationOpenButton");
+  const trainerPanel = document.getElementById("kantoDetailTrainerPanel");
+
+  if (!panel || !name || !type || !description || !openButton) return;
+
+  if (trainerPanel) {
+    trainerPanel.style.display = "none";
+    trainerPanel.innerHTML = "";
+  }
+  selectedKantoDetailTrainerKey = null;
+
+  name.textContent = location.name;
+  type.textContent = location.type;
+  description.textContent = getKantoLocationDescription(locationId);
 
   if (kantoDetailMaps[locationId]) {
-    selectedKantoLocationId = locationId;
+    openButton.textContent = kantoDetailMaps[locationId].buttonLabel || ("Open " + location.name + " Map");
+  }
+  else {
+    openButton.textContent = "Open on Kanto Map";
+  }
+
+  panel.style.display = "block";
+  updateKantoLocationStatus();
+  panel.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function openSelectedKantoDetailLocationFromPanel() {
+  if (!selectedKantoLocationId) return;
+  const locationId = selectedKantoLocationId;
+
+  if (kantoDetailMaps[locationId]) {
     openKantoDetailMap(locationId);
     return;
   }
@@ -8359,6 +8455,11 @@ function openKantoDetailLocationHotspot(locationId) {
   showPage("homePage");
   selectKantoLocation(locationId);
   window.scrollTo(0,0);
+}
+
+function closeKantoDetailLocationPanel() {
+  const panel = document.getElementById("kantoDetailLocationPanel");
+  if (panel) panel.style.display = "none";
 }
 
 function selectKantoDetailTrainer(trainerKey) {
@@ -8601,41 +8702,7 @@ function selectKantoLocation(locationId) {
   const detailMap = kantoDetailMaps[locationId] || null;
   const detailButton = document.getElementById("kantoDetailMapButton");
 
-  if (locationId === "route-1") {
-    description.textContent = "Route 1 connects Pallet Town to Viridian City. Trainers: Cal, Penny, and Riley.";
-  }
-  else if (locationId === "viridian-city") {
-    description.textContent = "Viridian City contains Gym 1, a Grass-type gym led by Fern.";
-  }
-  else if (locationId === "route-2") {
-    description.textContent = "Route 2 connects Viridian City to Pewter City. Trainers: Nate, Skye, and Wade.";
-  }
-  else if (locationId === "pewter-city") {
-    description.textContent = "Pewter City contains Gym 2, a Rock-type gym led by Flint.";
-  }
-  else if (locationId === "route-3") {
-    description.textContent = "Route 3 connects Pewter City to Mt. Moon. Trainers: Theo, Maya, and Knox.";
-  }
-  else if (locationId === "mt-moon") {
-    description.textContent = "Mt. Moon connects Route 3 to Route 4. Trainers: Dex, Mira, and Vex.";
-  }
-  else if (locationId === "route-4") {
-    description.textContent = "Route 4 connects Mt. Moon to Cerulean City, with a north branch toward Victory Road. Trainers: Finn, Cora, and Sol.";
-  }
-  else if (locationId === "cerulean-city") {
-    description.textContent = "Cerulean City contains Gym 3, a Water-type gym led by Coral.";
-  }
-  else if (locationId === "route-5") {
-    description.textContent = "Route 5 runs south from Cerulean City, then splits east toward Vermilion City and west toward Celadon City. Trainers: Ivy, Basil, and Lane.";
-  }
-  else if (locationId === "vermilion-city") {
-    description.textContent = "Vermilion City contains Gym 4, an Electric-type gym led by Amp.";
-  }
-  else {
-    description.textContent = location.type === "Route"
-      ? "This route is active on the Kanto overview. Its detailed map will be added as the campaign is built."
-      : "This location is active on the Kanto overview. Detailed content will be added as the campaign is built.";
-  }
+  description.textContent = getKantoLocationDescription(locationId);
 
   if (detailButton) {
     if (detailMap) {
@@ -8672,6 +8739,9 @@ function openKantoDetailMap(locationId) {
   }
   if (caption) caption.textContent = detail.caption;
 
+  const detailLocationPanel = document.getElementById("kantoDetailLocationPanel");
+  if (detailLocationPanel) detailLocationPanel.style.display = "none";
+
   renderKantoDetailTrainerHotspots(locationId);
   showPage("kantoDetailMapPage");
   window.scrollTo(0, 0);
@@ -8686,15 +8756,30 @@ function closeKantoLocationPanel() {
 function updateKantoLocationStatus() {
   if (!selectedKantoLocationId) return;
   const state = getKantoLocationProgress(selectedKantoLocationId);
-  const visitedButton = document.getElementById("kantoVisitedButton");
-  const completedButton = document.getElementById("kantoCompletedButton");
-  const status = document.getElementById("kantoLocationStatus");
+  const visitedButtons = [
+    document.getElementById("kantoVisitedButton"),
+    document.getElementById("kantoDetailVisitedButton")
+  ];
+  const completedButtons = [
+    document.getElementById("kantoCompletedButton"),
+    document.getElementById("kantoDetailCompletedButton")
+  ];
+  const statuses = [
+    document.getElementById("kantoLocationStatus"),
+    document.getElementById("kantoDetailLocationStatus")
+  ];
 
-  if (visitedButton) visitedButton.textContent = state.visited ? "Visited ✓" : "Mark Visited";
-  if (completedButton) completedButton.textContent = state.completed ? "Completed ✓" : "Mark Completed";
-  if (status) status.textContent =
-    (state.visited ? "Visited" : "Not visited") + " • " +
-    (state.completed ? "Completed" : "Not completed");
+  visitedButtons.forEach(function(button) {
+    if (button) button.textContent = state.visited ? "Visited ✓" : "Mark Visited";
+  });
+  completedButtons.forEach(function(button) {
+    if (button) button.textContent = state.completed ? "Completed ✓" : "Mark Completed";
+  });
+  statuses.forEach(function(status) {
+    if (status) status.textContent =
+      (state.visited ? "Visited" : "Not visited") + " • " +
+      (state.completed ? "Completed" : "Not completed");
+  });
 }
 
 function toggleKantoVisited() {
