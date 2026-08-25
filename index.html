@@ -2392,6 +2392,16 @@ select {
   }
 }
 
+/* Campaign dashboard: ~10% tighter vertical spacing */
+#campaignPage header { padding: 18px; }
+#campaignPage .page-content { padding: 18px 20px; }
+#campaignPage .form-card { margin-top: 18px; margin-bottom: 18px; padding: 18px; }
+#campaignPage .form-card h2 { margin-top: 0.75em; margin-bottom: 0.75em; }
+#campaignPage .form-card p { margin-top: 0.8em; margin-bottom: 0.8em; }
+#campaignPage .money-display { margin-top: 9px; margin-bottom: 9px; }
+#campaignPage button { padding-top: 16px; padding-bottom: 16px; }
+#campaignPage .small-button { padding-top: 6px; padding-bottom: 6px; }
+
 /* =========================================================
    CAMPAIGN PROGRESS / GYM BADGES V33 - COMPACT
 ========================================================= */
@@ -2995,7 +3005,7 @@ select {
   <header><h1>Trainers</h1></header>
 
   <div class="page-content">
-    <div class="compact-top-actions">
+    <div class="compact-top-actions three">
       <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
       <button class="primary-button" onclick="showPage('createTrainerPage')">+ Create Trainer</button>
       <button class="small-button" onclick="showPage('completedTrainersPage')">Defeated Trainers</button>
@@ -3237,7 +3247,7 @@ select {
 
   <div class="page-content">
     <div class="compact-top-actions">
-      <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
+      <button class="small-button" onclick="showPage('homePage')">← Back</button>
     </div>
     <div class="form-card campaign-progress-card">
       <h2 style="text-align:center;margin-top:0;">Campaign Progress</h2>
