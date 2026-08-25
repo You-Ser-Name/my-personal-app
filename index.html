@@ -7968,6 +7968,20 @@ const kantoDetailMaps = {
     buttonLabel: "Open Route 11 Map",
     caption: "Celadon City → Coast • Trainers: Marlin, Gale, Brook"
   },
+  "route-12": {
+    title: "Route 12",
+    image: "./assets/maps/route-12.png",
+    alt: "Route 12 ocean map with islands on the left, coastline on the right, and swimmers Kai, Pearl, and Tide",
+    buttonLabel: "Open Route 12 Map",
+    caption: "Coast → Seafoam waters • Swimmers: Kai, Pearl, Tide"
+  },
+  "route-13": {
+    title: "Route 13",
+    image: "./assets/maps/route-13.png",
+    alt: "Route 13 ocean map with Cinnabar Island on the left, smaller islands on the right, and swimmers Finnick, Neri, and Cove",
+    buttonLabel: "Open Route 13 Map",
+    caption: "Seafoam waters → Cinnabar Island • Swimmers: Finnick, Neri, Cove"
+  },
   "seafoam-islands": {
     title: "Seafoam Islands",
     image: "./assets/maps/seafoam-islands.png",
@@ -8090,6 +8104,16 @@ const kantoDetailTrainerEncounters = {
     {key:"r11-gale",name:"Gale",role:"Flying/Water Trainer",x:57.0,y:63.0,reward:"₽2450",team:[["Dodrio",42],["Seadra",42],["Seaking",43],["Kangaskhan",43],["Pidgeot",43]]},
     {key:"r11-brook",name:"Brook",role:"Route Ace",x:54.5,y:82.5,reward:"₽2700",team:[["Dewgong",43],["Seadra",43],["Dodrio",43],["Tauros",44],["Seaking",44],["Kangaskhan",44]]}
   ],
+  "route-12": [
+    {key:"r12-kai",name:"Kai",role:"Swimmer",x:29.8,y:47.0,reward:"₽2600",team:[["Seel",43],["Shellder",43],["Horsea",44],["Goldeen",44],["Krabby",44]]},
+    {key:"r12-pearl",name:"Pearl",role:"Swimmer",x:50.5,y:47.0,reward:"₽2800",team:[["Dewgong",44],["Cloyster",44],["Seadra",44],["Staryu",45],["Poliwhirl",45]]},
+    {key:"r12-tide",name:"Tide",role:"Swimmer Ace",x:70.7,y:47.0,reward:"₽3050",team:[["Dewgong",44],["Cloyster",45],["Seadra",45],["Starmie",45],["Lapras",45],["Gyarados",45]]}
+  ],
+  "route-13": [
+    {key:"r13-finnick",name:"Finnick",role:"Swimmer",x:34.8,y:50.5,reward:"₽2950",team:[["Dewgong",45],["Omanyte",45],["Kabuto",45],["Seadra",46],["Staryu",46]]},
+    {key:"r13-neri",name:"Neri",role:"Swimmer",x:50.8,y:50.5,reward:"₽3200",team:[["Cloyster",46],["Omastar",46],["Kabutops",46],["Seaking",47],["Starmie",47]]},
+    {key:"r13-cove",name:"Cove",role:"Swimmer Ace",x:67.8,y:50.5,reward:"₽3500",team:[["Lapras",46],["Dewgong",46],["Cloyster",47],["Omastar",47],["Kabutops",47],["Starmie",47]]}
+  ],
   "seafoam-cave": [
     {key:"legend-articuno",name:"Articuno",role:"Legendary Pokémon",x:84.5,y:19.5,w:18,h:22,reward:"—",team:[["Articuno",65]]}
   ]
@@ -8146,6 +8170,14 @@ const kantoDetailLocationHotspots = {
   "route-11": [
     {name:"Celadon City",target:"celadon-city",x:62,y:8,w:39,h:18},
     {name:"Coast / Route 12",target:"route-12",x:48,y:94,w:30,h:15}
+  ],
+  "route-12": [
+    {name:"Route 11 Coast",target:"route-11",x:91,y:55,w:18,h:75},
+    {name:"Route 13",target:"route-13",x:7,y:50,w:16,h:85}
+  ],
+  "route-13": [
+    {name:"Route 12",target:"route-12",x:94,y:50,w:13,h:85},
+    {name:"Cinnabar Island",target:"cinnabar-island",x:13,y:47,w:25,h:62}
   ],
   "seafoam-islands": [
     {name:"Seafoam Cave",target:"seafoam-cave",x:19.0,y:57.0,w:15,h:18}
