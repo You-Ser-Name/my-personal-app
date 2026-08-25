@@ -8556,8 +8556,9 @@ function renderKantoHotspots() {
 
   /*
     The campaign-order Gym labels are printed across the bottom of the
-    Kanto artwork. These invisible hotspots open the corresponding Gym
-    map directly instead of first opening the normal location panel.
+    Kanto artwork. These invisible hotspots now open the same location
+    panel used by the other Kanto landmarks, where the Gym map can be
+    opened or the location can be marked visited/completed.
   */
   kantoGymOrderHotspots.forEach(function(gym) {
     const button = document.createElement("button");
@@ -8567,12 +8568,11 @@ function renderKantoHotspots() {
     button.style.top = gym.y + "%";
     button.style.width = gym.w + "%";
     button.style.height = gym.h + "%";
-    button.setAttribute("aria-label", "Open " + gym.name + " map");
-    button.title = "Open " + gym.name + " map";
+    button.setAttribute("aria-label", gym.name);
+    button.title = gym.name;
     button.onclick = function(event) {
       event.stopPropagation();
-      closeKantoLocationPanel();
-      openKantoDetailMap(gym.locationId);
+      selectKantoLocation(gym.locationId);
     };
     layer.appendChild(button);
   });
