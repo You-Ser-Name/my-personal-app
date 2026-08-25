@@ -7964,6 +7964,13 @@ const kantoDetailMaps = {
     caption: "Viridian City → Pewter City • Trainers: Nate, Skye, Wade"
   },
   "pewter-city": {
+    title: "Pewter City",
+    image: "./assets/maps/pewter-city.png",
+    alt: "Pewter City map with Pewter Gym, Pokémon Center, Poké Mart, Museum of Science, and homes",
+    buttonLabel: "Open Pewter City Map",
+    caption: "Pewter City • Gym, Pokémon Center, Poké Mart, Museum of Science, and paths to Route 2 and Route 3"
+  },
+  "pewter-gym": {
     title: "Pewter Gym — Gym 2",
     image: "./assets/maps/pewter-gym.png?v=20260823b",
     alt: "Pewter Rock Gym map with trainers Cliff, Gemma, and Gym Leader Flint",
@@ -8133,7 +8140,7 @@ const kantoDetailTrainerEncounters = {
     {key:"r2-skye",name:"Skye",role:"Bird Keeper",x:31.7,y:31.0,reward:"₽280",team:[["Spearow",14],["Zubat",14],["Pidgeotto",15]]},
     {key:"r2-wade",name:"Wade",role:"Route Ace",x:60.0,y:25.0,reward:"₽380",team:[["Weedle",15],["Beedrill",15],["Nidoran♀",16],["Fearow",16]]}
   ],
-  "pewter-city": [
+  "pewter-gym": [
     {key:"g2-cliff",name:"Cliff",role:"Gym Trainer",x:43.0,y:50.0,reward:"₽450",team:[["Geodude",16],["Onix",17],["Kabuto",17]]},
     {key:"g2-gemma",name:"Gemma",role:"Gym Trainer",x:62.0,y:69.0,reward:"₽550",team:[["Omanyte",17],["Geodude",17],["Onix",18],["Aerodactyl",18]]},
     {key:"g2-flint",name:"Flint",role:"Gym Leader",x:50.0,y:25.0,reward:"₽1400",team:[["Geodude",18],["Omanyte",18],["Kabuto",19],["Onix",19],["Aerodactyl",20]]}
@@ -8251,6 +8258,11 @@ const kantoDetailLocationHotspots = {
   "route-2": [
     {name:"Pewter City",target:"pewter-city",x:52,y:8,w:42,h:18},
     {name:"Viridian City",target:"viridian-city",x:54,y:91,w:46,h:18}
+  ],
+  "pewter-city": [
+    {name:"Pewter Gym",target:"pewter-gym",x:18,y:7,w:28,h:27},
+    {name:"Route 2",target:"route-2",x:31,y:90,w:18,h:10},
+    {name:"Route 3",target:"route-3",x:88,y:31,w:12,h:18}
   ],
   "route-3": [
     {name:"Pewter City",target:"pewter-city",x:1,y:20,w:20,h:52},
@@ -8402,7 +8414,8 @@ function getKantoLocationDescription(locationId) {
     "viridian-city":"Viridian City includes the Gym, Poké Center, Poké Mart, Trainer School, and the southern trail to Viridian Forest.",
     "viridian-gym":"Viridian Gym is Gym 1, a Grass-type gym led by Fern.",
     "route-2":"Route 2 connects Viridian City to Pewter City. Trainers: Nate, Skye, and Wade.",
-    "pewter-city":"Pewter City contains Gym 2, a Rock-type gym led by Flint.",
+    "pewter-city":"Pewter City includes the Gym, Pokémon Center, Poké Mart, Museum of Science, and routes south and east.",
+    "pewter-gym":"Pewter Gym is Gym 2, a Rock-type gym led by Flint.",
     "route-3":"Route 3 connects Pewter City to Mt. Moon. Trainers: Theo, Maya, and Knox.",
     "mt-moon":"Mt. Moon connects Route 3 to Route 4. Trainers: Dex, Mira, and Vex.",
     "route-4":"Route 4 connects Mt. Moon to Cerulean City, with a north branch toward Victory Road. Trainers: Finn, Cora, and Sol.",
