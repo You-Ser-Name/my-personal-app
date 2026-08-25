@@ -2551,11 +2551,9 @@ select {
   <div class="menu">
     <button onclick="showPage('pokemonPage')">Pokémon</button>
     <button onclick="showPage('trainersPage')">Trainers</button>
-    <button onclick="showPage('inventoryPage')">Inventory</button>
     <button onclick="battleReturnContext=null;showPage('battlesPage')">Battles</button>
     <button onclick="showPage('campaignPage')">Campaign</button>
     <button onclick="showPage('pokemonCenterPage')">Poké Center</button>
-    <button onclick="showPage('backupPage')">Backup & Restore</button>
     <button onclick="showPage('settingsPage')">Settings</button>
   </div>
 </div>
@@ -2572,6 +2570,110 @@ select {
       <p>Checks the currently deployed GitHub Pages app, clears app caches, and reloads the newest copy without needing a version-file change.</p>
       <button class="primary-button" style="width:100%;" type="button" onclick="refreshAppFromGitHub(this)">Refresh App from GitHub</button>
       <div id="githubRefreshStatus" style="margin-top:10px;font-weight:700;text-align:center;"></div>
+    </div>
+
+
+    <div class="card" style="margin-top:14px;">
+      <h2 style="margin-top:0;text-align:center;">Backup & Restore</h2>
+      <p style="text-align:center;line-height:1.5;">Manage campaign backup files and local snapshots from Settings.</p>
+    </div>
+<div class="form-card">
+      <h2 style="text-align:center;">Backup Files</h2>
+
+      <p style="text-align:center;line-height:1.5;">
+        Export your complete campaign as a JSON file, including Pokémon,
+        trainers, inventories, money, completed trainers, encounter/reward
+        state, PC level, Kanto route/town visited/completed progress, and gym badge progress.
+        On iPhone or iPad, use <strong>Share / Save to Files</strong> if you
+        want to place the backup directly in the Files app.
+      </p>
+
+      <button
+        class="primary-button"
+        style="width:100%;margin-bottom:10px;"
+        onclick="shareCampaignBackup()">
+        Share / Save Backup to Files
+      </button>
+
+      <button
+        class="small-button"
+        style="width:100%;"
+        onclick="exportCampaignBackup()">
+        Download Backup
+      </button>
+
+      <div
+        id="backupExportResult"
+        class="battle-note"
+        style="display:none;text-align:center;margin-top:12px;">
+      </div>
+
+      <hr style="margin:20px 0;">
+
+      <h3>Restore Backup File</h3>
+
+      <p style="line-height:1.5;">
+        Select a JSON backup file from Files. Restoring replaces the campaign
+        currently stored on this device after first creating a safety snapshot.
+      </p>
+
+      <input
+        id="backupImportFile"
+        type="file"
+        accept=".json,application/json"
+        style="margin-bottom:12px;">
+
+      <button
+        class="primary-button"
+        style="width:100%;"
+        onclick="importCampaignBackupFromFile()">
+        Restore Selected Backup
+      </button>
+
+      <div
+        id="backupImportResult"
+        class="battle-note"
+        style="display:none;text-align:center;margin-top:12px;">
+      </div>
+    </div>
+
+    <div class="form-card">
+      <details open>
+        <summary style="font-size:20px;font-weight:bold;cursor:pointer;">
+          Manual Backups
+        </summary>
+
+        <p style="line-height:1.5;">
+          Manual snapshots include the same campaign/progress data as exported
+          backups, including Kanto map progress, gym badges, and completed route encounters.
+          The app keeps only the newest 12 manual snapshots.
+        </p>
+
+        <button
+          class="small-button"
+          style="width:100%;margin-bottom:12px;"
+          onclick="createManualLocalSnapshot()">
+          Create Manual Snapshot
+        </button>
+
+        <div id="manualBackupList"></div>
+      </details>
+    </div>
+
+    <div class="form-card">
+      <details>
+        <summary style="font-size:20px;font-weight:bold;cursor:pointer;">
+          Automatic Backups
+        </summary>
+
+        <p style="line-height:1.5;">
+          Automatic snapshots include campaign data plus Kanto map progress
+          whenever the app creates a new snapshot. The app keeps only the newest
+          12 automatic snapshots. Older automatic snapshots are removed automatically.
+        </p>
+
+        <div id="automaticBackupList"></div>
+      </details>
     </div>
 
     <div class="card danger-zone-card" style="margin-top:14px;">
@@ -3131,115 +3233,6 @@ select {
 </div>
 
 
-<!-- BACKUP & RESTORE -->
-<div id="backupPage" style="display:none;">
-  <header><h1>Backup & Restore</h1></header>
-
-  <div class="page-content">
-    <button class="back-button" onclick="showPage('homePage')">← Back</button>
-
-    <div class="form-card">
-      <h2 style="text-align:center;">Backup Files</h2>
-
-      <p style="text-align:center;line-height:1.5;">
-        Export your complete campaign as a JSON file, including Pokémon,
-        trainers, inventories, money, completed trainers, encounter/reward
-        state, PC level, Kanto route/town visited/completed progress, and gym badge progress.
-        On iPhone or iPad, use <strong>Share / Save to Files</strong> if you
-        want to place the backup directly in the Files app.
-      </p>
-
-      <button
-        class="primary-button"
-        style="width:100%;margin-bottom:10px;"
-        onclick="shareCampaignBackup()">
-        Share / Save Backup to Files
-      </button>
-
-      <button
-        class="small-button"
-        style="width:100%;"
-        onclick="exportCampaignBackup()">
-        Download Backup
-      </button>
-
-      <div
-        id="backupExportResult"
-        class="battle-note"
-        style="display:none;text-align:center;margin-top:12px;">
-      </div>
-
-      <hr style="margin:20px 0;">
-
-      <h3>Restore Backup File</h3>
-
-      <p style="line-height:1.5;">
-        Select a JSON backup file from Files. Restoring replaces the campaign
-        currently stored on this device after first creating a safety snapshot.
-      </p>
-
-      <input
-        id="backupImportFile"
-        type="file"
-        accept=".json,application/json"
-        style="margin-bottom:12px;">
-
-      <button
-        class="primary-button"
-        style="width:100%;"
-        onclick="importCampaignBackupFromFile()">
-        Restore Selected Backup
-      </button>
-
-      <div
-        id="backupImportResult"
-        class="battle-note"
-        style="display:none;text-align:center;margin-top:12px;">
-      </div>
-    </div>
-
-    <div class="form-card">
-      <details open>
-        <summary style="font-size:20px;font-weight:bold;cursor:pointer;">
-          Manual Backups
-        </summary>
-
-        <p style="line-height:1.5;">
-          Manual snapshots include the same campaign/progress data as exported
-          backups, including Kanto map progress, gym badges, and completed route encounters.
-          The app keeps only the newest 12 manual snapshots.
-        </p>
-
-        <button
-          class="small-button"
-          style="width:100%;margin-bottom:12px;"
-          onclick="createManualLocalSnapshot()">
-          Create Manual Snapshot
-        </button>
-
-        <div id="manualBackupList"></div>
-      </details>
-    </div>
-
-    <div class="form-card">
-      <details>
-        <summary style="font-size:20px;font-weight:bold;cursor:pointer;">
-          Automatic Backups
-        </summary>
-
-        <p style="line-height:1.5;">
-          Automatic snapshots include campaign data plus Kanto map progress
-          whenever the app creates a new snapshot. The app keeps only the newest
-          12 automatic snapshots. Older automatic snapshots are removed automatically.
-        </p>
-
-        <div id="automaticBackupList"></div>
-      </details>
-    </div>
-  </div>
-</div>
-
-
 <!-- INVENTORY -->
 <div id="inventoryPage" style="display:none;">
   <header><h1>Inventory</h1></header>
@@ -3258,8 +3251,8 @@ select {
   <header><h1 id="inventoryHeader">Inventory</h1></header>
 
   <div class="page-content">
-    <button class="back-button" onclick="showPage('inventoryPage')">
-      ← Back
+    <button class="back-button" onclick="showPage('trainersPage')">
+      ← Back to Trainers
     </button>
 
     <div class="form-card">
@@ -8726,7 +8719,6 @@ function showPage(pageId) {
     "battlesPage",
     "pokemonCenterPage",
     "campaignPage",
-    "backupPage",
     "settingsPage",
     "inventoryPage",
     "trainerInventoryPage"
@@ -8807,7 +8799,7 @@ function showPage(pageId) {
     populatePokemonCenterTrainerDropdown();
   }
   if (pageId === "campaignPage") displayCampaignPage();
-  if (pageId === "backupPage") {
+  if (pageId === "settingsPage") {
     displayManualBackups();
     displayAutomaticBackups();
   }
@@ -20516,33 +20508,23 @@ function displayTrainers() {
 
   list.innerHTML = "";
 
-  if (!trainers.length) {
+  const pcTrainerCount = trainers.filter(trainer => trainer.trainerType === "PC").length;
+
+  if (!pcTrainerCount) {
     list.innerHTML = `
       <p class="empty-message">
-        No trainers created yet.
+        No player characters created yet.
       </p>
     `;
     return;
   }
 
   const sortedTrainers =
-    trainers.filter(trainer=>!(trainer.trainerType==="NPC"&&trainer.completed)).sort(
-      function(a,b) {
-
-        if (
-          a.trainerType !==
-          b.trainerType
-        ) {
-          return a.trainerType === "PC"
-          ? -1
-          : 1;
-        }
-
-        return a.name.localeCompare(
-          b.name
-        );
-      }
-    );
+    trainers
+      .filter(trainer => trainer.trainerType === "PC")
+      .sort(function(a,b) {
+        return a.name.localeCompare(b.name);
+      });
 
   const unassigned =
     ownedPokemon.filter(
@@ -20687,7 +20669,12 @@ function displayTrainers() {
           Assign Pokémon
         </button>
 
-        ${trainer.trainerType === "NPC" ? `<button class="small-button" style="width:100%;margin-top:8px;" onclick="setTrainerCompleted(${trainer.id},true)">Mark Defeated / Completed</button>` : ""}
+        <button
+          class="primary-button"
+          style="width:100%;margin-top:8px;"
+          onclick="openTrainerInventory(${trainer.id})">
+          Inventory
+        </button>
         <button class="delete-button" onclick="deleteTrainer(${trainer.id})">Delete Trainer</button>
       `;
 
