@@ -7943,6 +7943,13 @@ const kantoDetailMaps = {
     caption: "Pallet Town → Viridian City • Trainers: Cal, Penny, Riley"
   },
   "viridian-city": {
+    title: "Viridian City",
+    image: "./assets/maps/viridian-city.png",
+    alt: "Viridian City map with the Gym, Poké Center, Poké Mart, Trainer School, homes, and the old man NPC",
+    buttonLabel: "Open Viridian City Map",
+    caption: "Viridian City • Gym, Poké Center, Poké Mart, Trainer School, and paths to Route 1, Route 2, and Viridian Forest"
+  },
+  "viridian-gym": {
     title: "Viridian Gym — Gym 1",
     image: "./assets/maps/viridian-gym.png?v=20260823b",
     alt: "Viridian Grass Gym map with trainers Clover, Reed, and Gym Leader Fern",
@@ -8116,7 +8123,7 @@ const kantoDetailTrainerEncounters = {
     {key:"r1-penny",name:"Penny",role:"Lass",x:44.0,y:65.0,reward:"₽160",team:[["Caterpie",6],["Weedle",6],["Nidoran♀",7]]},
     {key:"r1-riley",name:"Riley",role:"Route Ace",x:65.0,y:75.0,reward:"₽250",team:[["Rattata",7],["Pidgey",7],["Nidoran♂",8],["Butterfree",9]]}
   ],
-  "viridian-city": [
+  "viridian-gym": [
     {key:"g1-clover",name:"Clover",role:"Gym Trainer",x:42.0,y:48.0,reward:"₽300",team:[["Oddish",11],["Bellsprout",11],["Paras",12]]},
     {key:"g1-reed",name:"Reed",role:"Gym Trainer",x:62.0,y:69.0,reward:"₽400",team:[["Exeggcute",12],["Tangela",12],["Bulbasaur",13]]},
     {key:"g1-fern",name:"Fern",role:"Gym Leader",x:50.0,y:25.0,reward:"₽1000",team:[["Paras",13],["Oddish",14],["Bulbasaur",14],["Ivysaur",15]]}
@@ -8234,6 +8241,12 @@ const kantoDetailLocationHotspots = {
   "route-1": [
     {name:"Pallet Town",target:"pallet-town",x:31,y:8,w:36,h:18},
     {name:"Viridian City",target:"viridian-city",x:80,y:88,w:34,h:20}
+  ],
+  "viridian-city": [
+    {name:"Viridian Gym",target:"viridian-gym",x:18,y:9,w:27,h:24},
+    {name:"Route 1",target:"route-1",x:0,y:42,w:10,h:18},
+    {name:"Route 2",target:"route-2",x:43,y:0,w:14,h:11},
+    {name:"Viridian Forest",target:"viridian-forest",x:44,y:88,w:13,h:12}
   ],
   "route-2": [
     {name:"Pewter City",target:"pewter-city",x:52,y:8,w:42,h:18},
@@ -8376,7 +8389,7 @@ function getKantoLocationDisplayData(locationId) {
     return {
       id: locationId,
       name: detail.title,
-      type: locationId.indexOf("route-") === 0 ? "Route" : "Landmark"
+      type: locationId.indexOf("route-") === 0 ? "Route" : (locationId.indexOf("gym-") === 0 || locationId.indexOf("-gym") !== -1 ? "Gym" : "Landmark")
     };
   }
 
@@ -8386,7 +8399,8 @@ function getKantoLocationDisplayData(locationId) {
 function getKantoLocationDescription(locationId) {
   const descriptions = {
     "route-1":"Route 1 connects Pallet Town to Viridian City. Trainers: Cal, Penny, and Riley.",
-    "viridian-city":"Viridian City contains Gym 1, a Grass-type gym led by Fern.",
+    "viridian-city":"Viridian City includes the Gym, Poké Center, Poké Mart, Trainer School, and the southern trail to Viridian Forest.",
+    "viridian-gym":"Viridian Gym is Gym 1, a Grass-type gym led by Fern.",
     "route-2":"Route 2 connects Viridian City to Pewter City. Trainers: Nate, Skye, and Wade.",
     "pewter-city":"Pewter City contains Gym 2, a Rock-type gym led by Flint.",
     "route-3":"Route 3 connects Pewter City to Mt. Moon. Trainers: Theo, Maya, and Knox.",
