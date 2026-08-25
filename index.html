@@ -2563,8 +2563,6 @@ select {
 <div id="settingsPage" style="display:none;">
   <header><h1>Settings</h1></header>
   <div class="page-content">
-    <button class="back-button" onclick="showPage('homePage')">← Back</button>
-
     <div class="card" style="margin-top:14px;">
       <h2 style="margin-top:0;">App Updates</h2>
       <p>Checks the currently deployed GitHub Pages app, clears app caches, and reloads the newest copy without needing a version-file change.</p>
@@ -2693,6 +2691,10 @@ select {
         <button class="danger-button" type="button" onclick="resetCampaignToNewInstall()">Reset All Campaign Data</button>
       </div>
     </details>
+
+    <div class="battle-bottom-nav">
+      <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
+    </div>
   </div>
 </div>
 
@@ -2732,7 +2734,7 @@ select {
       <button id="viewPokedexButton" class="section-button" onclick="togglePokedex()">View Pokédex</button>
     </div>
     <div id="pokedexTopControls" class="compact-top-actions" style="display:block;">
-      <button class="back-button" onclick="showPage('homePage')">← Back</button>
+      <button class="small-button" onclick="showPage('homePage')">← Back</button>
     </div>
     <div id="pokedexSection" style="display:block;margin-top:8px;">
       <h2>Pokédex</h2>
@@ -2956,25 +2958,27 @@ select {
   <header><h1>Trainers</h1></header>
 
   <div class="page-content">
-    <div class="compact-top-actions three">
-      <button class="back-button" onclick="showPage('homePage')">← Back</button>
+    <div class="compact-top-actions">
       <button class="primary-button" onclick="showPage('createTrainerPage')">+ Create Trainer</button>
-      <button class="small-button" onclick="showPage('completedTrainersPage')">Completed Trainers</button>
+      <button class="small-button" onclick="showPage('completedTrainersPage')">Defeated Trainers</button>
     </div>
     <h2>Trainer List</h2>
     <div id="trainerList"></div>
+    <div class="battle-bottom-nav">
+      <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
+    </div>
   </div>
 </div>
 
 <!-- COMPLETED TRAINERS -->
 <div id="completedTrainersPage" style="display:none;">
-  <header><h1>Completed Trainers</h1></header>
+  <header><h1>Defeated Trainers</h1></header>
   <div class="page-content">
     <div class="compact-top-actions">
       <button class="back-button" onclick="showPage('trainersPage')">← Back</button>
       <button class="primary-button" onclick="showPage('createTrainerPage')">+ Create Trainer</button>
     </div>
-    <p class="completed-trainer-note">Defeated/completed NPC trainers stay here and are unavailable in Battle Setup until you explicitly re-enable them. Re-enabled route trainers can award their full prize again.</p>
+    <p class="completed-trainer-note">Defeated NPC trainers stay here and are unavailable in Battle Setup until you explicitly re-enable them. Re-enabled route trainers can award their full prize again.</p>
     <div id="completedTrainerList"></div>
   </div>
 </div>
@@ -3037,12 +3041,6 @@ select {
   <header><h1>Poké Center</h1></header>
 
   <div class="page-content">
-    <button
-      class="back-button"
-      onclick="showPage('homePage')">
-      ← Back
-    </button>
-
     <div class="form-card">
       <h2 style="text-align:center;">
         Heal All Pokémon
@@ -3067,9 +3065,9 @@ select {
       </div>
     </div>
 
-    <div class="form-card">
-      <h2 style="text-align:center;">Pokémon PC Storage</h2>
-
+    <details class="form-card">
+      <summary style="font-size:22px;font-weight:bold;cursor:pointer;text-align:left;list-style-position:inside;">Pokémon PC Storage</summary>
+      <div style="margin-top:16px;">
       <p style="text-align:center;line-height:1.5;">
         All Player Characters share one active party of up to 6 Pokémon total.
         Pokémon beyond that limit must be stored in a trainer's PC and cannot be selected for battle.
@@ -3084,6 +3082,11 @@ select {
 
       <h3 id="pokemonCenterStorageHeader" style="text-align:center;margin-bottom:8px;">Player Storage</h3>
       <div id="pokemonCenterStorageArea"></div>
+      </div>
+    </details>
+
+    <div class="battle-bottom-nav">
+      <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
     </div>
   </div>
 </div>
@@ -3201,8 +3204,6 @@ select {
   <header><h1>Campaign</h1></header>
 
   <div class="page-content">
-    <button class="back-button" onclick="showPage('homePage')">← Back</button>
-
     <div class="form-card campaign-progress-card">
       <h2 style="text-align:center;margin-top:0;">Campaign Progress</h2>
       <div id="gymProgressSummary" class="gym-progress-summary">0 / 8 Gym Badges Earned</div>
@@ -3251,6 +3252,10 @@ select {
         Apply Level to All PC Pokémon
       </button>
 
+    </div>
+
+    <div class="battle-bottom-nav">
+      <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
     </div>
   </div>
 </div>
