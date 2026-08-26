@@ -8071,7 +8071,6 @@ const kantoMapLocations = [
   {id:"rock-tunnel",name:"Rock Tunnel",type:"Landmark",x:87.0,y:30.0,w:10,h:7},
   {id:"viridian-forest",name:"Viridian Forest",type:"Landmark",x:20.0,y:52.5,w:11,h:7},
   {id:"ss-anne",name:"S.S. Anne",type:"Landmark",x:75.5,y:50.0,w:9,h:6},
-  {id:"pokemon-tower",name:"Pokémon Tower",type:"Landmark",x:91.5,y:52.0,w:10,h:7},
   {id:"safari-zone",name:"Safari Zone",type:"Landmark",x:89.0,y:78.5,w:12,h:7},
   {id:"seafoam-islands",name:"Seafoam Islands",type:"Landmark",x:29.0,y:79.5,w:12,h:8},
 
@@ -8336,6 +8335,27 @@ const kantoDetailMaps = {
     buttonLabel: "Open Route 13 Map",
     caption: "Seafoam waters → Cinnabar Island • Swimmers: Finnick, Neri, Cove"
   },
+  "victory-road": {
+    title: "Victory Road — Entrance",
+    image: "./assets/maps/victory-road-entrance.png",
+    alt: "Victory Road entrance cavern with Hiker and Blackbelt trainer encounters",
+    buttonLabel: "Open Victory Road",
+    caption: "Indigo Road • Entrance cavern • Trainers: Hiker, Blackbelt"
+  },
+  "victory-road-interior": {
+    title: "Victory Road — Interior",
+    image: "./assets/maps/victory-road-interior.png",
+    alt: "Victory Road interior cavern with a Cooltrainer encounter",
+    buttonLabel: "Open Victory Road Interior",
+    caption: "Indigo Road • Deep cavern • Trainer: Cooltrainer"
+  },
+  "victory-road-summit": {
+    title: "Victory Road — Summit",
+    image: "./assets/maps/victory-road-summit.png",
+    alt: "Victory Road summit and final ascent toward Indigo Plateau with the Road Ace encounter",
+    buttonLabel: "Open Victory Road Summit",
+    caption: "Indigo Road • Final ascent • Road Ace • Exit to Indigo Plateau"
+  },
   "seafoam-islands": {
     title: "Seafoam Islands",
     image: "./assets/maps/seafoam-islands.png",
@@ -8476,6 +8496,16 @@ const kantoDetailTrainerEncounters = {
     {key:"r13-neri",name:"Neri",role:"Swimmer",x:50.8,y:50.5,reward:"₽3200",team:[["Cloyster",46],["Omastar",46],["Kabutops",46],["Seaking",47],["Starmie",47]]},
     {key:"r13-cove",name:"Cove",role:"Swimmer",x:67.8,y:50.5,reward:"₽3500",team:[["Dewgong",45],["Omanyte",45],["Kabuto",45],["Seadra",46],["Staryu",46]]}
   ],
+  "victory-road": [
+    {key:"vr-t01",name:"Hiker",role:"Victory Road Trainer",x:34.0,y:52.0,reward:"₽3600",team:[["Machoke",47],["Graveler",47],["Onix",48],["Golbat",48],["Hypno",48]]},
+    {key:"vr-t02",name:"Blackbelt",role:"Victory Road Trainer",x:61.0,y:56.0,reward:"₽3800",team:[["Primeape",48],["Machoke",48],["Marowak",49],["Rhydon",49],["Kadabra",49]]}
+  ],
+  "victory-road-interior": [
+    {key:"vr-t03",name:"Cooltrainer",role:"Victory Road Trainer",x:43.0,y:61.0,reward:"₽4100",team:[["Graveler",49],["Onix",49],["Hypno",49],["Golbat",50],["Rhydon",50],["Machoke",50]]}
+  ],
+  "victory-road-summit": [
+    {key:"vr-t04",name:"Road Ace",role:"Victory Road Ace",x:54.0,y:47.0,reward:"₽4500",team:[["Golem",49],["Machamp",49],["Alakazam",50],["Rhydon",50],["Golbat",50],["Onix",50]]}
+  ],
   "seafoam-cave": [
     {key:"legend-articuno",name:"Articuno",role:"Legendary Pokémon",x:84.5,y:19.5,w:18,h:22,reward:"—",team:[["Articuno",65]]}
   ]
@@ -8483,6 +8513,18 @@ const kantoDetailTrainerEncounters = {
 
 /* City/town hotspots embedded on Route 1 and Route 2 detailed maps. */
 const kantoDetailLocationHotspots = {
+  "victory-road": [
+    {name:"Route 4",target:"route-4",x:0,y:70,w:19,h:30},
+    {name:"Victory Road Interior",target:"victory-road-interior",x:81,y:52,w:19,h:35}
+  ],
+  "victory-road-interior": [
+    {name:"Victory Road Entrance",target:"victory-road",x:0,y:69,w:20,h:31},
+    {name:"Victory Road Summit",target:"victory-road-summit",x:80,y:50,w:20,h:38}
+  ],
+  "victory-road-summit": [
+    {name:"Victory Road Interior",target:"victory-road-interior",x:0,y:67,w:20,h:33},
+    {name:"Indigo Plateau",target:"indigo-plateau",x:80,y:5,w:20,h:30}
+  ],
   "pallet-town": [
     {name:"Mom's House",action:"landmark",landmarkType:"Home",description:"The player's family home in Pallet Town.",x:15,y:33,w:28,h:30},
     {name:"Professor Oak's Lab",action:"landmark",landmarkType:"Laboratory",description:"Professor Oak's Pokémon research laboratory and the starting point for many trainers.",x:55,y:22,w:31,h:34},
@@ -8649,7 +8691,7 @@ const kantoWildEncounterLocationIds = new Set([
   "route-1","route-2","route-3","route-4","route-5","route-6","route-7",
   "route-8","route-9","route-10","route-11","route-12","route-13",
   "viridian-forest","mt-moon","rock-tunnel","pokemon-tower","safari-zone",
-  "seafoam-islands","seafoam-cave","victory-road"
+  "seafoam-islands","seafoam-cave","victory-road","victory-road-interior","victory-road-summit"
 ]);
 
 function canStartWildEncounterAtKantoLocation(locationId) {
@@ -8811,7 +8853,9 @@ function getKantoLocationDescription(locationId) {
     "route-13":"Route 13 is an ocean route between Seafoam Islands and Cinnabar Island. Swimmers: Finnick, Neri, and Cove.",
     "cinnabar-island":"Cinnabar Island includes the volcano, Cinnabar Gym, Poké Center, Poké Mart, Pokémon Lab, Pokémon Mansion, and an eastern dock to Route 13.",
     "cinnabar-gym":"Cinnabar Gym is Gym 8, a Fire-type gym led by Blaze.",
-    "victory-road":"Victory Road leads toward Indigo Plateau.",
+    "victory-road":"Victory Road begins the final Indigo Road ascent toward Indigo Plateau.",
+    "victory-road-interior":"The deep interior of Victory Road continues the Indigo Road ascent.",
+    "victory-road-summit":"The final Victory Road ascent exits at Indigo Plateau.",
     "pallet-town":"Pallet Town is the starting town for the campaign."
   };
   const location = getKantoLocationDisplayData(locationId);
