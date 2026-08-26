@@ -8248,6 +8248,13 @@ const kantoDetailMaps = {
     caption: "Gym 7 — Grass • Trainers: Poppy, Moss • Leader: Flora"
   },
   "cinnabar-island": {
+    title: "Cinnabar Island",
+    image: "./assets/maps/cinnabar-island.png",
+    alt: "Cinnabar Island map with the volcano, Cinnabar Gym, Poké Center, Poké Mart, Pokémon Lab, Pokémon Mansion, homes, and eastern dock",
+    buttonLabel: "Open Cinnabar Island Map",
+    caption: "Cinnabar Island • Volcano, Gym, Poké Center, Poké Mart, Pokémon Lab, Pokémon Mansion, and eastern dock to Route 13"
+  },
+  "cinnabar-gym": {
     title: "Cinnabar Gym — Gym 8",
     image: "./assets/maps/cinnabar-gym.png",
     alt: "Cinnabar Fire Gym map with trainers Cinder, Ash, and Gym Leader Blaze",
@@ -8409,7 +8416,8 @@ const kantoDetailTrainerEncounters = {
     {key:"g7-moss",name:"Moss",role:"Gym Trainer",x:50.0,y:49.0,reward:"₽2750",team:[["Victreebel",41],["Vileplume",41],["Exeggutor",42],["Tangela",42],["Parasect",42]]},
     {key:"g7-flora",name:"Flora",role:"Gym Leader",x:50.0,y:18.0,reward:"₽4500",team:[["Tangela",42],["Victreebel",42],["Parasect",43],["Vileplume",43],["Exeggutor",43],["Venusaur",44]]}
   ],
-  "cinnabar-island": [
+  "cinnabar-island": [],
+  "cinnabar-gym": [
     {key:"g8-cinder",name:"Cinder",role:"Gym Trainer",x:47.0,y:70.0,reward:"₽3000",team:[["Growlithe",46],["Ponyta",46],["Magmar",47],["Ninetales",47],["Rapidash",47]]},
     {key:"g8-ash",name:"Ash",role:"Gym Trainer",x:50.0,y:46.0,reward:"₽3250",team:[["Arcanine",47],["Rapidash",47],["Ninetales",48],["Magmar",48],["Flareon",48]]},
     {key:"g8-blaze",name:"Blaze",role:"Gym Leader",x:50.0,y:18.0,reward:"₽5500",team:[["Ninetales",48],["Rapidash",48],["Magmar",48],["Flareon",49],["Arcanine",49],["Charizard",49]]}
@@ -8579,6 +8587,12 @@ const kantoDetailLocationHotspots = {
     {name:"Seafoam Islands",target:"seafoam-islands",x:94,y:50,w:13,h:85},
     {name:"Cinnabar Island",target:"cinnabar-island",x:13,y:47,w:25,h:62}
   ],
+  "cinnabar-island": [
+    {name:"Cinnabar Gym",target:"cinnabar-gym",x:17.0,y:45.0,w:20.0,h:23.0},
+    {name:"Cinnabar Poké Center",action:"pokemon-center",cityName:"Cinnabar Island",x:45.0,y:12.0,w:20.0,h:22.0},
+    {name:"Cinnabar Poké Mart",action:"poke-mart",cityName:"Cinnabar Island",martId:"cinnabar-island",x:65.0,y:21.0,w:20.0,h:22.0},
+    {name:"Route 13",target:"route-13",x:82.0,y:38.0,w:18.0,h:22.0}
+  ],
   "seafoam-islands": [
     {name:"Route 13",target:"route-13",x:5,y:50,w:10,h:90},
     {name:"Seafoam Cave",target:"seafoam-cave",x:23.5,y:22.5,w:18,h:18},
@@ -8715,7 +8729,8 @@ function getKantoLocationDescription(locationId) {
     "seafoam-islands":"Seafoam Islands contains the entrance to the Seafoam cave system.",
     "seafoam-cave":"The Seafoam cave system contains three connected chambers and a Level 65 Articuno encounter.",
     "route-13":"Route 13 is an ocean route between Seafoam Islands and Cinnabar Island. Swimmers: Finnick, Neri, and Cove.",
-    "cinnabar-island":"Cinnabar Island contains Gym 8, a Fire-type gym led by Blaze.",
+    "cinnabar-island":"Cinnabar Island includes the volcano, Cinnabar Gym, Poké Center, Poké Mart, Pokémon Lab, Pokémon Mansion, and an eastern dock to Route 13.",
+    "cinnabar-gym":"Cinnabar Gym is Gym 8, a Fire-type gym led by Blaze.",
     "victory-road":"Victory Road leads toward Indigo Plateau.",
     "pallet-town":"Pallet Town is the starting town for the campaign."
   };
