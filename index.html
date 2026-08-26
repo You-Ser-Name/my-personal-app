@@ -8282,6 +8282,13 @@ const kantoDetailMaps = {
     buttonLabel: "Open Route 7 Map",
     caption: "Lavender Town → Safari Zone • Trainers: Emery, Kellan, Quinn"
   },
+  "safari-zone": {
+    title: "Safari Zone",
+    image: "./assets/maps/safari-zone.png",
+    alt: "Large Safari Zone map with ponds, streams, bridges, tall grass, wooded paths, rest houses, a north entrance, and a west entrance",
+    buttonLabel: "Open Safari Zone Map",
+    caption: "Safari Zone • North entrance to Route 7 • West entrance to Route 8"
+  },
   "route-8": {
     title: "Route 8",
     image: "./assets/maps/route-8.png",
@@ -8433,6 +8440,7 @@ const kantoDetailTrainerEncounters = {
     {key:"r7-kellan",name:"Kellan",role:"Psychic Trainer",x:50.0,y:51.0,reward:"₽1600",team:[["Abra",31],["Drowzee",31],["Slowpoke",32],["Mr. Mime",32]]},
     {key:"r7-quinn",name:"Quinn",role:"Route Ace",x:50.0,y:69.0,reward:"₽1800",team:[["Kadabra",32],["Clefable",32],["Persian",32],["Wigglytuff",33],["Slowpoke",33]]}
   ],
+  "safari-zone": [],
   "route-8": [
     {key:"r8-pax",name:"Pax",role:"Route Ace",x:27.0,y:50.0,reward:"₽1950",team:[["Raichu",33],["Electabuzz",33],["Magneton",34],["Electrode",34],["Pidgeot",34]]},
     {key:"r8-wren",name:"Wren",role:"Electric/Flying Trainer",x:50.5,y:47.5,reward:"₽1750",team:[["Pikachu",32],["Magneton",33],["Dodrio",33],["Electabuzz",34]]},
@@ -8541,6 +8549,10 @@ const kantoDetailLocationHotspots = {
   "route-7": [
     {name:"Lavender Town",target:"lavender-town",x:48,y:9,w:35,h:20},
     {name:"Safari Zone",target:"safari-zone",x:50,y:91,w:28,h:18}
+  ],
+  "safari-zone": [
+    {name:"Route 7",target:"route-7",x:55,y:0,w:24,h:18},
+    {name:"Route 8",target:"route-8",x:0,y:41,w:18,h:23}
   ],
   "route-8": [
     {name:"Fuchsia City",target:"fuchsia-city",x:12,y:29,w:25,h:35},
@@ -8714,7 +8726,7 @@ function getKantoLocationDescription(locationId) {
     "route-6":"Route 6 connects Vermilion City to Lavender Town. Trainers: Toby, Lark, and Reese.",
     "lavender-town":"Lavender Town includes Pokémon Tower, a Poké Center, Poké Mart, Mr. Fuji's house, the Name Rater's house, and an eastern coastline.",
     "route-7":"Route 7 connects Lavender Town to the Safari Zone. Trainers: Emery, Kellan, and Quinn.",
-    "safari-zone":"The Safari Zone connects Routes 7 and 8 in the campaign progression.",
+    "safari-zone":"The Safari Zone is a large wildlife reserve with ponds, streams, bridges, tall grass, rest houses, and entrances connecting Routes 7 and 8.",
     "route-8":"Route 8 connects the Safari Zone to Fuchsia City. Trainers: Pax, Wren, and Jace.",
     "fuchsia-city":"Fuchsia City is a waterfront city with the Fuchsia Gym, Poké Center, Poké Mart, zoo, Warden's house, and route connections west and east.",
     "fuchsia-gym":"Fuchsia Gym is Gym 5, a Poison-type gym led by Rue.",
