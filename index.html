@@ -48,6 +48,21 @@ header {
   line-height: 1.15;
 }
 
+.notes-toolbar { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; margin-bottom:14px; }
+.notes-add-button { width:48px; height:48px; padding:0; border-radius:50%; font-size:30px; line-height:1; background:#cc0000; color:white; }
+.notes-list { display:grid; gap:10px; }
+.note-list-card { width:100%; text-align:left; padding:14px 16px; background:white; }
+.note-list-title { font-size:18px; font-weight:800; margin-bottom:5px; }
+.note-list-preview { font-size:14px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.note-list-date { font-size:12px; color:#888; margin-top:6px; }
+.notes-empty { color:#777; text-align:center; padding:34px 12px; }
+.notes-editor-card input, .notes-editor-card textarea { width:100%; font-family:inherit; }
+.notes-editor-card textarea { min-height:320px; resize:vertical; padding:12px; font-size:17px; line-height:1.5; border:1px solid #bbb; border-radius:8px; }
+.notes-editor-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+.notes-icon { position:relative; width:32px; height:32px; display:inline-block; border:2px solid #222; border-radius:5px; background:linear-gradient(to bottom,#fff 0 45%,#222 45% 53%,#fff 53% 100%); }
+.notes-icon::before { content:""; position:absolute; width:8px; height:8px; border:2px solid #222; border-radius:50%; background:white; left:10px; top:11px; }
+.notes-icon::after { content:""; position:absolute; left:5px; right:5px; bottom:5px; height:2px; background:#aaa; box-shadow:0 -5px 0 #aaa; }
+
 button {
   padding: 18px 10px;
   font-size: 17px;
@@ -2630,9 +2645,9 @@ select {
       <span class="home-tab-icon" aria-hidden="true">🗺️</span>
       <span class="home-tab-label">Campaign</span>
     </button>
-    <button class="home-tab-button" onclick="showPage('pokemonCenterPage')">
-      <span class="home-tab-icon" aria-hidden="true">❤️</span>
-      <span class="home-tab-label">Poké Center</span>
+    <button class="home-tab-button" onclick="showPage('notesPage')">
+      <span class="notes-icon" aria-hidden="true"></span>
+      <span class="home-tab-label">Notes</span>
     </button>
     <button class="home-tab-button" onclick="showPage('settingsPage')">
       <span class="home-tab-icon" aria-hidden="true">⚙️</span>
@@ -2871,7 +2886,6 @@ select {
     </div>
     <div id="pokedexSection" style="display:block;margin-top:8px;">
       <p style="text-align:center;font-size:12px;color:#666;margin-top:0;">
-        Pokémon artwork loaded from Pokémon Wiki / Fandom.
       </p>
 
       <div class="form-row" style="max-width:520px;margin:0 auto 14px auto;">
@@ -3164,6 +3178,34 @@ select {
   </div>
 </div>
 
+
+<!-- NOTES -->
+<div id="notesPage" style="display:none;">
+  <header><h1>Notes</h1></header>
+  <div class="page-content">
+    <div id="notesListView">
+      <div class="notes-toolbar">
+        <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
+        <button class="notes-add-button" type="button" aria-label="Create new note" title="New Note" onclick="createCampaignNote()">+</button>
+      </div>
+      <div id="notesList" class="notes-list"></div>
+    </div>
+    <div id="notesEditorView" style="display:none;">
+      <div class="notes-toolbar">
+        <button class="small-button" type="button" onclick="closeCampaignNoteEditor()">← Notes</button>
+        <button class="small-button" type="button" onclick="closeCampaignNoteEditor()">Done</button>
+      </div>
+      <div class="form-card notes-editor-card">
+        <div class="form-row"><input id="campaignNoteTitle" type="text" maxlength="120" placeholder="Title" aria-label="Note title" oninput="saveActiveCampaignNote()"></div>
+        <div class="form-row"><textarea id="campaignNoteBody" placeholder="Start typing…" aria-label="Note text" oninput="saveActiveCampaignNote()"></textarea></div>
+        <div class="notes-editor-actions">
+          <button class="delete-button" type="button" onclick="deleteActiveCampaignNote()">Delete Note</button>
+          <button class="small-button" type="button" onclick="closeCampaignNoteEditor()">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- POKÉ CENTER -->
 <div id="pokemonCenterPage" style="display:none;">
@@ -9399,6 +9441,73 @@ function displayGymBadgeProgress() {
 }
 
 
+const CAMPAIGN_NOTES_KEY = "pokemonCampaignNotes";
+let campaignNotes = loadCampaignNotes();
+let activeCampaignNoteId = null;
+
+function loadCampaignNotes() {
+  try {
+    const saved = localStorage.getItem(CAMPAIGN_NOTES_KEY);
+    const parsed = saved ? JSON.parse(saved) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) { return []; }
+}
+
+function persistCampaignNotes() { localStorage.setItem(CAMPAIGN_NOTES_KEY, JSON.stringify(campaignNotes)); }
+
+function escapeNoteHtml(value) {
+  return String(value || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+
+function formatCampaignNoteDate(timestamp) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+}
+
+function displayCampaignNotes() {
+  const listView = document.getElementById("notesListView");
+  const editorView = document.getElementById("notesEditorView");
+  const list = document.getElementById("notesList");
+  if (!listView || !editorView || !list) return;
+  listView.style.display = "block";
+  editorView.style.display = "none";
+  const sorted = campaignNotes.slice().sort(function(a,b){ return Number(b.updatedAt||0)-Number(a.updatedAt||0); });
+  if (!sorted.length) { list.innerHTML = '<div class="form-card notes-empty">No notes yet.<br>Tap + to create one.</div>'; return; }
+  list.innerHTML = sorted.map(function(note){
+    const title=(note.title||"").trim()||"New Note";
+    const preview=(note.body||"").trim().replace(/\s+/g," ")||"No additional text";
+    return `<button class="note-list-card" type="button" onclick="openCampaignNote('${note.id}')"><div class="note-list-title">${escapeNoteHtml(title)}</div><div class="note-list-preview">${escapeNoteHtml(preview)}</div><div class="note-list-date">${escapeNoteHtml(formatCampaignNoteDate(note.updatedAt))}</div></button>`;
+  }).join("");
+}
+
+function createCampaignNote() {
+  const now=Date.now();
+  const note={id:"note-"+now+"-"+Math.random().toString(36).slice(2,8),title:"",body:"",createdAt:now,updatedAt:now};
+  campaignNotes.push(note); persistCampaignNotes(); openCampaignNote(note.id);
+}
+
+function openCampaignNote(noteId) {
+  const note=campaignNotes.find(function(entry){return entry.id===noteId;}); if(!note)return; activeCampaignNoteId=noteId;
+  const listView=document.getElementById("notesListView"), editorView=document.getElementById("notesEditorView"), title=document.getElementById("campaignNoteTitle"), body=document.getElementById("campaignNoteBody");
+  if(!listView||!editorView||!title||!body)return; listView.style.display="none"; editorView.style.display="block"; title.value=note.title||""; body.value=note.body||"";
+  setTimeout(function(){ if(!title.value&&!body.value) title.focus(); },0);
+}
+
+function saveActiveCampaignNote() {
+  if(!activeCampaignNoteId)return; const note=campaignNotes.find(function(entry){return entry.id===activeCampaignNoteId;});
+  const title=document.getElementById("campaignNoteTitle"), body=document.getElementById("campaignNoteBody"); if(!note||!title||!body)return;
+  note.title=title.value; note.body=body.value; note.updatedAt=Date.now(); persistCampaignNotes();
+}
+
+function closeCampaignNoteEditor() { saveActiveCampaignNote(); activeCampaignNoteId=null; displayCampaignNotes(); }
+
+function deleteActiveCampaignNote() {
+  if(!activeCampaignNoteId)return; const note=campaignNotes.find(function(entry){return entry.id===activeCampaignNoteId;});
+  const title=note&&note.title&&note.title.trim()?note.title.trim():"this note"; if(!confirm('Delete "'+title+'"?'))return;
+  campaignNotes=campaignNotes.filter(function(entry){return entry.id!==activeCampaignNoteId;}); activeCampaignNoteId=null; persistCampaignNotes(); displayCampaignNotes();
+}
+
 function showPage(pageId) {
 
   [
@@ -9417,6 +9526,7 @@ function showPage(pageId) {
     "trainerPokemonManagePage",
     "battlesPage",
     "pokemonCenterPage",
+    "notesPage",
     "campaignPage",
     "settingsPage",
     "inventoryPage",
@@ -9500,6 +9610,7 @@ function showPage(pageId) {
 
     populatePokemonCenterTrainerDropdown();
   }
+  if (pageId === "notesPage") { activeCampaignNoteId = null; displayCampaignNotes(); }
   if (pageId === "campaignPage") displayCampaignPage();
   if (pageId === "settingsPage") {
     displayManualBackups();
