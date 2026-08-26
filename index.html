@@ -2621,6 +2621,7 @@ select {
 
       <div class="kanto-location-actions">
         <button id="kantoDetailMapButton" class="primary-button small-button" type="button" style="display:none;grid-column:1 / -1;" onclick="openSelectedKantoDetailMap()">Open Detailed Map</button>
+        <button id="kantoWildEncounterButton" class="primary-button small-button" type="button" style="display:none;grid-column:1 / -1;" onclick="startWildEncounterFromKantoLocation(selectedKantoLocationId, false)">Start Wild Pokémon Encounter</button>
         <button id="kantoVisitedButton" class="small-button" type="button" onclick="toggleKantoVisited()">Mark Visited</button>
         <button id="kantoCompletedButton" class="small-button" type="button" onclick="toggleKantoCompleted()">Mark Completed</button>
       </div>
@@ -2817,6 +2818,7 @@ select {
         <div id="kantoDetailHotspotLayer" class="kanto-detail-hotspot-layer"></div>
       </div>
       <div id="kantoDetailMapCaption" class="kanto-detail-map-caption"></div>
+      <button id="kantoDetailWildEncounterButton" class="primary-button small-button" type="button" style="display:none;width:100%;margin:8px 0 0;" onclick="startWildEncounterFromKantoLocation(activeKantoDetailMapId, true)">Start Wild Pokémon Encounter</button>
 
       <div id="kantoDetailLocationPanel" class="kanto-location-panel" style="display:none;margin-top:8px;">
         <div class="kanto-location-panel-header">
@@ -8642,6 +8644,42 @@ const kantoDetailLocationHotspots = {
   ]
 };
 
+/* Locations where the party can start a wild Pokémon battle directly from the map. */
+const kantoWildEncounterLocationIds = new Set([
+  "route-1","route-2","route-3","route-4","route-5","route-6","route-7",
+  "route-8","route-9","route-10","route-11","route-12","route-13",
+  "viridian-forest","mt-moon","rock-tunnel","pokemon-tower","safari-zone",
+  "seafoam-islands","seafoam-cave","victory-road"
+]);
+
+function canStartWildEncounterAtKantoLocation(locationId) {
+  return !!locationId && kantoWildEncounterLocationIds.has(locationId);
+}
+
+function startWildEncounterFromKantoLocation(locationId, fromDetailMap) {
+  if (!canStartWildEncounterAtKantoLocation(locationId)) return;
+
+  battleReturnContext = fromDetailMap
+    ? {type:"kantoDetailMap",locationId:locationId}
+    : {type:"kantoMainMap",locationId:locationId};
+
+  showPage("battlesPage");
+  displayBattleSetup();
+
+  const sourceSelect = document.getElementById("battleOpponentSourceSelect");
+  if (sourceSelect) {
+    sourceSelect.value = "wild";
+    displayBattleOpponentPokemonOptions();
+  }
+
+  const wildLevel = document.getElementById("battleWildLevelInput");
+  if (wildLevel && (!wildLevel.value || Number(wildLevel.value) < 1)) {
+    wildLevel.value = pcPokemonLevel;
+  }
+
+  window.scrollTo(0,0);
+}
+
 let activeKantoDetailMapId = null;
 let selectedKantoDetailTrainerKey = null;
 
@@ -9377,8 +9415,13 @@ function selectKantoLocation(locationId) {
 
   const detailMap = kantoDetailMaps[locationId] || null;
   const detailButton = document.getElementById("kantoDetailMapButton");
+  const wildButton = document.getElementById("kantoWildEncounterButton");
 
   description.textContent = getKantoLocationDescription(locationId);
+
+  if (wildButton) {
+    wildButton.style.display = canStartWildEncounterAtKantoLocation(locationId) ? "block" : "none";
+  }
 
   if (detailButton) {
     if (detailMap) {
@@ -9414,6 +9457,11 @@ function openKantoDetailMap(locationId) {
     image.alt = detail.alt;
   }
   if (caption) caption.textContent = detail.caption;
+
+  const wildEncounterButton = document.getElementById("kantoDetailWildEncounterButton");
+  if (wildEncounterButton) {
+    wildEncounterButton.style.display = canStartWildEncounterAtKantoLocation(locationId) ? "block" : "none";
+  }
 
   const detailLocationPanel = document.getElementById("kantoDetailLocationPanel");
   if (detailLocationPanel) detailLocationPanel.style.display = "none";
@@ -13231,6 +13279,14 @@ function battleBack() {
     const returnContext = battleReturnContext;
     battleReturnContext = null;
     openKantoDetailMap(returnContext.locationId);
+    return;
+  }
+
+  if (battleReturnContext && battleReturnContext.type === "kantoMainMap") {
+    const returnContext = battleReturnContext;
+    battleReturnContext = null;
+    showPage("homePage");
+    selectKantoLocation(returnContext.locationId);
     return;
   }
 
