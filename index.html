@@ -8234,6 +8234,13 @@ const kantoDetailMaps = {
     caption: "Gym 6 — Psychic • Trainers: Nova, Orin • Leader: Sage"
   },
   "celadon-city": {
+    title: "Celadon City",
+    image: "./assets/maps/celadon-city.png",
+    alt: "Celadon City map with Celadon Gym, Pokémon Center, Department Store, Game Corner, Celadon Mansion, Hotel, generic buildings, and four city exits",
+    buttonLabel: "Open Celadon City Map",
+    caption: "Celadon City • Gym, Poké Center, Department Store, Game Corner, Mansion, Hotel, and southern connections to Routes 11 and 10"
+  },
+  "celadon-gym": {
     title: "Celadon Gym — Gym 7",
     image: "./assets/maps/celadon-gym.png",
     alt: "Celadon Grass Gym map with trainers Poppy, Moss, and Gym Leader Flora",
@@ -8396,7 +8403,8 @@ const kantoDetailTrainerEncounters = {
     {key:"g6-orin",name:"Orin",role:"Gym Trainer",x:50.0,y:44.0,reward:"₽2250",team:[["Hypno",38],["Jynx",38],["Slowbro",39],["Kadabra",39],["Mr. Mime",39]]},
     {key:"g6-sage",name:"Sage",role:"Gym Leader",x:50.0,y:17.0,reward:"₽3800",team:[["Hypno",39],["Mr. Mime",39],["Jynx",40],["Slowbro",40],["Exeggutor",40],["Alakazam",41]]}
   ],
-  "celadon-city": [
+  "celadon-city": [],
+  "celadon-gym": [
     {key:"g7-poppy",name:"Poppy",role:"Gym Trainer",x:50.0,y:75.0,reward:"₽2500",team:[["Tangela",40],["Weepinbell",40],["Parasect",41],["Gloom",41],["Exeggcute",42]]},
     {key:"g7-moss",name:"Moss",role:"Gym Trainer",x:50.0,y:49.0,reward:"₽2750",team:[["Victreebel",41],["Vileplume",41],["Exeggutor",42],["Tangela",42],["Parasect",42]]},
     {key:"g7-flora",name:"Flora",role:"Gym Leader",x:50.0,y:18.0,reward:"₽4500",team:[["Tangela",42],["Victreebel",42],["Parasect",43],["Vileplume",43],["Exeggutor",43],["Venusaur",44]]}
@@ -8552,6 +8560,13 @@ const kantoDetailLocationHotspots = {
     {name:"Saffron City",target:"saffron-city",x:82,y:82,w:31,h:28},
     {name:"Celadon City",target:"celadon-city",x:19,y:12,w:35,h:25}
   ],
+  "celadon-city": [
+    {name:"Celadon Gym",target:"celadon-gym",x:12.0,y:8.0,w:24.0,h:27.0},
+    {name:"Celadon Poké Center",action:"pokemon-center",cityName:"Celadon City",x:72.0,y:9.0,w:23.0,h:27.0},
+    {name:"Celadon Department Store",action:"poke-mart",cityName:"Celadon City",martId:"celadon-city",x:39.0,y:4.0,w:24.0,h:36.0},
+    {name:"Route 11",target:"route-11",x:27.0,y:86.0,w:15.0,h:14.0},
+    {name:"Route 10",target:"route-10",x:64.0,y:86.0,w:15.0,h:14.0}
+  ],
   "route-11": [
     {name:"Celadon City",target:"celadon-city",x:62,y:8,w:39,h:18},
     {name:"Coast / Route 12",target:"route-12",x:48,y:94,w:30,h:15}
@@ -8693,7 +8708,8 @@ function getKantoLocationDescription(locationId) {
     "saffron-city":"Saffron City includes Saffron Gym, Poké Center, Poké Mart, Silph Co., the Fighting Dojo, and the west and south route exits.",
     "saffron-gym":"Saffron Gym is Gym 6, a Psychic-type gym led by Sage.",
     "route-10":"Route 10 connects Saffron City to Celadon City. Trainers: Ember, Dune, and Slate.",
-    "celadon-city":"Celadon City contains Gym 7, a Grass-type gym led by Flora.",
+    "celadon-city":"Celadon City is a major commercial city with Celadon Gym, a Poké Center, the multi-story Department Store, Game Corner, Celadon Mansion, Hotel, and southern route exits.",
+    "celadon-gym":"Celadon Gym is Gym 7, a Grass-type gym led by Flora.",
     "route-11":"Route 11 connects Celadon City to the coast. Trainers: Marlin, Gale, and Brook.",
     "route-12":"Route 12 is an ocean route between the coast and Seafoam Islands. Swimmers: Kai, Pearl, and Tide.",
     "seafoam-islands":"Seafoam Islands contains the entrance to the Seafoam cave system.",
