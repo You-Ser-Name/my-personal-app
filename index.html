@@ -8206,6 +8206,13 @@ const kantoDetailMaps = {
     caption: "Gym 4 — Electric • Trainers: Jolt, Watt • Leader: Amp"
   },
   "fuchsia-city": {
+    title: "Fuchsia City",
+    image: "./assets/maps/fuchsia-city.png",
+    alt: "Fuchsia City waterfront map with the Fuchsia Gym, Poké Center, Poké Mart, zoo, Warden's house, homes, and west/east route exits",
+    buttonLabel: "Open Fuchsia City Map",
+    caption: "Fuchsia City • Gym, Poké Center, Poké Mart, zoo, Warden's house, and connections to Routes 9 and 8"
+  },
+  "fuchsia-gym": {
     title: "Fuchsia Gym — Gym 5",
     image: "./assets/maps/fuchsia-gym.png",
     alt: "Fuchsia Poison Gym map with trainers Nox, Vera, and Gym Leader Rue",
@@ -8370,7 +8377,8 @@ const kantoDetailTrainerEncounters = {
     {key:"g4-watt",name:"Watt",role:"Gym Trainer",x:18.0,y:54.0,reward:"₽1300",team:[["Voltorb",27],["Pikachu",27],["Magneton",28],["Electabuzz",28],["Raichu",29]]},
     {key:"g4-amp",name:"Amp",role:"Gym Leader",x:44.5,y:11.0,reward:"₽2500",team:[["Voltorb",28],["Magnemite",28],["Electabuzz",29],["Magneton",29],["Raichu",30]]}
   ],
-  "fuchsia-city": [
+  "fuchsia-city": [],
+  "fuchsia-gym": [
     {key:"g5-nox",name:"Nox",role:"Gym Trainer",x:26.0,y:57.0,reward:"₽1500",team:[["Koffing",32],["Grimer",32],["Ekans",33],["Venonat",33],["Nidorino",34]]},
     {key:"g5-vera",name:"Vera",role:"Gym Trainer",x:50.0,y:42.0,reward:"₽1750",team:[["Nidorina",33],["Weezing",33],["Arbok",34],["Venomoth",34],["Muk",34]]},
     {key:"g5-rue",name:"Rue",role:"Gym Leader",x:50.0,y:18.0,reward:"₽3200",team:[["Arbok",34],["Venomoth",34],["Nidoqueen",35],["Weezing",35],["Muk",35],["Nidoking",36]]}
@@ -8513,6 +8521,13 @@ const kantoDetailLocationHotspots = {
   "route-8": [
     {name:"Fuchsia City",target:"fuchsia-city",x:12,y:29,w:25,h:35},
     {name:"Safari Zone",target:"safari-zone",x:93,y:63,w:14,h:28}
+  ],
+  "fuchsia-city": [
+    {name:"Fuchsia Gym",target:"fuchsia-gym",x:13,y:8,w:29,h:28},
+    {name:"Fuchsia Poké Center",action:"pokemon-center",cityName:"Fuchsia City",x:64,y:8,w:27,h:27},
+    {name:"Fuchsia Poké Mart",action:"poke-mart",cityName:"Fuchsia City",martId:"fuchsia-city",x:64,y:31,w:25,h:25},
+    {name:"Route 9",target:"route-9",x:0,y:31,w:20,h:22},
+    {name:"Route 8",target:"route-8",x:80,y:31,w:20,h:22}
   ],
   "route-9": [
     {name:"Fuchsia City",target:"fuchsia-city",x:72,y:82,w:30,h:25},
@@ -8657,7 +8672,8 @@ function getKantoLocationDescription(locationId) {
     "route-7":"Route 7 connects Lavender Town to the Safari Zone. Trainers: Emery, Kellan, and Quinn.",
     "safari-zone":"The Safari Zone connects Routes 7 and 8 in the campaign progression.",
     "route-8":"Route 8 connects the Safari Zone to Fuchsia City. Trainers: Pax, Wren, and Jace.",
-    "fuchsia-city":"Fuchsia City contains Gym 5, a Poison-type gym led by Rue.",
+    "fuchsia-city":"Fuchsia City is a waterfront city with the Fuchsia Gym, Poké Center, Poké Mart, zoo, Warden's house, and route connections west and east.",
+    "fuchsia-gym":"Fuchsia Gym is Gym 5, a Poison-type gym led by Rue.",
     "route-9":"Route 9 connects Fuchsia City to Saffron City. Trainers: Mack, Tess, and Rook.",
     "saffron-city":"Saffron City contains Gym 6, a Psychic-type gym led by Sage.",
     "route-10":"Route 10 connects Saffron City to Celadon City. Trainers: Ember, Dune, and Slate.",
