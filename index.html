@@ -3387,7 +3387,6 @@ select {
       <h2 style="text-align:center;">PC Pokémon Level</h2>
 
       <p style="text-align:center;line-height:1.5;">
-        All Pokémon assigned to PC trainers use the same campaign level.
       </p>
 
       <div class="money-display">
@@ -8483,6 +8482,9 @@ const kantoDetailTrainerEncounters = {
 /* City/town hotspots embedded on Route 1 and Route 2 detailed maps. */
 const kantoDetailLocationHotspots = {
   "pallet-town": [
+    {name:"Mom's House",action:"landmark",landmarkType:"Home",description:"The player's family home in Pallet Town.",x:15,y:33,w:28,h:30},
+    {name:"Professor Oak's Lab",action:"landmark",landmarkType:"Laboratory",description:"Professor Oak's Pokémon research laboratory and the starting point for many trainers.",x:55,y:22,w:31,h:34},
+    {name:"Rival's House",action:"landmark",landmarkType:"Home",description:"The rival family's home in Pallet Town.",x:57,y:61,w:27,h:25},
     {name:"Route 1",target:"route-1",x:50,y:95,w:28,h:10}
   ],
   "route-1": [
@@ -8493,6 +8495,7 @@ const kantoDetailLocationHotspots = {
     {name:"Viridian Poké Center",action:"pokemon-center",cityName:"Viridian City",x:56,y:5,w:28,h:28},
     {name:"Viridian Poké Mart",action:"poke-mart",cityName:"Viridian City",martId:"viridian-city",x:59,y:31,w:25,h:25},
     {name:"Viridian Gym",target:"viridian-gym",x:18,y:9,w:27,h:24},
+    {name:"Trainer School",action:"landmark",landmarkType:"School",description:"Viridian City's Trainer School, where new trainers learn basic Pokémon battling concepts.",x:18,y:37,w:24,h:20},
     {name:"Route 1",target:"route-1",x:0,y:42,w:10,h:18},
     {name:"Route 2",target:"route-2",x:43,y:0,w:14,h:11},
     {name:"Viridian Forest",target:"viridian-forest",x:44,y:88,w:13,h:12}
@@ -8505,6 +8508,7 @@ const kantoDetailLocationHotspots = {
     {name:"Pewter Poké Center",action:"pokemon-center",cityName:"Pewter City",x:49,y:6,w:29,h:29},
     {name:"Pewter Poké Mart",action:"poke-mart",cityName:"Pewter City",martId:"pewter-city",x:57,y:31,w:23,h:23},
     {name:"Pewter Gym",target:"pewter-gym",x:32,y:19,w:36,h:31},
+    {name:"Pewter Museum of Science",action:"landmark",landmarkType:"Museum",description:"Pewter City's museum featuring fossils, science exhibits, and space-related displays.",x:7,y:8,w:25,h:26},
     {name:"Route 2",target:"route-2",x:43,y:96,w:24,h:12},
     {name:"Route 3",target:"route-3",x:96,y:35,w:12,h:24}
   ],
@@ -8525,6 +8529,8 @@ const kantoDetailLocationHotspots = {
     {name:"Cerulean Poké Center",action:"pokemon-center",cityName:"Cerulean City",x:59,y:5,w:27,h:29},
     {name:"Cerulean Poké Mart",action:"poke-mart",cityName:"Cerulean City",martId:"cerulean-city",x:73,y:31,w:24,h:25},
     {name:"Cerulean Gym",target:"cerulean-gym",x:30,y:18,w:38,h:30},
+    {name:"Bike Shop",action:"landmark",landmarkType:"Shop",description:"Cerulean City's bicycle shop.",x:15,y:36,w:24,h:22},
+    {name:"Burglarized House",action:"landmark",landmarkType:"Home",description:"The Cerulean home damaged during the Team Rocket burglary incident.",x:68,y:59,w:25,h:22},
     {name:"Route 4",target:"route-4",x:5,y:43,w:20,h:24},
     {name:"Route 5",target:"route-5",x:50,y:84,w:24,h:23}
   ],
@@ -8537,6 +8543,9 @@ const kantoDetailLocationHotspots = {
     {name:"Vermilion Poké Center",action:"pokemon-center",cityName:"Vermilion City",x:55,y:3,w:29,h:30},
     {name:"Vermilion Poké Mart",action:"poke-mart",cityName:"Vermilion City",martId:"vermilion-city",x:61,y:27,w:22,h:23},
     {name:"Vermilion Gym",target:"vermilion-gym",x:16,y:4,w:33,h:29},
+    {name:"Pokémon Fan Club",action:"landmark",landmarkType:"Club",description:"Vermilion City's Pokémon Fan Club, a gathering place for enthusiastic Pokémon owners.",x:14,y:28,w:24,h:22},
+    {name:"Fishing Guru's House",action:"landmark",landmarkType:"Home",description:"The Vermilion home of the Fishing Guru.",x:14,y:49,w:22,h:22},
+    {name:"S.S. Anne Harbor",action:"landmark",landmarkType:"Harbor",description:"Vermilion City's harbor and docking area for the S.S. Anne.",x:66,y:54,w:20,h:34},
     {name:"Route 5",target:"route-5",x:0,y:34,w:23,h:25},
     {name:"Route 6",target:"route-6",x:77,y:34,w:23,h:25}
   ],
@@ -8547,6 +8556,9 @@ const kantoDetailLocationHotspots = {
   "lavender-town": [
     {name:"Lavender Poké Center",action:"pokemon-center",cityName:"Lavender Town",x:54,y:7,w:27,h:27},
     {name:"Lavender Poké Mart",action:"poke-mart",cityName:"Lavender Town",martId:"lavender-town",x:58,y:31,w:25,h:24},
+    {name:"Pokémon Tower",action:"landmark",landmarkType:"Landmark",description:"Lavender Town's towering memorial site for departed Pokémon.",x:20,y:8,w:25,h:32},
+    {name:"Mr. Fuji's House",action:"landmark",landmarkType:"Home",description:"Mr. Fuji's home and a place associated with the care of abandoned Pokémon.",x:13,y:53,w:24,h:23},
+    {name:"Name Rater's House",action:"landmark",landmarkType:"Home",description:"The home of Lavender Town's Name Rater.",x:35,y:69,w:24,h:22},
     {name:"Route 6",target:"route-6",x:0,y:38,w:21,h:20},
     {name:"Route 7",target:"route-7",x:46,y:77,w:19,h:23}
   ],
@@ -8566,6 +8578,8 @@ const kantoDetailLocationHotspots = {
     {name:"Fuchsia Gym",target:"fuchsia-gym",x:25.5,y:21.5,w:29,h:28},
     {name:"Fuchsia Poké Center",action:"pokemon-center",cityName:"Fuchsia City",x:75.0,y:21.5,w:27,h:27},
     {name:"Fuchsia Poké Mart",action:"poke-mart",cityName:"Fuchsia City",martId:"fuchsia-city",x:75.0,y:43.5,w:25,h:24},
+    {name:"Fuchsia Zoo",action:"landmark",landmarkType:"Exhibit",description:"Fuchsia City's outdoor Pokémon exhibit and zoo area.",x:14,y:40,w:25,h:22},
+    {name:"Warden's House",action:"landmark",landmarkType:"Home",description:"The home of the Safari Zone Warden.",x:67,y:57,w:25,h:23},
     {name:"Route 9",target:"route-9",x:7.0,y:36.0,w:14,h:20},
     {name:"Route 8",target:"route-8",x:94.0,y:52.0,w:12,h:22}
   ],
@@ -8573,6 +8587,10 @@ const kantoDetailLocationHotspots = {
     {name:"Saffron Gym",target:"saffron-gym",x:16.5,y:11.0,w:25.5,h:24.5},
     {name:"Saffron Poké Center",action:"pokemon-center",cityName:"Saffron City",x:67.0,y:11.0,w:26.5,h:24.5},
     {name:"Saffron Poké Mart",action:"poke-mart",cityName:"Saffron City",martId:"saffron-city",x:76.0,y:42.0,w:21.0,h:21.0},
+    {name:"Fighting Dojo",action:"landmark",landmarkType:"Dojo",description:"Saffron City's Fighting Dojo, the former rival Gym specializing in Fighting-type Pokémon.",x:44,y:11,w:20,h:23},
+    {name:"Silph Co.",action:"landmark",landmarkType:"Corporate Headquarters",description:"The towering headquarters of Silph Co., one of Kanto's major technology companies.",x:38,y:30,w:25,h:32},
+    {name:"Copycat's House",action:"landmark",landmarkType:"Home",description:"The home of Saffron City's Copycat.",x:16,y:66,w:22,h:22},
+    {name:"Mr. Psychic's House",action:"landmark",landmarkType:"Home",description:"The home of Mr. Psychic in Saffron City.",x:42,y:66,w:22,h:22},
     {name:"Route 10",target:"route-10",x:0.0,y:42.0,w:14.0,h:18.0},
     {name:"Route 9",target:"route-9",x:44.0,y:90.0,w:12.0,h:10.0}
   ],
@@ -8588,6 +8606,9 @@ const kantoDetailLocationHotspots = {
     {name:"Celadon Gym",target:"celadon-gym",x:12.0,y:8.0,w:24.0,h:27.0},
     {name:"Celadon Poké Center",action:"pokemon-center",cityName:"Celadon City",x:72.0,y:9.0,w:23.0,h:27.0},
     {name:"Celadon Department Store",action:"poke-mart",cityName:"Celadon City",martId:"celadon-city",x:39.0,y:4.0,w:24.0,h:36.0},
+    {name:"Game Corner",action:"landmark",landmarkType:"Entertainment",description:"Celadon City's brightly lit Game Corner.",x:72,y:39,w:24,h:23},
+    {name:"Celadon Mansion",action:"landmark",landmarkType:"Landmark",description:"Celadon Mansion, one of the city's notable residential buildings.",x:11,y:62,w:23,h:24},
+    {name:"Celadon Hotel",action:"landmark",landmarkType:"Hotel",description:"A hotel serving visitors to Celadon City.",x:35,y:63,w:20,h:23},
     {name:"Route 11",target:"route-11",x:27.0,y:86.0,w:15.0,h:14.0},
     {name:"Route 10",target:"route-10",x:64.0,y:86.0,w:15.0,h:14.0}
   ],
@@ -8607,6 +8628,8 @@ const kantoDetailLocationHotspots = {
     {name:"Cinnabar Gym",target:"cinnabar-gym",x:17.0,y:45.0,w:20.0,h:23.0},
     {name:"Cinnabar Poké Center",action:"pokemon-center",cityName:"Cinnabar Island",x:45.0,y:12.0,w:20.0,h:22.0},
     {name:"Cinnabar Poké Mart",action:"poke-mart",cityName:"Cinnabar Island",martId:"cinnabar-island",x:65.0,y:21.0,w:20.0,h:22.0},
+    {name:"Pokémon Mansion",action:"landmark",landmarkType:"Mansion",description:"The abandoned Pokémon Mansion, filled with old research notes and mysteries tied to Cinnabar Island.",x:36,y:62,w:23,h:25},
+    {name:"Pokémon Lab",action:"landmark",landmarkType:"Laboratory",description:"Cinnabar Island's Pokémon Lab, known for fossil research and revival work.",x:59,y:62,w:22,h:24},
     {name:"Route 13",target:"route-13",x:82.0,y:38.0,w:18.0,h:22.0}
   ],
   "seafoam-islands": [
@@ -8684,6 +8707,9 @@ function renderKantoDetailTrainerHotspots(locationId) {
       }
       else if (location.action === "poke-mart") {
         openCityPokeMartLandmark(location.martId || activeKantoDetailMapId, location.cityName || location.name);
+      }
+      else if (location.action === "landmark") {
+        openGenericCityLandmark(location);
       }
       else {
         openKantoDetailLocationHotspot(location.target);
@@ -9001,6 +9027,38 @@ function displayPokeMart(){
   populatePokeMartTrainerSelect();
   renderPokeMartInto("cityPokeMartTrainerSelect","cityPokeMartMoney","cityPokeMartStock","cityPokeMartSellList","cityPokeMartTitle");
   renderPokeMartInto("pokeMartTrainerSelect","pokeMartMoney","pokeMartStock","pokeMartSellList","pokeMartCityName");
+}
+
+function openGenericCityLandmark(location) {
+  if (!location) return;
+  selectedKantoLocationId = null;
+
+  const panel = document.getElementById("kantoDetailLocationPanel");
+  const name = document.getElementById("kantoDetailLocationName");
+  const type = document.getElementById("kantoDetailLocationType");
+  const description = document.getElementById("kantoDetailLocationDescription");
+  const openButton = document.getElementById("kantoDetailLocationOpenButton");
+  const centerActions = document.getElementById("kantoDetailPokemonCenterActions");
+  const martActions = document.getElementById("kantoDetailPokeMartActions");
+  const pcPanel = document.getElementById("kantoDetailPokemonCenterPC");
+  const martShop = document.getElementById("kantoDetailPokeMartShop");
+  const trainerPanel = document.getElementById("kantoDetailTrainerPanel");
+
+  if (!panel || !name || !type || !description || !openButton) return;
+
+  if (trainerPanel) { trainerPanel.style.display = "none"; trainerPanel.innerHTML = ""; }
+  selectedKantoDetailTrainerKey = null;
+  if (centerActions) centerActions.style.display = "none";
+  if (martActions) martActions.style.display = "none";
+  if (pcPanel) pcPanel.style.display = "none";
+  if (martShop) martShop.style.display = "none";
+  openButton.style.display = "none";
+
+  type.textContent = location.landmarkType || "Landmark";
+  name.textContent = location.name || "Landmark";
+  description.textContent = location.description || "A notable location in this area.";
+  panel.style.display = "block";
+  panel.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 
 function openKantoDetailLocationHotspot(locationId) {
