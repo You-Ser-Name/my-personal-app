@@ -59,9 +59,7 @@ header {
 .notes-editor-card input, .notes-editor-card textarea { width:100%; font-family:inherit; }
 .notes-editor-card textarea { min-height:320px; resize:vertical; padding:12px; font-size:17px; line-height:1.5; border:1px solid #bbb; border-radius:8px; }
 .notes-editor-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
-.notes-icon { position:relative; width:32px; height:32px; display:inline-block; border:2px solid #222; border-radius:5px; background:linear-gradient(to bottom,#fff 0 45%,#222 45% 53%,#fff 53% 100%); }
-.notes-icon::before { content:""; position:absolute; width:8px; height:8px; border:2px solid #222; border-radius:50%; background:white; left:10px; top:11px; }
-.notes-icon::after { content:""; position:absolute; left:5px; right:5px; bottom:5px; height:2px; background:#aaa; box-shadow:0 -5px 0 #aaa; }
+.notes-icon { width:32px; height:32px; display:block; object-fit:contain; border-radius:7px; }
 
 button {
   padding: 18px 10px;
@@ -2646,7 +2644,7 @@ select {
       <span class="home-tab-label">Campaign</span>
     </button>
     <button class="home-tab-button" onclick="showPage('notesPage')">
-      <span class="notes-icon" aria-hidden="true"></span>
+      <img class="notes-icon" src="./assets/icons/notes-icon.png" alt="" aria-hidden="true">
       <span class="home-tab-label">Notes</span>
     </button>
     <button class="home-tab-button" onclick="showPage('settingsPage')">
