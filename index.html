@@ -8240,6 +8240,13 @@ const kantoDetailMaps = {
     buttonLabel: "Open Route 6 Map",
     caption: "Vermilion City → Lavender Town • Trainers: Toby, Lark, Reese"
   },
+  "lavender-town": {
+    title: "Lavender Town",
+    image: "./assets/maps/lavender-town.png",
+    alt: "Lavender Town map with Pokémon Tower, Poké Center, Poké Mart, Mr. Fuji's house, Name Rater's house, homes, and an eastern coastline",
+    buttonLabel: "Open Lavender Town Map",
+    caption: "Lavender Town • Pokémon Tower, Poké Center, Poké Mart, Mr. Fuji's house, Name Rater's house, and paths to Routes 6 and 7"
+  },
   "route-7": {
     title: "Route 7",
     image: "./assets/maps/route-7.png",
@@ -8388,6 +8395,7 @@ const kantoDetailTrainerEncounters = {
     {key:"r6-lark",name:"Lark",role:"Flying Trainer",x:73.5,y:47.0,reward:"₽1450",team:[["Pidgeotto",29],["Fearow",29],["Doduo",30],["Farfetch'd",30]]},
     {key:"r6-reese",name:"Reese",role:"Route Ace",x:79.5,y:63.0,reward:"₽1650",team:[["Meowth",30],["Raticate",30],["Kangaskhan",30],["Persian",31],["Dodrio",31]]}
   ],
+  "lavender-town": [],
   "route-7": [
     {key:"r7-emery",name:"Emery",role:"Normal Trainer",x:50.0,y:34.0,reward:"₽1450",team:[["Clefairy",30],["Jigglypuff",30],["Meowth",31],["Lickitung",31]]},
     {key:"r7-kellan",name:"Kellan",role:"Psychic Trainer",x:50.0,y:51.0,reward:"₽1600",team:[["Abra",31],["Drowzee",31],["Slowpoke",32],["Mr. Mime",32]]},
@@ -8491,6 +8499,12 @@ const kantoDetailLocationHotspots = {
   "route-6": [
     {name:"Vermilion City",target:"vermilion-city",x:12,y:17,w:25,h:30},
     {name:"Lavender Town",target:"lavender-town",x:86,y:84,w:27,h:29}
+  ],
+  "lavender-town": [
+    {name:"Lavender Poké Center",action:"pokemon-center",cityName:"Lavender Town",x:54,y:7,w:27,h:27},
+    {name:"Lavender Poké Mart",action:"poke-mart",cityName:"Lavender Town",martId:"lavender-town",x:58,y:31,w:25,h:24},
+    {name:"Route 6",target:"route-6",x:0,y:38,w:21,h:20},
+    {name:"Route 7",target:"route-7",x:46,y:77,w:19,h:23}
   ],
   "route-7": [
     {name:"Lavender Town",target:"lavender-town",x:48,y:9,w:35,h:20},
@@ -8639,7 +8653,7 @@ function getKantoLocationDescription(locationId) {
     "vermilion-city":"Vermilion City is a harbor city built on docks over the water, with the Gym, Poké Center, Poké Mart, Fan Club, Fishing Guru house, and the S.S. Anne harbor.",
     "vermilion-gym":"Vermilion Gym is Gym 4, an Electric-type gym led by Amp.",
     "route-6":"Route 6 connects Vermilion City to Lavender Town. Trainers: Toby, Lark, and Reese.",
-    "lavender-town":"Lavender Town is a campaign location connected to Routes 6 and 7.",
+    "lavender-town":"Lavender Town includes Pokémon Tower, a Poké Center, Poké Mart, Mr. Fuji's house, the Name Rater's house, and an eastern coastline.",
     "route-7":"Route 7 connects Lavender Town to the Safari Zone. Trainers: Emery, Kellan, and Quinn.",
     "safari-zone":"The Safari Zone connects Routes 7 and 8 in the campaign progression.",
     "route-8":"Route 8 connects the Safari Zone to Fuchsia City. Trainers: Pax, Wren, and Jace.",
