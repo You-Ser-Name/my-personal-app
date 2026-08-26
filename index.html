@@ -48,17 +48,21 @@ header {
   line-height: 1.15;
 }
 
-.notes-toolbar { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; margin-bottom:14px; }
-.notes-add-button { width:48px; height:48px; padding:0; border-radius:50%; font-size:30px; line-height:1; background:#cc0000; color:white; }
-.notes-list { display:grid; gap:10px; }
-.note-list-card { width:100%; text-align:left; padding:14px 16px; background:white; }
-.note-list-title { font-size:18px; font-weight:800; margin-bottom:5px; }
-.note-list-preview { font-size:14px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.note-list-date { font-size:12px; color:#888; margin-top:6px; }
+.notes-toolbar { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:center; margin-bottom:14px; min-width:0; }
+.notes-toolbar > * { min-width:0; }
+.notes-add-button { width:48px; height:48px; padding:0; border-radius:50%; font-size:30px; line-height:1; background:#cc0000; color:white; flex:0 0 auto; }
+#notesPage, #notesPage .page-content, #notesListView, #notesEditorView { width:100%; max-width:100%; min-width:0; box-sizing:border-box; overflow-x:hidden; }
+.notes-list { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; width:100%; max-width:100%; min-width:0; }
+.note-list-card { width:100%; max-width:100%; min-width:0; text-align:left; padding:14px 16px; background:white; overflow:hidden; box-sizing:border-box; }
+.note-list-title { font-size:18px; font-weight:800; margin-bottom:5px; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.note-list-preview { display:block; width:100%; max-width:100%; min-width:0; font-size:14px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.note-list-date { font-size:12px; color:#888; margin-top:6px; max-width:100%; overflow:hidden; }
 .notes-empty { color:#777; text-align:center; padding:34px 12px; }
-.notes-editor-card input, .notes-editor-card textarea { width:100%; font-family:inherit; }
-.notes-editor-card textarea { min-height:320px; resize:vertical; padding:12px; font-size:17px; line-height:1.5; border:1px solid #bbb; border-radius:8px; }
-.notes-editor-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+.notes-editor-card { width:100%; max-width:100%; min-width:0; box-sizing:border-box; overflow:hidden; }
+.notes-editor-card input, .notes-editor-card textarea { width:100%; max-width:100%; min-width:0; box-sizing:border-box; font-family:inherit; }
+.notes-editor-card textarea { min-height:320px; resize:vertical; padding:12px; font-size:17px; line-height:1.5; border:1px solid #bbb; border-radius:8px; overflow-wrap:anywhere; word-break:break-word; }
+.notes-editor-actions { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; margin-top:12px; min-width:0; }
+.notes-editor-actions > * { min-width:0; }
 .notes-icon { width:32px; height:32px; display:block; object-fit:contain; border-radius:7px; }
 
 button {
