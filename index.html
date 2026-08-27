@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pokémon Campaign Manager</title>
-<!-- Kanto overview clean rebuild: v34R1 / 2026-08-23 -->
+<!-- Kanto overview + location encounter tables: v34R2 / 2026-08-26 -->
 
 <style>
 * { box-sizing: border-box; }
@@ -2576,6 +2576,37 @@ select {
   }
 }
 
+
+/* =========================================================
+   LOCATION-BASED WILD ENCOUNTERS V34R2
+========================================================= */
+.map-encounter-reference {
+  display:none;
+  margin:0 0 14px;
+  padding:12px;
+  border:1px solid #d8d8d8;
+  border-radius:10px;
+  background:#fafafa;
+  text-align:left;
+}
+.map-encounter-reference h3 { margin:0 0 4px; text-align:center; }
+.map-encounter-level { text-align:center; font-weight:800; margin-bottom:10px; }
+.map-encounter-tier-grid { display:grid; gap:6px; }
+.map-encounter-tier { padding:7px 9px; background:#fff; border-radius:8px; border:1px solid #e5e5e5; font-size:13px; line-height:1.35; }
+.map-encounter-tier strong { display:inline-block; min-width:145px; }
+.map-encounter-selected-rarity { margin-top:7px; text-align:center; font-size:12px; font-weight:800; color:#555; }
+.map-encounter-random-note { margin-top:8px; padding:7px 9px; border-radius:8px; background:#eef5fb; font-size:11px; line-height:1.35; text-align:center; }
+@media (max-width:600px) {
+  .map-encounter-reference { padding:8px; margin-bottom:9px; }
+  .map-encounter-reference h3 { font-size:15px; }
+  .map-encounter-level { font-size:11px; margin-bottom:6px; }
+  .map-encounter-tier-grid { gap:4px; }
+  .map-encounter-tier { padding:5px 6px; font-size:9px; }
+  .map-encounter-tier strong { min-width:106px; }
+  .map-encounter-selected-rarity,
+  .map-encounter-random-note { font-size:9px; }
+}
+
 </style>
 
 
@@ -2588,7 +2619,7 @@ select {
 <meta name="apple-mobile-web-app-title" content="Pokémon Campaign">
 
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
-<!-- KANTO APP BUILD v34R1: new overview map; legacy route/town/trainer map system removed -->
+<!-- KANTO APP BUILD v34R2: location-based wild encounter tables + randomized map encounter levels -->
 </head>
 
 <body>
@@ -2643,7 +2674,7 @@ select {
       <span class="home-tab-icon" aria-hidden="true">👥</span>
       <span class="home-tab-label">Trainers</span>
     </button>
-    <button class="home-tab-button" onclick="battleReturnContext=null;showPage('battlesPage')">
+    <button class="home-tab-button" onclick="battleReturnContext=null;activeMapWildEncounterLocationId=null;showPage('battlesPage')">
       <span class="home-tab-icon" aria-hidden="true">⚔️</span>
       <span class="home-tab-label">Battles</span>
     </button>
@@ -3282,7 +3313,14 @@ select {
         <select id="battlePokemonASelect"></select>
       </div>
 
-      <div class="form-row">
+      <div id="mapWildEncounterReference" class="map-encounter-reference">
+        <h3 id="mapWildEncounterTitle">Wild Encounter</h3>
+        <div id="mapWildEncounterLevel" class="map-encounter-level"></div>
+        <div id="mapWildEncounterTierGrid" class="map-encounter-tier-grid"></div>
+        <div class="map-encounter-random-note">Players roll the d20 at the table. Select any Pokémon allowed by the roll; the app will randomly choose its level when the battle starts.</div>
+      </div>
+
+      <div id="battleOpponentSourceRow" class="form-row">
         <label>Opponent</label>
         <select
           id="battleOpponentSourceSelect"
@@ -3315,10 +3353,12 @@ select {
           </div>
         </div>
 
-        <select id="battlePokemonBSelect"></select>
+        <select id="battlePokemonBSelect" onchange="updateMapEncounterSelectedRarity()"></select>
+        <div id="mapWildEncounterSelectedRarity" class="map-encounter-selected-rarity" style="display:none;"></div>
       </div>
 
       <button
+        id="startBattleButton"
         class="primary-button"
         style="width:100%;"
         onclick="startBattle()">
@@ -8421,7 +8461,7 @@ const kantoDetailMaps = {
     image: "./assets/maps/seafoam-cave.png",
     alt: "Three connected Seafoam cave chambers with waterfalls, whirlpools, and Articuno in the final chamber",
     buttonLabel: "Open Seafoam Cave",
-    caption: "Three connected chambers • Legendary encounter: Articuno — Level 65"
+    caption: "Three connected chambers • Legendary encounter: Articuno — Level 60"
   }
 };
 
@@ -8579,7 +8619,7 @@ const kantoDetailTrainerEncounters = {
     {key:"vr-t04",name:"Road Ace",role:"Victory Road Ace",x:54.0,y:47.0,reward:"₽4500",team:[["Golem",49],["Machamp",49],["Alakazam",50],["Rhydon",50],["Golbat",50],["Onix",50]]}
   ],
   "seafoam-cave": [
-    {key:"legend-articuno",name:"Articuno",role:"Legendary Pokémon",x:84.5,y:19.5,w:18,h:22,reward:"—",team:[["Articuno",65]]}
+    {key:"legend-articuno",name:"Articuno",role:"Legendary Pokémon",x:84.5,y:19.5,w:18,h:22,reward:"—",team:[["Articuno",60]]}
   ]
 };
 
@@ -8808,9 +8848,162 @@ function canStartWildEncounterAtKantoLocation(locationId) {
   return !!locationId && kantoWildEncounterLocationIds.has(locationId);
 }
 
+
+/*
+  Location-based wild encounter tables. Rarity is a tabletop reference only:
+  1-7 Common, 8-13 Uncommon, 14-18 Rare, 19-20 Very Rare.
+  Map encounters trust the DM's species selection and randomize the wild level
+  within the location's configured range. Manual Battles > Wild Pokémon remains
+  unrestricted.
+*/
+const kantoWildEncounterTables = {
+  "route-1": {name:"Route 1",minLevel:3,maxLevel:6,common:["Pidgey","Rattata"],uncommon:["Nidoran♀","Nidoran♂"],rare:[],veryRare:[]},
+  "route-2": {name:"Route 2",minLevel:5,maxLevel:8,common:["Pidgey","Rattata","Caterpie","Weedle"],uncommon:["Jigglypuff"],rare:[],veryRare:[]},
+  "viridian-forest": {name:"Viridian Forest",minLevel:6,maxLevel:10,common:["Caterpie","Weedle","Paras","Oddish"],uncommon:["Metapod","Kakuna","Bellsprout"],rare:["Butterfree","Beedrill"],veryRare:[]},
+  "route-3": {name:"Route 3",minLevel:8,maxLevel:12,common:["Ekans","Mankey"],uncommon:["Nidoran♀","Nidoran♂"],rare:["Vulpix","Growlithe"],veryRare:[]},
+  "mt-moon": {name:"Mt. Moon",minLevel:10,maxLevel:14,common:["Zubat","Geodude"],uncommon:["Paras","Clefairy"],rare:["Onix"],veryRare:[]},
+  "route-4": {name:"Route 4",minLevel:12,maxLevel:16,common:["Rattata","Sandshrew"],uncommon:["Fearow","Mankey"],rare:["Arbok","Pikachu"],veryRare:[]},
+  "route-5": {name:"Route 5",minLevel:14,maxLevel:18,common:["Oddish","Bellsprout"],uncommon:["Abra","Venonat"],rare:["Kadabra"],veryRare:["Bulbasaur"]},
+  "route-6": {name:"Route 6",minLevel:16,maxLevel:20,common:["Pidgeotto","Meowth"],uncommon:["Vulpix","Growlithe","Psyduck"],rare:["Persian"],veryRare:["Charmander"]},
+  "route-7": {name:"Route 7",minLevel:18,maxLevel:22,common:["Oddish","Bellsprout"],uncommon:["Gloom","Weepinbell","Poliwag"],rare:["Golduck","Staryu"],veryRare:["Squirtle"]},
+  "route-8": {name:"Route 8",minLevel:20,maxLevel:24,common:["Pidgeotto","Doduo"],uncommon:["Jigglypuff","Farfetch'd","Venonat"],rare:["Dodrio","Tangela","Lickitung"],veryRare:[]},
+  "route-9": {name:"Route 9",minLevel:22,maxLevel:26,common:["Grimer","Koffing"],uncommon:["Magnemite","Voltorb"],rare:["Muk","Weezing"],veryRare:["Electabuzz"]},
+  "pokemon-tower": {name:"Pokémon Tower",minLevel:24,maxLevel:29,common:["Gastly"],uncommon:["Cubone"],rare:["Haunter","Marowak"],veryRare:[]},
+  "route-10": {name:"Route 10",minLevel:26,maxLevel:30,common:["Ponyta","Raticate"],uncommon:["Raichu","Electrode"],rare:["Rapidash","Ditto"],veryRare:[]},
+  "celadon-east-path": {name:"Celadon East Path",minLevel:27,maxLevel:31,common:["Oddish","Bellsprout","Exeggcute"],uncommon:["Gloom","Weepinbell","Tangela"],rare:["Vileplume","Victreebel"],veryRare:[]},
+  "route-11": {name:"Route 11",minLevel:28,maxLevel:32,common:["Diglett","Doduo"],uncommon:["Machop","Rhyhorn","Drowzee"],rare:["Dugtrio","Hypno"],veryRare:[]},
+  "rock-tunnel-path": {name:"Rock Tunnel Path",minLevel:31,maxLevel:35,common:["Sandshrew","Machop"],uncommon:["Ponyta","Graveler","Cubone"],rare:["Rhyhorn","Onix"],veryRare:[]},
+  "rock-tunnel": {name:"Rock Tunnel",minLevel:34,maxLevel:38,common:["Zubat","Graveler"],uncommon:["Golbat","Machoke","Onix"],rare:["Rhydon","Hitmonlee"],veryRare:[]},
+  "route-12": {name:"Route 12",minLevel:35,maxLevel:39,common:["Magikarp","Tentacool","Goldeen"],uncommon:["Poliwhirl","Seaking","Krabby"],rare:["Gyarados","Kingler"],veryRare:[]},
+  "safari-zone": {name:"Safari Zone",minLevel:36,maxLevel:41,common:["Nidoran♀","Nidoran♂","Doduo","Exeggcute","Paras"],uncommon:["Nidorina","Nidorino","Rhyhorn","Parasect","Cubone"],rare:["Tauros","Kangaskhan","Scyther","Pinsir"],veryRare:["Chansey"]},
+  "viridian-celadon-path": {name:"Viridian–Celadon Path",minLevel:38,maxLevel:42,common:["Oddish","Bellsprout","Venonat"],uncommon:["Gloom","Weepinbell","Parasect"],rare:["Scyther","Pinsir"],veryRare:["Eevee"]},
+  "route-13": {name:"Route 13",minLevel:39,maxLevel:43,common:["Tentacool","Krabby","Exeggcute"],uncommon:["Slowpoke","Horsea","Shellder"],rare:["Lapras","Snorlax"],veryRare:[]},
+  "coastal-fuchsia-path": {name:"Coastal Fuchsia Path",minLevel:42,maxLevel:46,common:["Tentacool","Horsea"],uncommon:["Tentacruel","Seadra","Shellder"],rare:["Cloyster","Starmie","Lapras"],veryRare:[]},
+  "cerulean-crossroads": {name:"Cerulean–Rock Tunnel Path",minLevel:44,maxLevel:48,common:["Machop","Geodude"],uncommon:["Machoke","Graveler","Rhyhorn"],rare:["Rhydon","Hitmonchan"],veryRare:["Dratini"]},
+  "seafoam-islands": {name:"Seafoam Islands",minLevel:46,maxLevel:50,common:["Seel","Shellder","Horsea"],uncommon:["Dewgong","Seadra","Staryu"],rare:["Jynx","Cloyster"],veryRare:[]},
+  "seafoam-cave": {name:"Seafoam Cave",minLevel:48,maxLevel:52,common:["Seel","Shellder"],uncommon:["Dewgong","Cloyster","Slowbro"],rare:["Jynx","Dragonair"],veryRare:[]},
+  "victory-road": {name:"Victory Road — Entrance",minLevel:50,maxLevel:53,common:["Geodude","Zubat"],uncommon:["Graveler","Golbat","Onix"],rare:["Nidoqueen","Nidoking"],veryRare:[]},
+  "victory-road-interior": {name:"Victory Road — Interior",minLevel:52,maxLevel:56,common:["Graveler","Golbat"],uncommon:["Machoke","Rhydon","Onix"],rare:["Golem","Machamp"],veryRare:[]},
+  "victory-road-summit": {name:"Victory Road — Summit",minLevel:55,maxLevel:58,common:["Fearow","Golbat"],uncommon:["Rhydon","Golem"],rare:["Snorlax","Dragonair"],veryRare:[]}
+};
+
+let activeMapWildEncounterLocationId = null;
+
+function getKantoWildEncounterTable(locationId) {
+  return locationId ? (kantoWildEncounterTables[locationId] || null) : null;
+}
+
+function getWildEncounterRarityLabelForSpecies(table, speciesName) {
+  if (!table || !speciesName) return "";
+  if (table.common.includes(speciesName)) return "Common — roll 1–7";
+  if (table.uncommon.includes(speciesName)) return "Uncommon — roll 8–13";
+  if (table.rare.includes(speciesName)) return "Rare — roll 14–18";
+  if (table.veryRare.includes(speciesName)) return "Very Rare — roll 19–20";
+  return "";
+}
+
+function randomEncounterLevel(table) {
+  if (!table) return pcPokemonLevel;
+  return Math.floor(Math.random() * (table.maxLevel - table.minLevel + 1)) + table.minLevel;
+}
+
+function populateMapWildPokemonDropdown(locationId) {
+  const table = getKantoWildEncounterTable(locationId);
+  const dropdown = document.getElementById("battlePokemonBSelect");
+  if (!table || !dropdown) return;
+
+  const previousValue = dropdown.value;
+  dropdown.innerHTML = "";
+  [
+    ["Common — 1–7", table.common],
+    ["Uncommon — 8–13", table.uncommon],
+    ["Rare — 14–18", table.rare],
+    ["Very Rare — 19–20", table.veryRare]
+  ].forEach(function(group) {
+    if (!group[1].length) return;
+    const optgroup = document.createElement("optgroup");
+    optgroup.label = group[0];
+    group[1].forEach(function(name) {
+      const species = pokemonDatabase.find(function(pokemon) { return pokemon.name === name; });
+      if (!species) return;
+      const option = document.createElement("option");
+      option.value = species.number;
+      option.textContent = name;
+      optgroup.appendChild(option);
+    });
+    dropdown.appendChild(optgroup);
+  });
+
+  if (previousValue && Array.from(dropdown.options).some(function(option) { return option.value === previousValue; })) {
+    dropdown.value = previousValue;
+  }
+  updateMapEncounterSelectedRarity();
+}
+
+function renderMapWildEncounterReference(locationId) {
+  const table = getKantoWildEncounterTable(locationId);
+  const box = document.getElementById("mapWildEncounterReference");
+  const title = document.getElementById("mapWildEncounterTitle");
+  const level = document.getElementById("mapWildEncounterLevel");
+  const grid = document.getElementById("mapWildEncounterTierGrid");
+  const selected = document.getElementById("mapWildEncounterSelectedRarity");
+  const sourceRow = document.getElementById("battleOpponentSourceRow");
+  const startButton = document.getElementById("startBattleButton");
+  if (!box || !title || !level || !grid) return;
+
+  if (!table) {
+    box.style.display = "none";
+    if (selected) selected.style.display = "none";
+    if (sourceRow) sourceRow.style.display = "block";
+    if (startButton) startButton.textContent = "Start / Load Battle";
+    return;
+  }
+
+  title.textContent = table.name + " — Wild Encounters";
+  level.textContent = "Wild level range: " + table.minLevel + "–" + table.maxLevel;
+  grid.innerHTML = "";
+  [
+    ["Common — 1–7", table.common],
+    ["Uncommon — 8–13", table.uncommon],
+    ["Rare — 14–18", table.rare],
+    ["Very Rare — 19–20", table.veryRare]
+  ].forEach(function(group) {
+    const row = document.createElement("div");
+    row.className = "map-encounter-tier";
+    const label = document.createElement("strong");
+    label.textContent = group[0] + ":";
+    row.appendChild(label);
+    row.appendChild(document.createTextNode(group[1].length ? group[1].join(", ") : "—"));
+    grid.appendChild(row);
+  });
+  box.style.display = "block";
+  if (sourceRow) sourceRow.style.display = "none";
+  if (startButton) startButton.textContent = "Start Wild Battle — Random Level";
+  if (selected) selected.style.display = "block";
+}
+
+function updateMapEncounterSelectedRarity() {
+  const table = getKantoWildEncounterTable(activeMapWildEncounterLocationId);
+  const dropdown = document.getElementById("battlePokemonBSelect");
+  const selected = document.getElementById("mapWildEncounterSelectedRarity");
+  if (!table || !dropdown || !selected) {
+    if (selected) selected.style.display = "none";
+    return;
+  }
+  const species = pokemonDatabase.find(function(pokemon) { return String(pokemon.number) === String(dropdown.value); });
+  selected.textContent = species ? species.name + " — " + getWildEncounterRarityLabelForSpecies(table, species.name) : "";
+  selected.style.display = species ? "block" : "none";
+}
+
 function startWildEncounterFromKantoLocation(locationId, fromDetailMap) {
   if (!canStartWildEncounterAtKantoLocation(locationId)) return;
+  const table = getKantoWildEncounterTable(locationId);
+  if (!table) {
+    alert("No wild encounter table is configured for this location yet.");
+    return;
+  }
 
+  activeMapWildEncounterLocationId = locationId;
   battleReturnContext = fromDetailMap
     ? {type:"kantoDetailMap",locationId:locationId}
     : {type:"kantoMainMap",locationId:locationId};
@@ -8824,11 +9017,8 @@ function startWildEncounterFromKantoLocation(locationId, fromDetailMap) {
     displayBattleOpponentPokemonOptions();
   }
 
-  const wildLevel = document.getElementById("battleWildLevelInput");
-  if (wildLevel && (!wildLevel.value || Number(wildLevel.value) < 1)) {
-    wildLevel.value = pcPokemonLevel;
-  }
-
+  renderMapWildEncounterReference(locationId);
+  populateMapWildPokemonDropdown(locationId);
   window.scrollTo(0,0);
 }
 
@@ -8960,7 +9150,7 @@ function getKantoLocationDescription(locationId) {
     "route-11":"Route 11 connects Celadon City to the coast. Trainers: Marlin, Gale, and Brook.",
     "route-12":"Route 12 is an ocean route between the coast and Seafoam Islands. Swimmers: Kai, Pearl, and Tide.",
     "seafoam-islands":"Seafoam Islands contains the entrance to the Seafoam cave system.",
-    "seafoam-cave":"The Seafoam cave system contains three connected chambers and a Level 65 Articuno encounter.",
+    "seafoam-cave":"The Seafoam cave system contains three connected chambers and a Level 60 Articuno encounter.",
     "route-13":"Route 13 is an ocean route between Seafoam Islands and Cinnabar Island. Swimmers: Finnick, Neri, and Cove.",
     "viridian-celadon-path":"A forest road connecting Viridian City to Celadon City. Trainers: Bram and Holly.",
     "celadon-east-path":"A wooded eastbound road from Celadon City to Route 5. Trainers: Reed and Lyra.",
@@ -9464,6 +9654,7 @@ function ensureKantoMapTrainerEncounter(trainerKey) {
 }
 
 function prepareKantoMapTrainerBattle(trainerKey) {
+  activeMapWildEncounterLocationId = null;
   const trainer = ensureKantoMapTrainerEncounter(trainerKey);
   if (!trainer) {
     alert("This trainer encounter could not be prepared.");
@@ -13433,6 +13624,7 @@ function battleBack() {
   if (battleReturnContext && battleReturnContext.type === "kantoDetailMap") {
     const returnContext = battleReturnContext;
     battleReturnContext = null;
+    activeMapWildEncounterLocationId = null;
     openKantoDetailMap(returnContext.locationId);
     return;
   }
@@ -13440,6 +13632,7 @@ function battleBack() {
   if (battleReturnContext && battleReturnContext.type === "kantoMainMap") {
     const returnContext = battleReturnContext;
     battleReturnContext = null;
+    activeMapWildEncounterLocationId = null;
     showPage("homePage");
     selectKantoLocation(returnContext.locationId);
     return;
@@ -13456,6 +13649,7 @@ function endBattle(force=false){
 
   const returnContext=battleReturnContext;
   battleReturnContext=null;
+  activeMapWildEncounterLocationId=null;
 
   battleUndoHistory=[];
   battleOpenSections.A.Stats=false;
@@ -14338,6 +14532,11 @@ function displayBattleOpponentPokemonOptions() {
   const previousPokemon =
     pokemonSelect.value;
 
+  const mapEncounterTable = getKantoWildEncounterTable(activeMapWildEncounterLocationId);
+  if (mapEncounterTable && sourceSelect.value !== "wild") {
+    sourceSelect.value = "wild";
+  }
+
   const source =
     sourceSelect.value;
 
@@ -14349,6 +14548,15 @@ function displayBattleOpponentPokemonOptions() {
   if (
     source === "wild"
   ) {
+
+    if (mapEncounterTable) {
+      if (wildArea) wildArea.style.display = "none";
+      renderMapWildEncounterReference(activeMapWildEncounterLocationId);
+      populateMapWildPokemonDropdown(activeMapWildEncounterLocationId);
+      return;
+    }
+
+    renderMapWildEncounterReference(null);
 
     if (wildArea) {
       wildArea.style.display =
@@ -14639,6 +14847,7 @@ function displayBattleSetup() {
   }
 
   displayBattleOpponentPokemonOptions();
+  renderMapWildEncounterReference(activeMapWildEncounterLocationId);
   updateBattleEndButtonVisibility();
 
   if (
@@ -14723,18 +14932,20 @@ function startBattle() {
         "battleWildLevelInput"
       );
 
-    const level =
-      Math.max(
-        1,
-        Math.min(
-          100,
-          Number(
-            levelInput
-            ? levelInput.value
-            : pcPokemonLevel
-          ) || pcPokemonLevel
-        )
-      );
+    const mapEncounterTable = getKantoWildEncounterTable(activeMapWildEncounterLocationId);
+    const level = mapEncounterTable
+      ? randomEncounterLevel(mapEncounterTable)
+      : Math.max(
+          1,
+          Math.min(
+            100,
+            Number(
+              levelInput
+              ? levelInput.value
+              : pcPokemonLevel
+            ) || pcPokemonLevel
+          )
+        );
 
     activeWildBattlePokemon =
       createTemporaryWildPokemon(
