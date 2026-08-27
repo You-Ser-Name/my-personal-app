@@ -8117,6 +8117,13 @@ const kantoDetailMaps = {
     buttonLabel: "Open Route 1 Map",
     caption: "Pallet Town → Viridian City • Trainers: Cal, Penny, Riley"
   },
+  "viridian-forest": {
+    title: "Viridian Forest",
+    image: "./assets/maps/viridian-forest.png",
+    alt: "Viridian Forest map with dense woodland trails and a north dirt-path exit to Viridian City",
+    buttonLabel: "Open Viridian Forest Map",
+    caption: "Viridian Forest • Dense woodland trails with a north exit to Viridian City"
+  },
   "viridian-city": {
     title: "Viridian City",
     image: "./assets/maps/viridian-city.png",
@@ -8543,6 +8550,9 @@ const kantoDetailLocationHotspots = {
     {name:"Route 2",target:"route-2",x:43,y:0,w:14,h:11},
     {name:"Viridian Forest",target:"viridian-forest",x:44,y:88,w:13,h:12}
   ],
+  "viridian-forest": [
+    {name:"Viridian City",target:"viridian-city",x:40,y:0,w:20,h:14}
+  ],
   "route-2": [
     {name:"Pewter City",target:"pewter-city",x:52,y:8,w:42,h:18},
     {name:"Viridian City",target:"viridian-city",x:54,y:91,w:46,h:18}
@@ -8820,6 +8830,7 @@ function getKantoLocationDescription(locationId) {
   const descriptions = {
     "route-1":"Route 1 connects Pallet Town to Viridian City. Trainers: Cal, Penny, and Riley.",
     "viridian-city":"Viridian City includes the Gym, Poké Center, Poké Mart, Trainer School, and the southern trail to Viridian Forest.",
+    "viridian-forest":"Viridian Forest is a large woodland area with winding trails and a north exit back to Viridian City.",
     "viridian-gym":"Viridian Gym is Gym 1, a Grass-type gym led by Fern.",
     "route-2":"Route 2 connects Viridian City to Pewter City. Trainers: Nate, Skye, and Wade.",
     "pewter-city":"Pewter City includes the Gym, Pokémon Center, Poké Mart, Museum of Science, and routes south and east.",
