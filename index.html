@@ -8178,6 +8178,13 @@ const kantoDetailMaps = {
     buttonLabel: "Open Mt. Moon Map",
     caption: "Route 3 → Mt. Moon → Route 4 • Trainers: Dex, Mira, Vex"
   },
+  "rock-tunnel": {
+    title: "Rock Tunnel",
+    image: "./assets/maps/rock-tunnel.png",
+    alt: "Rock Tunnel cave map with a northern entrance and a southern exit",
+    buttonLabel: "Open Rock Tunnel Map",
+    caption: "Rock Tunnel • A cave passage linking Cerulean Crossroads to Lavender Town"
+  },
   "route-4": {
     title: "Route 4",
     image: "./assets/maps/route-4.png",
@@ -8761,6 +8768,10 @@ const kantoDetailLocationHotspots = {
     {name:"Rock Tunnel",target:"rock-tunnel",x:31,y:0,w:38,h:18},
     {name:"Lavender Town",target:"lavender-town",x:31,y:81,w:38,h:19}
   ],
+  "rock-tunnel": [
+    {name:"Cerulean Crossroads",target:"cerulean-crossroads",x:40,y:0,w:20,h:12},
+    {name:"Rock Tunnel Path",target:"rock-tunnel-path",x:41,y:88,w:18,h:12}
+  ],
   "coastal-fuchsia-path": [
     {name:"Route 11 Coast",target:"route-11",x:0,y:0,w:16,h:21},
     {name:"Route 12 Coast",target:"route-12",x:0,y:33,w:18,h:23},
@@ -8955,6 +8966,7 @@ function getKantoLocationDescription(locationId) {
     "celadon-east-path":"A wooded eastbound road from Celadon City to Route 5. Trainers: Reed and Lyra.",
     "cerulean-crossroads":"A branching forest crossroads north of Cerulean City leading toward Rock Tunnel and a wooded clearing. Trainers: Fenn and Nell.",
     "rock-tunnel-path":"A wooded path connecting Rock Tunnel to Lavender Town. Trainer: Glen.",
+    "rock-tunnel":"Rock Tunnel is a cave passage with a northern entrance from Cerulean Crossroads and a southern exit toward Lavender Town.",
     "coastal-fuchsia-path":"A coastal road linking the Route 11 and Route 12 coast to Fuchsia City. Trainers: Holt and Sela.",
     "cinnabar-island":"Cinnabar Island includes the volcano, Cinnabar Gym, Poké Center, Poké Mart, Pokémon Lab, Pokémon Mansion, and an eastern dock to Route 13.",
     "cinnabar-gym":"Cinnabar Gym is Gym 8, a Fire-type gym led by Blaze.",
