@@ -2621,7 +2621,6 @@ select {
 
       <div class="kanto-location-actions">
         <button id="kantoDetailMapButton" class="primary-button small-button" type="button" style="display:none;grid-column:1 / -1;" onclick="openSelectedKantoDetailMap()">Open Detailed Map</button>
-        <button id="kantoWildEncounterButton" class="primary-button small-button" type="button" style="display:none;grid-column:1 / -1;" onclick="startWildEncounterFromKantoLocation(selectedKantoLocationId, false)">Start Wild Pokémon Encounter</button>
         <button id="kantoVisitedButton" class="small-button" type="button" onclick="toggleKantoVisited()">Mark Visited</button>
         <button id="kantoCompletedButton" class="small-button" type="button" onclick="toggleKantoCompleted()">Mark Completed</button>
       </div>
@@ -9459,13 +9458,7 @@ function selectKantoLocation(locationId) {
 
   const detailMap = kantoDetailMaps[locationId] || null;
   const detailButton = document.getElementById("kantoDetailMapButton");
-  const wildButton = document.getElementById("kantoWildEncounterButton");
-
   description.textContent = getKantoLocationDescription(locationId);
-
-  if (wildButton) {
-    wildButton.style.display = canStartWildEncounterAtKantoLocation(locationId) ? "block" : "none";
-  }
 
   if (detailButton) {
     if (detailMap) {
