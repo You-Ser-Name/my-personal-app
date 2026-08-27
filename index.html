@@ -8085,7 +8085,12 @@ const kantoMapLocations = [
   {id:"route-10",name:"Route 10",type:"Route",x:50.0,y:56.0,w:4.0,h:5.0},
   {id:"route-11",name:"Route 11",type:"Route",x:41.2,y:58.5,w:4.0,h:5.0},
   {id:"route-12",name:"Route 12",type:"Route",x:38.0,y:76.3,w:4.0,h:5.0},
-  {id:"route-13",name:"Route 13",type:"Route",x:19.0,y:75.5,w:4.0,h:5.0}
+  {id:"route-13",name:"Route 13",type:"Route",x:19.0,y:75.5,w:4.0,h:5.0},
+  {id:"viridian-celadon-path",name:"Viridian-Celadon Path",type:"Route",x:35.5,y:43.5,w:4.6,h:5.2},
+  {id:"celadon-east-path",name:"Celadon East Path",type:"Route",x:50.8,y:43.5,w:4.6,h:5.2},
+  {id:"cerulean-crossroads",name:"Cerulean Crossroads",type:"Route",x:88.0,y:15.8,w:5.2,h:6.0},
+  {id:"rock-tunnel-path",name:"Rock Tunnel Path",type:"Route",x:89.5,y:35.8,w:4.6,h:5.8},
+  {id:"coastal-fuchsia-path",name:"Coastal Path",type:"Route",x:50.8,y:69.5,w:5.0,h:5.8}
 ];
 
 const kantoGymOrderHotspots = [
@@ -8341,6 +8346,41 @@ const kantoDetailMaps = {
     buttonLabel: "Open Route 13 Map",
     caption: "Seafoam waters → Cinnabar Island • Swimmers: Finnick, Neri, Cove"
   },
+  "viridian-celadon-path": {
+    title: "Viridian-Celadon Path",
+    image: "./assets/maps/viridian-celadon-path.png",
+    alt: "Forest route with Viridian City on the left, Celadon City on the right, and two trainers along the center path",
+    buttonLabel: "Open Viridian-Celadon Path",
+    caption: "Viridian City → Celadon City • Trainers: Bram, Holly"
+  },
+  "celadon-east-path": {
+    title: "Celadon East Path",
+    image: "./assets/maps/celadon-east-path.png",
+    alt: "Forest route with Celadon City on the left, Route 5 on the right, and two trainers along the road",
+    buttonLabel: "Open Celadon East Path",
+    caption: "Celadon City → Route 5 • Trainers: Reed, Lyra"
+  },
+  "cerulean-crossroads": {
+    title: "Cerulean Crossroads",
+    image: "./assets/maps/cerulean-crossroads.png",
+    alt: "Branching forest crossroads north of Cerulean City leading toward Rock Tunnel and a wooded clearing",
+    buttonLabel: "Open Cerulean Crossroads",
+    caption: "Cerulean City → Rock Tunnel / Woodland • Trainers: Fenn, Nell"
+  },
+  "rock-tunnel-path": {
+    title: "Rock Tunnel Path",
+    image: "./assets/maps/rock-tunnel-path.png",
+    alt: "Forest path connecting Rock Tunnel at the north to Lavender Town at the south with a trainer along the road",
+    buttonLabel: "Open Rock Tunnel Path",
+    caption: "Rock Tunnel → Lavender Town • Trainer: Glen"
+  },
+  "coastal-fuchsia-path": {
+    title: "Coastal Path",
+    image: "./assets/maps/coastal-fuchsia-path.png",
+    alt: "Coastal route with Fuchsia City on the right, the Route 11 and Route 12 junction on the left, and two trainers along the coast road",
+    buttonLabel: "Open Coastal Path",
+    caption: "Route 11 / Route 12 coast → Fuchsia City • Trainers: Holt, Sela"
+  },
   "victory-road": {
     title: "Victory Road — Entrance",
     image: "./assets/maps/victory-road-entrance.png",
@@ -8502,6 +8542,25 @@ const kantoDetailTrainerEncounters = {
     {key:"r13-neri",name:"Neri",role:"Swimmer",x:50.8,y:50.5,reward:"₽3200",team:[["Cloyster",46],["Omastar",46],["Kabutops",46],["Seaking",47],["Starmie",47]]},
     {key:"r13-cove",name:"Cove",role:"Swimmer",x:67.8,y:50.5,reward:"₽3500",team:[["Dewgong",45],["Omanyte",45],["Kabuto",45],["Seadra",46],["Staryu",46]]}
   ],
+  "viridian-celadon-path": [
+    {key:"vcp-bram",name:"Bram",role:"Ranger",x:35.0,y:43.0,reward:"₽1650",team:[["Growlithe",31],["Pidgeotto",31],["Raticate",32],["Weepinbell",32]]},
+    {key:"vcp-holly",name:"Holly",role:"Route Ace",x:60.0,y:43.0,reward:"₽1850",team:[["Gloom",32],["Persian",32],["Vulpix",33],["Tangela",33]]}
+  ],
+  "celadon-east-path": [
+    {key:"cep-reed",name:"Reed",role:"Jr. Trainer",x:33.0,y:52.0,reward:"₽1750",team:[["Doduo",33],["Mankey",33],["Machop",34],["Fearow",34]]},
+    {key:"cep-lyra",name:"Lyra",role:"Route Ace",x:70.0,y:55.0,reward:"₽1950",team:[["Ponyta",34],["Kadabra",34],["Vileplume",35],["Persian",35]]}
+  ],
+  "cerulean-crossroads": [
+    {key:"ccr-fenn",name:"Fenn",role:"Hiker",x:40.5,y:44.0,reward:"₽1150",team:[["Sandshrew",26],["Geodude",26],["Machop",27],["Onix",27]]},
+    {key:"ccr-nell",name:"Nell",role:"Scout",x:61.0,y:49.0,reward:"₽1300",team:[["Oddish",27],["Pidgeotto",27],["Abra",28],["Vulpix",28]]}
+  ],
+  "rock-tunnel-path": [
+    {key:"rtp-glen",name:"Glen",role:"Hiker",x:49.0,y:46.0,reward:"₽1450",team:[["Graveler",29],["Machop",29],["Cubone",30],["Golbat",30]]}
+  ],
+  "coastal-fuchsia-path": [
+    {key:"cfp-holt",name:"Holt",role:"Coastal Trainer",x:25.5,y:45.0,reward:"₽2150",team:[["Machop",34],["Raticate",34],["Tentacool",35],["Dodrio",35]]},
+    {key:"cfp-sela",name:"Sela",role:"Route Ace",x:57.0,y:58.0,reward:"₽2350",team:[["Goldeen",35],["Horsea",35],["Fearow",36],["Persian",36],["Staryu",36]]}
+  ],
   "victory-road": [
     {key:"vr-t01",name:"Hiker",role:"Victory Road Trainer",x:34.0,y:52.0,reward:"₽3600",team:[["Machoke",47],["Graveler",47],["Onix",48],["Golbat",48],["Hypno",48]]},
     {key:"vr-t02",name:"Blackbelt",role:"Victory Road Trainer",x:65.0,y:36.0,w:14,h:18,reward:"₽3800",team:[["Primeape",48],["Machoke",48],["Marowak",49],["Rhydon",49],["Kadabra",49]]}
@@ -8548,7 +8607,8 @@ const kantoDetailLocationHotspots = {
     {name:"Trainer School",action:"landmark",landmarkType:"School",description:"Viridian City's Trainer School, where new trainers learn basic Pokémon battling concepts.",x:18,y:37,w:24,h:20},
     {name:"Route 1",target:"route-1",x:0,y:42,w:10,h:18},
     {name:"Route 2",target:"route-2",x:43,y:0,w:14,h:11},
-    {name:"Viridian Forest",target:"viridian-forest",x:44,y:88,w:13,h:12}
+    {name:"Viridian Forest",target:"viridian-forest",x:44,y:88,w:13,h:12},
+    {name:"Viridian-Celadon Path",target:"viridian-celadon-path",x:95,y:36,w:12,h:24}
   ],
   "viridian-forest": [
     {name:"Viridian City",target:"viridian-city",x:40,y:0,w:20,h:14}
@@ -8585,12 +8645,13 @@ const kantoDetailLocationHotspots = {
     {name:"Bike Shop",action:"landmark",landmarkType:"Shop",description:"Cerulean City's bicycle shop.",x:15,y:36,w:24,h:22},
     {name:"Burglarized House",action:"landmark",landmarkType:"Home",description:"The Cerulean home damaged during the Team Rocket burglary incident.",x:68,y:59,w:25,h:22},
     {name:"Route 4",target:"route-4",x:5,y:43,w:20,h:24},
-    {name:"Route 5",target:"route-5",x:50,y:84,w:24,h:23}
+    {name:"Route 5",target:"route-5",x:50,y:84,w:24,h:23},
+    {name:"Cerulean Crossroads",target:"cerulean-crossroads",x:42,y:0,w:16,h:13}
   ],
   "route-5": [
     {name:"Cerulean City",target:"cerulean-city",x:35,y:0,w:30,h:27},
     {name:"Vermilion City",target:"vermilion-city",x:77,y:53,w:23,h:38},
-    {name:"Celadon City",target:"celadon-city",x:0,y:65,w:21,h:24}
+    {name:"Path to Celadon City",target:"celadon-east-path",x:0,y:65,w:21,h:24}
   ],
   "vermilion-city": [
     {name:"Vermilion Poké Center",action:"pokemon-center",cityName:"Vermilion City",x:55,y:3,w:29,h:30},
@@ -8613,7 +8674,8 @@ const kantoDetailLocationHotspots = {
     {name:"Mr. Fuji's House",action:"landmark",landmarkType:"Home",description:"Mr. Fuji's home and a place associated with the care of abandoned Pokémon.",x:13,y:53,w:24,h:23},
     {name:"Name Rater's House",action:"landmark",landmarkType:"Home",description:"The home of Lavender Town's Name Rater.",x:35,y:69,w:24,h:22},
     {name:"Route 6",target:"route-6",x:0,y:38,w:21,h:20},
-    {name:"Route 7",target:"route-7",x:46,y:77,w:19,h:23}
+    {name:"Route 7",target:"route-7",x:46,y:77,w:19,h:23},
+    {name:"Rock Tunnel Path",target:"rock-tunnel-path",x:44,y:0,w:18,h:12}
   ],
   "route-7": [
     {name:"Lavender Town",target:"lavender-town",x:48,y:9,w:35,h:20},
@@ -8634,7 +8696,8 @@ const kantoDetailLocationHotspots = {
     {name:"Fuchsia Zoo",action:"landmark",landmarkType:"Exhibit",description:"Fuchsia City's outdoor Pokémon exhibit and zoo area.",x:14,y:40,w:25,h:22},
     {name:"Warden's House",action:"landmark",landmarkType:"Home",description:"The home of the Safari Zone Warden.",x:67,y:57,w:25,h:23},
     {name:"Route 9",target:"route-9",x:7.0,y:36.0,w:14,h:20},
-    {name:"Route 8",target:"route-8",x:94.0,y:52.0,w:12,h:22}
+    {name:"Route 8",target:"route-8",x:94.0,y:52.0,w:12,h:22},
+    {name:"Coastal Path",target:"coastal-fuchsia-path",x:44.0,y:89.0,w:16.0,h:11.0}
   ],
   "saffron-city": [
     {name:"Saffron Gym",target:"saffron-gym",x:16.5,y:11.0,w:25.5,h:24.5},
@@ -8663,19 +8726,45 @@ const kantoDetailLocationHotspots = {
     {name:"Celadon Mansion",action:"landmark",landmarkType:"Landmark",description:"Celadon Mansion, one of the city's notable residential buildings.",x:11,y:62,w:23,h:24},
     {name:"Celadon Hotel",action:"landmark",landmarkType:"Hotel",description:"A hotel serving visitors to Celadon City.",x:35,y:63,w:20,h:23},
     {name:"Route 11",target:"route-11",x:27.0,y:86.0,w:15.0,h:14.0},
-    {name:"Route 10",target:"route-10",x:64.0,y:86.0,w:15.0,h:14.0}
+    {name:"Route 10",target:"route-10",x:64.0,y:86.0,w:15.0,h:14.0},
+    {name:"Viridian-Celadon Path",target:"viridian-celadon-path",x:0.0,y:34.0,w:12.0,h:20.0},
+    {name:"Celadon East Path",target:"celadon-east-path",x:95.0,y:34.0,w:12.0,h:20.0}
   ],
   "route-11": [
     {name:"Celadon City",target:"celadon-city",x:62,y:8,w:39,h:18},
-    {name:"Coast / Route 12",target:"route-12",x:48,y:94,w:30,h:15}
+    {name:"Coast / Route 12",target:"route-12",x:48,y:94,w:30,h:15},
+    {name:"Coastal Path",target:"coastal-fuchsia-path",x:0,y:74,w:15,h:26}
   ],
   "route-12": [
-    {name:"Route 11 Coast",target:"route-11",x:91,y:55,w:18,h:75},
-    {name:"Seafoam Islands",target:"seafoam-islands",x:7,y:50,w:16,h:85}
+    {name:"Route 11 Coast",target:"route-11",x:91,y:45,w:18,h:55},
+    {name:"Seafoam Islands",target:"seafoam-islands",x:7,y:50,w:16,h:85},
+    {name:"Coastal Path",target:"coastal-fuchsia-path",x:88,y:83,w:14,h:17}
   ],
   "route-13": [
     {name:"Seafoam Islands",target:"seafoam-islands",x:94,y:50,w:13,h:85},
     {name:"Cinnabar Island",target:"cinnabar-island",x:13,y:47,w:25,h:62}
+  ],
+  "viridian-celadon-path": [
+    {name:"Viridian City",target:"viridian-city",x:0,y:33,w:24,h:30},
+    {name:"Celadon City",target:"celadon-city",x:79,y:33,w:21,h:30}
+  ],
+  "celadon-east-path": [
+    {name:"Celadon City",target:"celadon-city",x:0,y:17,w:25,h:35},
+    {name:"Route 5",target:"route-5",x:94,y:42,w:12,h:22}
+  ],
+  "cerulean-crossroads": [
+    {name:"Cerulean City",target:"cerulean-city",x:0,y:68,w:29,h:31},
+    {name:"Rock Tunnel",target:"rock-tunnel",x:76,y:73,w:24,h:26},
+    {name:"Woodland Clearing",action:"landmark",landmarkType:"Woodland",description:"A quiet wooded clearing branching northeast from the crossroads.",x:74,y:0,w:26,h:23}
+  ],
+  "rock-tunnel-path": [
+    {name:"Rock Tunnel",target:"rock-tunnel",x:31,y:0,w:38,h:18},
+    {name:"Lavender Town",target:"lavender-town",x:31,y:81,w:38,h:19}
+  ],
+  "coastal-fuchsia-path": [
+    {name:"Route 11 Coast",target:"route-11",x:0,y:0,w:16,h:21},
+    {name:"Route 12 Coast",target:"route-12",x:0,y:33,w:18,h:23},
+    {name:"Fuchsia City",target:"fuchsia-city",x:76,y:17,w:24,h:35}
   ],
   "cinnabar-island": [
     {name:"Cinnabar Gym",target:"cinnabar-gym",x:17.0,y:45.0,w:20.0,h:23.0},
@@ -8699,6 +8788,7 @@ const kantoDetailLocationHotspots = {
 const kantoWildEncounterLocationIds = new Set([
   "route-1","route-2","route-3","route-4","route-5","route-6","route-7",
   "route-8","route-9","route-10","route-11","route-12","route-13",
+  "viridian-celadon-path","celadon-east-path","cerulean-crossroads","rock-tunnel-path","coastal-fuchsia-path",
   "viridian-forest","mt-moon","rock-tunnel","pokemon-tower","safari-zone",
   "seafoam-islands","seafoam-cave","victory-road","victory-road-interior","victory-road-summit"
 ]);
@@ -8861,6 +8951,11 @@ function getKantoLocationDescription(locationId) {
     "seafoam-islands":"Seafoam Islands contains the entrance to the Seafoam cave system.",
     "seafoam-cave":"The Seafoam cave system contains three connected chambers and a Level 65 Articuno encounter.",
     "route-13":"Route 13 is an ocean route between Seafoam Islands and Cinnabar Island. Swimmers: Finnick, Neri, and Cove.",
+    "viridian-celadon-path":"A forest road connecting Viridian City to Celadon City. Trainers: Bram and Holly.",
+    "celadon-east-path":"A wooded eastbound road from Celadon City to Route 5. Trainers: Reed and Lyra.",
+    "cerulean-crossroads":"A branching forest crossroads north of Cerulean City leading toward Rock Tunnel and a wooded clearing. Trainers: Fenn and Nell.",
+    "rock-tunnel-path":"A wooded path connecting Rock Tunnel to Lavender Town. Trainer: Glen.",
+    "coastal-fuchsia-path":"A coastal road linking the Route 11 and Route 12 coast to Fuchsia City. Trainers: Holt and Sela.",
     "cinnabar-island":"Cinnabar Island includes the volcano, Cinnabar Gym, Poké Center, Poké Mart, Pokémon Lab, Pokémon Mansion, and an eastern dock to Route 13.",
     "cinnabar-gym":"Cinnabar Gym is Gym 8, a Fire-type gym led by Blaze.",
     "victory-road":"Victory Road begins the final Indigo Road ascent toward Indigo Plateau.",
