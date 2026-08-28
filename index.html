@@ -2607,6 +2607,76 @@ select {
   .map-encounter-random-note { font-size:9px; }
 }
 
+
+
+/* =========================================================
+   SUPABASE MULTIPLAYER AUTH / PLAYER PORTAL V1
+========================================================= */
+#cloudAuthGate {
+  position:fixed;
+  inset:0;
+  z-index:100000;
+  background:linear-gradient(180deg,#f7f9fc 0%,#eef2f7 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  overflow:auto;
+}
+#cloudAuthGate.cloud-hidden { display:none !important; }
+.cloud-auth-card {
+  width:min(440px,100%);
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:18px;
+  box-shadow:0 12px 36px rgba(0,0,0,.14);
+  padding:22px;
+}
+.cloud-auth-card h1 { margin:0 0 4px; text-align:center; }
+.cloud-auth-card p { margin:4px 0 16px; text-align:center; color:#555; }
+.cloud-auth-card label { display:block; font-weight:800; margin-top:11px; }
+.cloud-auth-card input {
+  width:100%; box-sizing:border-box; margin-top:5px; padding:12px;
+  border:1px solid #bbb; border-radius:10px; font-size:16px;
+}
+.cloud-auth-card button { width:100%; margin-top:14px; }
+.cloud-auth-status { min-height:20px; margin-top:10px; text-align:center; font-size:13px; font-weight:700; }
+.cloud-auth-status.error { color:#b00020; }
+.cloud-auth-status.ok { color:#166534; }
+.cloud-auth-offline { margin-top:12px; padding:9px 10px; border-radius:10px; background:#fff8e1; font-size:12px; line-height:1.35; }
+
+#playerCloudPage { display:none; min-height:100vh; background:#f4f4f4; }
+body.cloud-player-mode #playerCloudPage { display:block !important; }
+body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display:none !important; }
+.player-cloud-header {
+  position:sticky; top:0; z-index:20; background:#c62810; color:#fff;
+  padding:13px 16px; display:flex; justify-content:space-between; align-items:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.18);
+}
+.player-cloud-header h1 { margin:0; font-size:21px; }
+.player-cloud-header button { width:auto; margin:0; padding:7px 11px; min-height:0; }
+.player-cloud-content { max-width:760px; margin:0 auto; padding:14px; }
+.player-cloud-card {
+  background:#fff; border-radius:14px; border:1px solid #ddd; padding:14px;
+  margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+.player-cloud-trainer-name { font-size:25px; font-weight:900; }
+.player-cloud-meta { margin-top:4px; color:#555; font-size:13px; }
+.player-cloud-pokemon {
+  border:1px solid #e0e0e0; border-radius:12px; padding:12px; margin-top:9px;
+}
+.player-cloud-pokemon-top { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+.player-cloud-pokemon-name { font-size:18px; font-weight:900; }
+.player-cloud-hp { font-weight:900; white-space:nowrap; }
+.player-cloud-moves { margin-top:9px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+.player-cloud-move { background:#f5f5f5; border-radius:8px; padding:7px; font-size:12px; }
+.player-cloud-empty { color:#666; text-align:center; padding:18px 8px; }
+.player-cloud-statusbar { font-size:12px; color:#555; margin-top:6px; }
+@media(max-width:520px){
+  .player-cloud-moves{grid-template-columns:1fr;}
+  .cloud-auth-card{padding:18px;}
+}
+
 </style>
 
 
@@ -2619,10 +2689,55 @@ select {
 <meta name="apple-mobile-web-app-title" content="Pokémon Campaign">
 
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
-<!-- KANTO APP BUILD v34R2: location-based wild encounter tables + randomized map encounter levels -->
+<!-- KANTO APP BUILD v34R3: Supabase authentication + DM/player role test portal -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
 </head>
 
 <body>
+
+<!-- SUPABASE AUTH GATE -->
+<div id="cloudAuthGate">
+  <div class="cloud-auth-card">
+    <h1>Pokémon Campaign</h1>
+    <p>Sign in to your campaign account.</p>
+
+    <label for="cloudEmailInput">Email</label>
+    <input id="cloudEmailInput" type="email" autocomplete="username" placeholder="you@example.com">
+
+    <label for="cloudPasswordInput">Password</label>
+    <input id="cloudPasswordInput" type="password" autocomplete="current-password" placeholder="Password">
+
+    <button class="primary-button" type="button" onclick="cloudSignIn()">Sign In</button>
+    <div id="cloudAuthStatus" class="cloud-auth-status"></div>
+    <div class="cloud-auth-offline">Live campaign accounts require an internet connection. The DM's existing local campaign data is not deleted by signing in.</div>
+  </div>
+</div>
+
+<!-- PLAYER-ONLY CLOUD VIEW -->
+<div id="playerCloudPage">
+  <div class="player-cloud-header">
+    <h1>My Trainer</h1>
+    <button class="small-button" type="button" onclick="cloudSignOut()">Sign Out</button>
+  </div>
+  <div class="player-cloud-content">
+    <div class="player-cloud-card">
+      <div id="playerCloudTrainerName" class="player-cloud-trainer-name">Loading…</div>
+      <div id="playerCloudTrainerMeta" class="player-cloud-meta"></div>
+      <div id="playerCloudConnectionStatus" class="player-cloud-statusbar"></div>
+    </div>
+    <div class="player-cloud-card">
+      <h2 style="margin-top:0;">My Pokémon</h2>
+      <div id="playerCloudPokemonList"><div class="player-cloud-empty">Loading Pokémon…</div></div>
+    </div>
+    <div class="player-cloud-card">
+      <h2 style="margin-top:0;">Battle</h2>
+      <div class="player-cloud-empty">Player move controls will be enabled in the next multiplayer phase after we verify account permissions and live data.</div>
+    </div>
+  </div>
+</div>
+
 
 <!-- HOME -->
 <div id="homePage">
@@ -23365,6 +23480,217 @@ window.addEventListener("load", async function() {
       error
     );
   }
+});
+</script>
+
+<script>
+/* =========================================================
+   SUPABASE MULTIPLAYER CONNECTION V1
+   First end-to-end test: authentication + role-based view.
+========================================================= */
+const CLOUD_SUPABASE_URL = "https://sfaiouqnkglysttmxivh.supabase.co";
+const CLOUD_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_df1mmTywwBCPRSCLLN_7sA_TOt_ZGlC";
+const CLOUD_JOIN_CODE = "KANTO-001";
+
+let cloudSupabaseClient = null;
+let cloudCurrentUser = null;
+let cloudCurrentMembership = null;
+let cloudCurrentCampaign = null;
+
+function setCloudAuthStatus(message, kind="") {
+  const el=document.getElementById("cloudAuthStatus");
+  if(!el)return;
+  el.textContent=message||"";
+  el.className="cloud-auth-status"+(kind?" "+kind:"");
+}
+
+function setCloudGateVisible(visible){
+  const gate=document.getElementById("cloudAuthGate");
+  if(!gate)return;
+  gate.classList.toggle("cloud-hidden",!visible);
+}
+
+function resetCloudRoleView(){
+  document.body.classList.remove("cloud-player-mode");
+  cloudCurrentMembership=null;
+  cloudCurrentCampaign=null;
+}
+
+async function initializeCloudClient(){
+  try{
+    if(!window.supabase || !window.supabase.createClient){
+      throw new Error("Supabase library did not load. Check your internet connection and reload.");
+    }
+    cloudSupabaseClient=window.supabase.createClient(
+      CLOUD_SUPABASE_URL,
+      CLOUD_SUPABASE_PUBLISHABLE_KEY,
+      {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}
+    );
+
+    const {data,error}=await cloudSupabaseClient.auth.getSession();
+    if(error)throw error;
+
+    if(data && data.session && data.session.user){
+      cloudCurrentUser=data.session.user;
+      setCloudAuthStatus("Loading campaign…","ok");
+      await loadCloudRoleAndView();
+    }else{
+      setCloudGateVisible(true);
+      setCloudAuthStatus("");
+    }
+
+    cloudSupabaseClient.auth.onAuthStateChange(async function(event,session){
+      if(event==="SIGNED_OUT" || !session){
+        cloudCurrentUser=null;
+        resetCloudRoleView();
+        setCloudGateVisible(true);
+        return;
+      }
+      if((event==="SIGNED_IN" || event==="TOKEN_REFRESHED") && session.user){
+        cloudCurrentUser=session.user;
+      }
+    });
+  }catch(error){
+    setCloudGateVisible(true);
+    setCloudAuthStatus(error&&error.message?error.message:"Unable to initialize online campaign.","error");
+  }
+}
+
+async function cloudSignIn(){
+  if(!cloudSupabaseClient){
+    setCloudAuthStatus("Online campaign service is still loading. Try again in a moment.","error");
+    return;
+  }
+  const email=(document.getElementById("cloudEmailInput")?.value||"").trim();
+  const password=document.getElementById("cloudPasswordInput")?.value||"";
+  if(!email || !password){
+    setCloudAuthStatus("Enter your email and password.","error");
+    return;
+  }
+  setCloudAuthStatus("Signing in…");
+  try{
+    const {data,error}=await cloudSupabaseClient.auth.signInWithPassword({email,password});
+    if(error)throw error;
+    cloudCurrentUser=data.user;
+    await loadCloudRoleAndView();
+  }catch(error){
+    setCloudAuthStatus(error&&error.message?error.message:"Sign in failed.","error");
+  }
+}
+
+async function cloudSignOut(){
+  try{
+    if(cloudSupabaseClient) await cloudSupabaseClient.auth.signOut();
+  }catch(error){ console.warn("Cloud sign-out warning",error); }
+  cloudCurrentUser=null;
+  resetCloudRoleView();
+  setCloudGateVisible(true);
+  setCloudAuthStatus("Signed out.","ok");
+  const pwd=document.getElementById("cloudPasswordInput");
+  if(pwd)pwd.value="";
+}
+
+async function loadCloudRoleAndView(){
+  if(!cloudSupabaseClient || !cloudCurrentUser)return;
+
+  const {data:campaign,error:campaignError}=await cloudSupabaseClient
+    .from("campaigns")
+    .select("id,name,join_code,owner_user_id")
+    .eq("join_code",CLOUD_JOIN_CODE)
+    .maybeSingle();
+  if(campaignError)throw campaignError;
+  if(!campaign)throw new Error("Campaign KANTO-001 was not found or this account cannot access it.");
+  cloudCurrentCampaign=campaign;
+
+  const {data:membership,error:membershipError}=await cloudSupabaseClient
+    .from("campaign_members")
+    .select("id,campaign_id,user_id,role,trainer_id")
+    .eq("campaign_id",campaign.id)
+    .eq("user_id",cloudCurrentUser.id)
+    .maybeSingle();
+  if(membershipError)throw membershipError;
+  if(!membership)throw new Error("This account has not been added to the campaign yet.");
+  cloudCurrentMembership=membership;
+
+  if(membership.role==="dm"){
+    document.body.classList.remove("cloud-player-mode");
+    setCloudGateVisible(false);
+    setCloudAuthStatus("");
+    return;
+  }
+
+  if(membership.role==="player"){
+    document.body.classList.add("cloud-player-mode");
+    setCloudGateVisible(false);
+    await renderCloudPlayerPortal();
+    return;
+  }
+
+  throw new Error("Unknown campaign role: "+membership.role);
+}
+
+function cloudEscape(value){
+  return String(value??"").replace(/[&<>'"]/g,function(ch){
+    return ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[ch];
+  });
+}
+
+async function renderCloudPlayerPortal(){
+  const nameEl=document.getElementById("playerCloudTrainerName");
+  const metaEl=document.getElementById("playerCloudTrainerMeta");
+  const statusEl=document.getElementById("playerCloudConnectionStatus");
+  const listEl=document.getElementById("playerCloudPokemonList");
+
+  if(!cloudCurrentMembership?.trainer_id){
+    if(nameEl)nameEl.textContent="Trainer not assigned";
+    if(metaEl)metaEl.textContent="Ask the DM to assign this account to a trainer.";
+    if(listEl)listEl.innerHTML='<div class="player-cloud-empty">No trainer assignment yet.</div>';
+    return;
+  }
+
+  const {data:trainer,error:trainerError}=await cloudSupabaseClient
+    .from("trainers")
+    .select("id,name,trainer_type,money,inventory")
+    .eq("id",cloudCurrentMembership.trainer_id)
+    .single();
+  if(trainerError)throw trainerError;
+
+  const {data:pokemon,error:pokemonError}=await cloudSupabaseClient
+    .from("owned_pokemon")
+    .select("id,pokedex_number,species,nickname,level,current_hp,status,storage_location,moves,move_pp,stats")
+    .eq("trainer_id",trainer.id)
+    .order("created_at",{ascending:true});
+  if(pokemonError)throw pokemonError;
+
+  if(nameEl)nameEl.textContent=trainer.name||"My Trainer";
+  if(metaEl)metaEl.textContent="Money: $"+Number(trainer.money||0).toLocaleString()+" • "+(cloudCurrentCampaign?.name||"Campaign");
+  if(statusEl)statusEl.textContent="Connected as player • "+(cloudCurrentUser.email||"");
+
+  if(!pokemon || !pokemon.length){
+    listEl.innerHTML='<div class="player-cloud-empty">No Pokémon assigned to this trainer.</div>';
+    return;
+  }
+
+  listEl.innerHTML=pokemon.map(function(p){
+    const displayName=p.nickname ? cloudEscape(p.nickname)+" ("+cloudEscape(p.species)+")" : cloudEscape(p.species);
+    const maxHp=(p.stats && (p.stats.hp ?? p.stats.HP)) ?? null;
+    const hpText=maxHp!=null ? cloudEscape(p.current_hp)+" / "+cloudEscape(maxHp) : cloudEscape(p.current_hp ?? "—");
+    const moves=Array.isArray(p.moves)?p.moves:[];
+    const pp=(p.move_pp && typeof p.move_pp==="object")?p.move_pp:{};
+    const moveHtml=moves.length?moves.map(function(move){
+      const val=pp[move];
+      return '<div class="player-cloud-move"><strong>'+cloudEscape(move)+'</strong>'+(val!==undefined?'<br>PP '+cloudEscape(val):'')+'</div>';
+    }).join(""):'<div class="player-cloud-move">No moves listed</div>';
+    return '<div class="player-cloud-pokemon">'+
+      '<div class="player-cloud-pokemon-top"><div><div class="player-cloud-pokemon-name">'+displayName+'</div><div class="player-cloud-meta">Lv. '+cloudEscape(p.level)+' • '+cloudEscape(p.storage_location||"party")+(p.status?' • '+cloudEscape(p.status):'')+'</div></div><div class="player-cloud-hp">HP '+hpText+'</div></div>'+
+      '<div class="player-cloud-moves">'+moveHtml+'</div></div>';
+  }).join("");
+}
+
+window.addEventListener("DOMContentLoaded",function(){
+  const pwd=document.getElementById("cloudPasswordInput");
+  if(pwd){pwd.addEventListener("keydown",function(event){if(event.key==="Enter")cloudSignIn();});}
+  initializeCloudClient();
 });
 </script>
 
