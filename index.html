@@ -2846,6 +2846,9 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
       <button class="primary-button" id="cloudMigrationButton" style="width:100%;" type="button" onclick="cloudMigrateLocalCampaignToSupabase()">
         Upload This Device's Campaign to Cloud
       </button>
+      <button class="small-button" id="cloudDownloadButton" style="width:100%;margin-top:10px;" type="button" onclick="cloudDownloadCampaignToThisDevice()">
+        Download Cloud Campaign to This Device
+      </button>
       <div id="cloudMigrationStatus" class="battle-note" style="display:none;text-align:center;margin-top:12px;"></div>
     </div>
 
@@ -23909,6 +23912,135 @@ async function cloudMigrateLocalCampaignToSupabase(){
     console.error("Cloud migration failed",error);
     setCloudMigrationStatus(error&&error.message?error.message:"Cloud migration failed.",true);
     alert("Cloud migration failed: "+(error&&error.message?error.message:"Unknown error"));
+  }finally{
+    if(button)button.disabled=false;
+  }
+}
+
+
+async function cloudDownloadCampaignToThisDevice(){
+  const button=document.getElementById("cloudDownloadButton");
+  try{
+    if(!cloudSupabaseClient || !cloudCurrentUser || !cloudCurrentCampaign){
+      throw new Error("Sign in to the campaign first.");
+    }
+    if(cloudCurrentMembership?.role!=="dm"){
+      throw new Error("Only the DM can download the full campaign to a device.");
+    }
+
+    const campaignId=cloudCurrentCampaign.id;
+    setCloudMigrationStatus("Reading cloud campaign…");
+    if(button)button.disabled=true;
+
+    const [stateResult,trainerResult,pokemonResult]=await Promise.all([
+      cloudSupabaseClient.from("campaign_state").select("state_data").eq("campaign_id",campaignId).maybeSingle(),
+      cloudSupabaseClient.from("trainers").select("*").eq("campaign_id",campaignId).order("created_at",{ascending:true}),
+      cloudSupabaseClient.from("owned_pokemon").select("*").eq("campaign_id",campaignId).order("created_at",{ascending:true})
+    ]);
+
+    if(stateResult.error)throw stateResult.error;
+    if(trainerResult.error)throw trainerResult.error;
+    if(pokemonResult.error)throw pokemonResult.error;
+
+    const cloudState=stateResult.data?.state_data||{};
+    const cloudTrainers=Array.isArray(trainerResult.data)?trainerResult.data:[];
+    const cloudPokemon=Array.isArray(pokemonResult.data)?pokemonResult.data:[];
+
+    if(!cloudTrainers.length && !cloudPokemon.length){
+      throw new Error("The cloud campaign does not contain trainer or Pokémon data yet.");
+    }
+
+    const ok=confirm(
+      "Download the shared cloud campaign to this device?\n\n"+
+      cloudTrainers.length+" trainers and "+cloudPokemon.length+" Pokémon will replace the campaign currently stored on this device.\n\n"+
+      "A safety backup of this device will be created first. Your cloud data will not be changed."
+    );
+    if(!ok)return;
+
+    setCloudMigrationStatus("Creating local safety backup…");
+    if(typeof createAutomaticBackupFromStorage==="function"){
+      createAutomaticBackupFromStorage("Before cloud download",true);
+    }
+
+    const persistent=cloudState.persistent_storage;
+    if(persistent && typeof persistent==="object" && !Array.isArray(persistent)){
+      const existing=[];
+      for(let i=0;i<localStorage.length;i++){
+        const key=localStorage.key(i);
+        if(typeof shouldIncludeCampaignStorageKey!=="function" || shouldIncludeCampaignStorageKey(key))existing.push(key);
+      }
+      existing.forEach(function(key){localStorage.removeItem(key);});
+      Object.keys(persistent).forEach(function(key){
+        const value=persistent[key];
+        if((typeof shouldIncludeCampaignStorageKey!=="function" || shouldIncludeCampaignStorageKey(key)) && typeof value==="string"){
+          localStorage.setItem(key,value);
+        }
+      });
+    }
+
+    const cloudToLocalTrainerId=new Map();
+    const restoredTrainers=cloudTrainers.map(function(row,index){
+      const extra=(row.extra_data && typeof row.extra_data==="object" && !Array.isArray(row.extra_data))?cloudSafeExtraData(row.extra_data):{};
+      const localId=extra.local_id!==undefined && extra.local_id!==null ? extra.local_id : ("cloud-trainer-"+row.id);
+      cloudToLocalTrainerId.set(String(row.id),localId);
+      delete extra.local_id;
+      return Object.assign(extra,{
+        id:localId,
+        name:row.name,
+        trainerType:row.trainer_type==="npc"?"NPC":"PC",
+        money:Number(row.money)||0,
+        inventory:Array.isArray(row.inventory)?row.inventory:[],
+        completed:Boolean(row.completed),
+        rewardClaimed:Boolean(row.reward_claimed),
+        rewardAmount:Number(row.reward_amount)||0
+      });
+    });
+
+    const restoredPokemon=cloudPokemon.map(function(row){
+      const extra=(row.extra_data && typeof row.extra_data==="object" && !Array.isArray(row.extra_data))?cloudSafeExtraData(row.extra_data):{};
+      const localId=extra.local_id!==undefined && extra.local_id!==null ? extra.local_id : ("cloud-pokemon-"+row.id);
+      const localTrainerId=row.trainer_id ? (cloudToLocalTrainerId.get(String(row.trainer_id))??null) : null;
+      delete extra.local_id;
+      delete extra.local_trainer_id;
+      return Object.assign(extra,{
+        id:localId,
+        trainerId:localTrainerId,
+        speciesNumber:Number(row.pokedex_number)||0,
+        speciesName:row.species,
+        species:row.species,
+        nickname:row.nickname||"",
+        level:Math.max(1,Number(row.level)||1),
+        currentHP:row.current_hp===null||row.current_hp===undefined?null:Number(row.current_hp),
+        status:row.status||"None",
+        storageLocation:row.storage_location==="pc"?"pc":"party",
+        moves:Array.isArray(row.moves)?row.moves:[],
+        movePP:(row.move_pp && typeof row.move_pp==="object" && !Array.isArray(row.move_pp))?row.move_pp:{},
+        ivs:(row.ivs && typeof row.ivs==="object")?row.ivs:{},
+        evs:(row.evs && typeof row.evs==="object")?row.evs:{},
+        stats:(row.stats && typeof row.stats==="object")?row.stats:{}
+      });
+    });
+
+    localStorage.setItem("trainers",JSON.stringify(restoredTrainers));
+    localStorage.setItem("ownedPokemon",JSON.stringify(restoredPokemon));
+
+    if(Number.isInteger(Number(cloudState.pc_pokemon_level)) && Number(cloudState.pc_pokemon_level)>=1){
+      localStorage.setItem("pcPokemonLevel",String(Number(cloudState.pc_pokemon_level)));
+    }
+    if(cloudState.kanto_map_progress && typeof cloudState.kanto_map_progress==="object"){
+      localStorage.setItem("pokemonCampaignKantoMapProgress",JSON.stringify(cloudState.kanto_map_progress));
+    }
+    if(typeof cloudState.notes==="string"){
+      localStorage.setItem("pokemonCampaignNotes",cloudState.notes);
+    }
+
+    setCloudMigrationStatus("Cloud campaign downloaded. Reloading…");
+    alert("Cloud campaign downloaded successfully.\n\n"+cloudTrainers.length+" trainers and "+cloudPokemon.length+" Pokémon are now stored on this device.\n\nThe app will reload now.");
+    window.location.reload();
+  }catch(error){
+    console.error("Cloud download failed",error);
+    setCloudMigrationStatus(error&&error.message?error.message:"Cloud download failed.",true);
+    alert("Cloud download failed: "+(error&&error.message?error.message:"Unknown error"));
   }finally{
     if(button)button.disabled=false;
   }
