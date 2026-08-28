@@ -2733,7 +2733,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 <meta name="apple-mobile-web-app-title" content="Pokémon Campaign">
 
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
-<!-- KANTO APP BUILD v34R12: player battle polish + quick refresh/map -->
+<!-- KANTO APP BUILD v34R13: player victory rewards + inline player map -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
@@ -2764,7 +2764,6 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
   <div class="player-cloud-header">
     <h1>My Trainer</h1>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
-      <button class="small-button" type="button" onclick="openPlayerKantoMap()">View Map</button>
       <button class="small-button" type="button" onclick="refreshAppFromGitHub(this)">Refresh App</button>
       <button class="small-button" type="button" onclick="cloudSignOut()">Sign Out</button>
     </div>
@@ -2790,11 +2789,13 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
         <div id="playerCloudInventoryList" class="player-cloud-inventory-list"><div class="player-cloud-empty">Loading inventory…</div></div>
       </details>
     </div>
-  </div>
-  <div id="playerCloudMapOverlay" class="player-cloud-map-overlay" onclick="if(event.target===this)closePlayerKantoMap()">
-    <div class="player-cloud-map-panel">
-      <div class="player-cloud-map-header"><h2>Kanto Map</h2><button class="small-button" type="button" onclick="closePlayerKantoMap()">Close</button></div>
-      <img class="player-cloud-map-image" src="./assets/maps/kanto-map.png?v=20260823" alt="Kanto campaign map">
+    <div class="player-cloud-card">
+      <button id="playerCloudMapToggle" class="primary-button" type="button" style="margin:0;" onclick="togglePlayerKantoMap()">View Map</button>
+      <div id="playerCloudInlineMap" style="display:none;margin-top:10px;">
+        <div class="kanto-map-shell">
+          <img class="kanto-map-image" src="./assets/maps/kanto-map.png?v=20260823" alt="Kanto campaign map" draggable="false">
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -18072,23 +18073,32 @@ function handleBattleConclusionIfNeeded() {
     }
   }
 
+  let multiplayerReward = 0;
   if (
     conclusion.result === "won" &&
     conclusion.defeatedTrainer
   ) {
-    const reward =
+    multiplayerReward =
       awardTrainerVictoryReward(
         conclusion.defeatedTrainer
       );
 
-    if (reward > 0) {
+    if (multiplayerReward > 0) {
       message +=
         "\n\nYou've received ₽" +
-        reward.toLocaleString() +
+        multiplayerReward.toLocaleString() +
         ". Every player character received ₽" +
-        reward.toLocaleString() +
+        multiplayerReward.toLocaleString() +
         ".";
     }
+  }
+
+  if (typeof cloudSetPendingBattleCompletion === "function") {
+    cloudSetPendingBattleCompletion({
+      result:conclusion.result,
+      reward:multiplayerReward,
+      opponent_name:conclusion.defeatedTrainer?.name || null
+    });
   }
 
   alert(
@@ -24193,6 +24203,8 @@ let cloudPlayerDamageRoll = null;
 let cloudPlayerDamageDraft = "";
 let cloudPlayerDamageDraftRound = null;
 let cloudBattleRoundNumber = 1;
+let cloudPendingBattleCompletion = null;
+let cloudLastNotifiedCompletedBattleId = null;
 
 function cloudStopBattlePolling(){
   if(cloudBattlePollTimer){ clearInterval(cloudBattlePollTimer); cloudBattlePollTimer=null; }
@@ -24218,14 +24230,13 @@ function cloudLocalPokemonSnapshot(pokemon){
   };
 }
 
-function openPlayerKantoMap(){
-  const overlay=document.getElementById("playerCloudMapOverlay");
-  if(overlay)overlay.classList.add("open");
-}
-
-function closePlayerKantoMap(){
-  const overlay=document.getElementById("playerCloudMapOverlay");
-  if(overlay)overlay.classList.remove("open");
+function togglePlayerKantoMap(){
+  const map=document.getElementById("playerCloudInlineMap");
+  const button=document.getElementById("playerCloudMapToggle");
+  if(!map)return;
+  const opening=map.style.display==="none" || !map.style.display;
+  map.style.display=opening?"block":"none";
+  if(button)button.textContent=opening?"Hide Map":"View Map";
 }
 
 function cloudBattleSnapshotArtworkURL(snapshot){
@@ -24289,6 +24300,7 @@ async function cloudPublishCurrentBattle(){
 
   const source=String(document.getElementById("battleOpponentSourceSelect")?.value||"wild");
   cloudBattleRoundNumber=1;
+  cloudPendingBattleCompletion=null;
   const {data:battle,error:battleError}=await cloudSupabaseClient.from("battles").insert({
     campaign_id:cloudCurrentCampaign.id,
     battle_type:source==="wild"?"wild":"trainer",
@@ -24313,16 +24325,40 @@ async function cloudPublishCurrentBattle(){
   await cloudSyncActiveBattleNow();
 }
 
+function cloudSetPendingBattleCompletion(details){
+  cloudPendingBattleCompletion=details&&typeof details==="object"?details:null;
+}
+
+async function cloudSyncPcTrainerMoney(){
+  if(!cloudSupabaseClient||cloudCurrentMembership?.role!=="dm"||!cloudCurrentCampaign||typeof trainers==="undefined")return;
+  const pcTrainers=(Array.isArray(trainers)?trainers:[]).filter(function(t){return t&&t.trainerType==="PC";});
+  for(const trainer of pcTrainers){
+    const cloudTrainer=await cloudFindTrainerByLocalId(trainer.id);
+    if(!cloudTrainer)continue;
+    await cloudSupabaseClient.from("trainers").update({
+      money:Number(trainer.money)||0,
+      updated_at:new Date().toISOString()
+    }).eq("id",cloudTrainer.id);
+  }
+}
+
 async function cloudCloseCurrentBattle(){
   if(!cloudSupabaseClient||!cloudActiveBattleId)return;
   const id=cloudActiveBattleId;
+  const completion=cloudPendingBattleCompletion;
+  cloudPendingBattleCompletion=null;
   cloudActiveBattleId=null;
   cloudActivePlayerParticipantId=null;
   cloudLastPlayerActionKey="";
   cloudPlayerDamageRoll=null;
   cloudPlayerDamageDraft="";
   cloudBattleRoundNumber=1;
-  await cloudSupabaseClient.from("battles").update({status:"completed",updated_at:new Date().toISOString()}).eq("id",id);
+  if(completion?.reward>0){
+    try{ await cloudSyncPcTrainerMoney(); }catch(error){ console.warn("Unable to sync player reward money",error); }
+  }
+  const updatePayload={status:"completed",updated_at:new Date().toISOString()};
+  if(completion)updatePayload.battle_state={completion:completion};
+  await cloudSupabaseClient.from("battles").update(updatePayload).eq("id",id);
 }
 
 async function cloudAdvanceBattleRound(){
@@ -24439,6 +24475,26 @@ function cloudStartPlayerBattlePolling(){
   cloudBattlePollTimer=setInterval(()=>{cloudLoadPlayerBattle().catch(e=>console.warn("Player battle poll warning",e));},1200);
 }
 
+async function cloudCheckPlayerBattleCompletion(){
+  if(!cloudSupabaseClient||cloudCurrentMembership?.role!=="player"||!cloudCurrentCampaign)return;
+  const {data,error}=await cloudSupabaseClient.from("battles")
+    .select("id,status,battle_state,updated_at")
+    .eq("campaign_id",cloudCurrentCampaign.id)
+    .eq("status","completed")
+    .order("updated_at",{ascending:false})
+    .limit(1);
+  if(error)throw error;
+  const battle=(data||[])[0];
+  if(!battle||battle.id===cloudLastNotifiedCompletedBattleId)return;
+  const completion=battle.battle_state?.completion;
+  if(!completion||completion.result!=="won"||Number(completion.reward)<=0)return;
+  cloudLastNotifiedCompletedBattleId=battle.id;
+  const reward=Math.max(0,Number(completion.reward)||0);
+  const opponent=completion.opponent_name?" for defeating "+completion.opponent_name:"";
+  alert("Battle Won!\n\nYou received ₽"+reward.toLocaleString()+opponent+".");
+  try{ await renderCloudPlayerPortal(); }catch(error){ console.warn("Unable to refresh player portal after reward",error); }
+}
+
 async function cloudLoadPlayerBattle(){
   const area=document.getElementById("playerCloudBattleArea");
   const battleCard=document.getElementById("playerCloudBattleCard");
@@ -24452,6 +24508,7 @@ async function cloudLoadPlayerBattle(){
     cloudPlayerDamageDraftRound=null;
     area.innerHTML="";
     if(battleCard)battleCard.style.display="none";
+    await cloudCheckPlayerBattleCompletion();
     return;
   }
   if(battleCard)battleCard.style.display="block";
