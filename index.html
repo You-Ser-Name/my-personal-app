@@ -2689,7 +2689,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 <meta name="apple-mobile-web-app-title" content="Pokémon Campaign">
 
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
-<!-- KANTO APP BUILD v34R3: Supabase authentication + DM/player role test portal -->
+<!-- KANTO APP BUILD v34R4: player-side GitHub refresh control -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
@@ -2719,13 +2719,17 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 <div id="playerCloudPage">
   <div class="player-cloud-header">
     <h1>My Trainer</h1>
-    <button class="small-button" type="button" onclick="cloudSignOut()">Sign Out</button>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button class="small-button" type="button" onclick="refreshAppFromGitHub(this)">Refresh App</button>
+      <button class="small-button" type="button" onclick="cloudSignOut()">Sign Out</button>
+    </div>
   </div>
   <div class="player-cloud-content">
     <div class="player-cloud-card">
       <div id="playerCloudTrainerName" class="player-cloud-trainer-name">Loading…</div>
       <div id="playerCloudTrainerMeta" class="player-cloud-meta"></div>
       <div id="playerCloudConnectionStatus" class="player-cloud-statusbar"></div>
+      <div id="playerCloudRefreshStatus" class="player-cloud-statusbar" style="margin-top:8px;"></div>
     </div>
     <div class="player-cloud-card">
       <h2 style="margin-top:0;">My Pokémon</h2>
@@ -23420,10 +23424,14 @@ function resetCampaignToNewInstall() {
 <script>
 
 function setGithubRefreshStatus(message,isError){
-  const status=document.getElementById('githubRefreshStatus');
-  if(!status)return;
-  status.textContent=message;
-  status.style.color=isError?'#b00020':'#166534';
+  const statuses=[
+    document.getElementById('githubRefreshStatus'),
+    document.getElementById('playerCloudRefreshStatus')
+  ].filter(Boolean);
+  for(const status of statuses){
+    status.textContent=message;
+    status.style.color=isError?'#b00020':'#166534';
+  }
 }
 
 async function refreshAppFromGitHub(button){
