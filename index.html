@@ -2689,6 +2689,23 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 .player-cloud-inventory-item { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:9px 2px; border-bottom:1px solid #eee; font-size:14px; }
 .player-cloud-inventory-item:last-child { border-bottom:0; }
 .player-cloud-inventory-qty { font-weight:900; white-space:nowrap; }
+.player-cloud-map-details { margin:0; }
+.player-cloud-map-details > summary { cursor:pointer; font-size:18px; font-weight:900; min-height:44px; display:flex; align-items:center; justify-content:space-between; gap:8px; list-style:none; }
+.player-cloud-map-details > summary::-webkit-details-marker { display:none; }
+.player-cloud-map-details > summary::after { content:"▾"; font-size:15px; color:#666; transition:transform .15s ease; }
+.player-cloud-map-details[open] > summary::after { transform:rotate(180deg); }
+.player-cloud-map-content { margin-top:8px; border-top:1px solid #eee; padding-top:10px; }
+.player-cloud-map-stage { position:relative; }
+.player-cloud-map-hotspot-layer { position:absolute; inset:0; z-index:3; }
+.player-cloud-map-hotspot { position:absolute; border:2px solid rgba(198,40,16,.55); background:rgba(255,255,255,.08); border-radius:7px; min-width:24px; min-height:24px; padding:0; margin:0; }
+.player-cloud-map-hotspot:focus-visible,.player-cloud-map-hotspot:active { outline:3px solid rgba(198,40,16,.35); background:rgba(198,40,16,.12); }
+.player-cloud-map-access-note { margin-top:8px; color:#666; font-size:12px; line-height:1.35; }
+.player-cloud-detail-map { display:none; margin-top:10px; }
+.player-cloud-detail-map.open { display:block; }
+.player-cloud-detail-map-header { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+.player-cloud-detail-map-title { font-size:17px; font-weight:900; }
+.player-cloud-detail-map img { display:block; width:100%; height:auto; border-radius:10px; border:1px solid #ddd; }
+.player-cloud-detail-map-caption { margin-top:7px; color:#555; font-size:12px; line-height:1.35; }
 @media(max-width:520px){
   .player-cloud-moves{grid-template-columns:1fr;}
   .cloud-auth-card{padding:18px;}
@@ -2733,7 +2750,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 <meta name="apple-mobile-web-app-title" content="Pokémon Campaign">
 
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
-<!-- KANTO APP BUILD v34R13: player victory rewards + inline player map -->
+<!-- KANTO APP BUILD v34R14: player map access controls + collapsible Kanto map -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
@@ -2790,12 +2807,24 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
       </details>
     </div>
     <div class="player-cloud-card">
-      <button id="playerCloudMapToggle" class="primary-button" type="button" style="margin:0;" onclick="togglePlayerKantoMap()">View Map</button>
-      <div id="playerCloudInlineMap" style="display:none;margin-top:10px;">
-        <div class="kanto-map-shell">
-          <img class="kanto-map-image" src="./assets/maps/kanto-map.png?v=20260823" alt="Kanto campaign map" draggable="false">
+      <details id="playerCloudMapDetails" class="player-cloud-map-details" ontoggle="handlePlayerKantoMapToggle(this)">
+        <summary>Kanto Map</summary>
+        <div class="player-cloud-map-content">
+          <div id="playerCloudMainMapStage" class="kanto-map-shell player-cloud-map-stage">
+            <img class="kanto-map-image" src="./assets/maps/kanto-map.png?v=20260823" alt="Kanto campaign map" draggable="false">
+            <div id="playerCloudKantoHotspotLayer" class="player-cloud-map-hotspot-layer"></div>
+          </div>
+          <div id="playerCloudMapAccessNote" class="player-cloud-map-access-note">Locations become clickable as the DM makes them available.</div>
+          <div id="playerCloudDetailMap" class="player-cloud-detail-map">
+            <div class="player-cloud-detail-map-header">
+              <div id="playerCloudDetailMapTitle" class="player-cloud-detail-map-title"></div>
+              <button class="small-button" type="button" onclick="closePlayerKantoDetailMap()">Back to Kanto Map</button>
+            </div>
+            <img id="playerCloudDetailMapImage" src="" alt="">
+            <div id="playerCloudDetailMapCaption" class="player-cloud-detail-map-caption"></div>
+          </div>
         </div>
-      </div>
+      </details>
     </div>
   </div>
 </div>
@@ -2834,6 +2863,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
         <button id="kantoDetailMapButton" class="primary-button small-button" type="button" style="display:none;grid-column:1 / -1;" onclick="openSelectedKantoDetailMap()">Open Detailed Map</button>
         <button id="kantoVisitedButton" class="small-button" type="button" onclick="toggleKantoVisited()">Mark Visited</button>
         <button id="kantoCompletedButton" class="small-button" type="button" onclick="toggleKantoCompleted()">Mark Completed</button>
+        <button id="kantoPlayerAccessButton" class="small-button" type="button" style="grid-column:1 / -1;" onclick="toggleKantoPlayerAccess()">Players: Locked</button>
       </div>
 
       <div id="kantoLocationStatus" class="kanto-location-status"></div>
@@ -10093,6 +10123,11 @@ function getKantoMapProgress() {
 
 function saveKantoMapProgress(progress) {
   localStorage.setItem(KANTO_MAP_PROGRESS_KEY, JSON.stringify(progress));
+  if (typeof cloudSyncKantoMapProgress === "function") {
+    cloudSyncKantoMapProgress().catch(function(error){
+      console.warn("Unable to sync Kanto map access", error);
+    });
+  }
 }
 
 function getKantoLocationProgress(locationId) {
@@ -10244,6 +10279,7 @@ function updateKantoLocationStatus() {
     document.getElementById("kantoLocationStatus"),
     document.getElementById("kantoDetailLocationStatus")
   ];
+  const playerAccessButton = document.getElementById("kantoPlayerAccessButton");
 
   visitedButtons.forEach(function(button) {
     if (button) button.textContent = state.visited ? "Visited ✓" : "Mark Visited";
@@ -10251,10 +10287,14 @@ function updateKantoLocationStatus() {
   completedButtons.forEach(function(button) {
     if (button) button.textContent = state.completed ? "Completed ✓" : "Mark Completed";
   });
+  if (playerAccessButton) {
+    playerAccessButton.textContent = state.playerEnabled ? "Players: Available ✓" : "Players: Locked";
+  }
   statuses.forEach(function(status) {
     if (status) status.textContent =
       (state.visited ? "Visited" : "Not visited") + " • " +
-      (state.completed ? "Completed" : "Not completed");
+      (state.completed ? "Completed" : "Not completed") + " • " +
+      (state.playerEnabled ? "Player map enabled" : "Player map locked");
   });
 }
 
@@ -10275,6 +10315,16 @@ function toggleKantoCompleted() {
   const state = progress[selectedKantoLocationId] || {visited:false,completed:false};
   state.completed = !state.completed;
   if (state.completed) state.visited = true;
+  progress[selectedKantoLocationId] = state;
+  saveKantoMapProgress(progress);
+  updateKantoLocationStatus();
+}
+
+function toggleKantoPlayerAccess() {
+  if (!selectedKantoLocationId) return;
+  const progress = getKantoMapProgress();
+  const state = progress[selectedKantoLocationId] || {visited:false,completed:false};
+  state.playerEnabled = !Boolean(state.playerEnabled);
   progress[selectedKantoLocationId] = state;
   saveKantoMapProgress(progress);
   updateKantoLocationStatus();
@@ -23906,6 +23956,10 @@ async function renderCloudPlayerPortal(){
   if (typeof cloudLoadPlayerBattle === "function") {
     await cloudLoadPlayerBattle();
   }
+  const playerMapDetails=document.getElementById("playerCloudMapDetails");
+  if(playerMapDetails?.open && typeof cloudRefreshPlayerKantoMapAccess==="function") {
+    await cloudRefreshPlayerKantoMapAccess();
+  }
 }
 
 
@@ -24230,13 +24284,97 @@ function cloudLocalPokemonSnapshot(pokemon){
   };
 }
 
-function togglePlayerKantoMap(){
-  const map=document.getElementById("playerCloudInlineMap");
-  const button=document.getElementById("playerCloudMapToggle");
-  if(!map)return;
-  const opening=map.style.display==="none" || !map.style.display;
-  map.style.display=opening?"block":"none";
-  if(button)button.textContent=opening?"Hide Map":"View Map";
+async function cloudSyncKantoMapProgress(){
+  if(!cloudSupabaseClient || !cloudCurrentCampaign || cloudCurrentMembership?.role!=="dm")return;
+  const campaignId=cloudCurrentCampaign.id;
+  const {data,error}=await cloudSupabaseClient.from("campaign_state")
+    .select("state_data")
+    .eq("campaign_id",campaignId)
+    .maybeSingle();
+  if(error)throw error;
+  const existing=(data && data.state_data && typeof data.state_data==="object") ? data.state_data : {};
+  const merged=Object.assign({},existing,{
+    kanto_map_progress:(typeof getKantoMapProgress==="function")?getKantoMapProgress():{},
+    updated_at:new Date().toISOString()
+  });
+  const {error:saveError}=await cloudSupabaseClient.from("campaign_state").upsert({
+    campaign_id:campaignId,
+    state_data:merged,
+    updated_at:new Date().toISOString()
+  },{onConflict:"campaign_id"});
+  if(saveError)throw saveError;
+}
+
+async function handlePlayerKantoMapToggle(details){
+  if(details && details.open){
+    await cloudRefreshPlayerKantoMapAccess();
+  }
+}
+
+async function cloudRefreshPlayerKantoMapAccess(){
+  if(!cloudSupabaseClient || !cloudCurrentCampaign || cloudCurrentMembership?.role!=="player")return;
+  const {data,error}=await cloudSupabaseClient.from("campaign_state")
+    .select("state_data")
+    .eq("campaign_id",cloudCurrentCampaign.id)
+    .maybeSingle();
+  if(error)throw error;
+  const progress=(data?.state_data?.kanto_map_progress && typeof data.state_data.kanto_map_progress==="object")
+    ? data.state_data.kanto_map_progress : {};
+  renderPlayerKantoHotspots(progress);
+}
+
+function renderPlayerKantoHotspots(progress){
+  const layer=document.getElementById("playerCloudKantoHotspotLayer");
+  const note=document.getElementById("playerCloudMapAccessNote");
+  if(!layer)return;
+  layer.innerHTML="";
+  let enabledCount=0;
+  (kantoMapLocations||[]).forEach(function(location){
+    const state=progress?.[location.id]||{};
+    if(!state.playerEnabled)return;
+    const detail=kantoDetailMaps?.[location.id];
+    if(!detail)return;
+    enabledCount+=1;
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="player-cloud-map-hotspot";
+    button.style.left=location.x+"%";
+    button.style.top=location.y+"%";
+    button.style.width=location.w+"%";
+    button.style.height=location.h+"%";
+    button.setAttribute("aria-label","Open "+location.name);
+    button.title="Open "+location.name;
+    button.onclick=function(event){ event.stopPropagation(); openPlayerKantoDetailMap(location.id); };
+    layer.appendChild(button);
+  });
+  if(note){
+    note.textContent=enabledCount
+      ? enabledCount+" campaign location"+(enabledCount===1?" is":"s are")+" currently available. Tap a highlighted location to open its map."
+      : "No campaign locations have been made available by the DM yet.";
+  }
+}
+
+function openPlayerKantoDetailMap(locationId){
+  const detail=kantoDetailMaps?.[locationId];
+  const location=(kantoMapLocations||[]).find(function(item){return item.id===locationId;});
+  if(!detail || !location)return;
+  const main=document.getElementById("playerCloudMainMapStage");
+  const detailWrap=document.getElementById("playerCloudDetailMap");
+  const title=document.getElementById("playerCloudDetailMapTitle");
+  const image=document.getElementById("playerCloudDetailMapImage");
+  const caption=document.getElementById("playerCloudDetailMapCaption");
+  if(main)main.style.display="none";
+  if(title)title.textContent=detail.title||location.name;
+  if(image){ image.src=detail.image; image.alt=detail.alt||((detail.title||location.name)+" map"); }
+  if(caption)caption.textContent=detail.caption||"";
+  if(detailWrap)detailWrap.classList.add("open");
+}
+
+function closePlayerKantoDetailMap(){
+  const main=document.getElementById("playerCloudMainMapStage");
+  const detailWrap=document.getElementById("playerCloudDetailMap");
+  if(detailWrap)detailWrap.classList.remove("open");
+  if(main)main.style.display="block";
 }
 
 function cloudBattleSnapshotArtworkURL(snapshot){
