@@ -24087,6 +24087,8 @@ let cloudBattlePollTimer = null;
 let cloudBattleSyncTimer = null;
 let cloudLastPlayerActionKey = "";
 let cloudPlayerDamageRoll = null;
+let cloudPlayerDamageDraft = "";
+let cloudPlayerDamageDraftRound = null;
 
 function cloudStopBattlePolling(){
   if(cloudBattlePollTimer){ clearInterval(cloudBattlePollTimer); cloudBattlePollTimer=null; }
@@ -24185,6 +24187,7 @@ async function cloudCloseCurrentBattle(){
   cloudActivePlayerParticipantId=null;
   cloudLastPlayerActionKey="";
   cloudPlayerDamageRoll=null;
+  cloudPlayerDamageDraft="";
   await cloudSupabaseClient.from("battles").update({status:"completed",updated_at:new Date().toISOString()}).eq("id",id);
 }
 
@@ -24192,6 +24195,7 @@ async function cloudAdvanceBattleRound(){
   if(!cloudSupabaseClient||!cloudActiveBattleId||cloudCurrentMembership?.role!=="dm")return;
   cloudLastPlayerActionKey="";
   cloudPlayerDamageRoll=null;
+  cloudPlayerDamageDraft="";
   await cloudSupabaseClient.from("battles").update({round_number:battleTurnNumber,updated_at:new Date().toISOString()}).eq("id",cloudActiveBattleId);
   await cloudSyncActiveBattleNow();
 }
@@ -24286,7 +24290,11 @@ async function cloudLoadPlayerBattle(){
     .eq("campaign_id",cloudCurrentCampaign.id).eq("status","active").order("updated_at",{ascending:false}).limit(1);
   if(error)throw error;
   const battle=(battles||[])[0];
-  if(!battle){ area.innerHTML='<div class="player-cloud-empty">No active battle.</div>'; return; }
+  if(!battle){ cloudPlayerDamageDraft=""; cloudPlayerDamageDraftRound=null; area.innerHTML='<div class="player-cloud-empty">No active battle.</div>'; return; }
+  if(cloudPlayerDamageDraftRound!==Number(battle.round_number)){
+    cloudPlayerDamageDraft="";
+    cloudPlayerDamageDraftRound=Number(battle.round_number);
+  }
   const {data:parts,error:partError}=await cloudSupabaseClient.from("battle_participants").select("id,side,trainer_id,pokemon_id,participant_state").eq("battle_id",battle.id);
   if(partError)throw partError;
   const mine=(parts||[]).find(p=>p.side==="player");
@@ -24298,7 +24306,15 @@ async function cloudLoadPlayerBattle(){
   if(actionError)throw actionError;
   const selected=action?.action_type==="move"?action.action_data?.move_name:null;
   const savedDamageRoll=Number(action?.action_data?.damage_roll);
-  const damageRoll=(Number.isInteger(savedDamageRoll)&&savedDamageRoll>=1&&savedDamageRoll<=20)?savedDamageRoll:"";
+  const serverDamageRoll=(Number.isInteger(savedDamageRoll)&&savedDamageRoll>=1&&savedDamageRoll<=20)?String(savedDamageRoll):"";
+  const activeDamageInput=document.getElementById("playerCloudDamageRoll");
+  const damageInputHasFocus=activeDamageInput && document.activeElement===activeDamageInput;
+  if(damageInputHasFocus){
+    cloudPlayerDamageDraft=activeDamageInput.value;
+    return; // Do not rebuild the player battle UI while iOS is editing the number field.
+  }
+  const damageRoll=cloudPlayerDamageDraft!==""?cloudPlayerDamageDraft:serverDamageRoll;
+  if(serverDamageRoll!=="" && cloudPlayerDamageDraft==="")cloudPlayerDamageDraft=serverDamageRoll;
   const moves=Array.isArray(ms.moves)?ms.moves:[];
   const pp=(ms.move_pp&&typeof ms.move_pp==="object")?ms.move_pp:{};
   const buttons=moves.map(move=>'<button class="player-cloud-battle-move '+(selected===move?'selected':'')+'" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" data-move-name="'+cloudEscape(encodeURIComponent(move))+'" onclick="cloudSubmitPlayerMoveFromButton(this)"><strong>'+cloudEscape(move)+'</strong><br>PP '+cloudEscape(pp[move]??'—')+'</button>').join('');
@@ -24308,7 +24324,7 @@ async function cloudLoadPlayerBattle(){
       '<div class="player-cloud-battle-side"><div class="player-cloud-battle-name">'+cloudEscape(os.display_name||battle.opponent_name||"Opponent")+'</div><div class="player-cloud-battle-meta">Lv. '+cloudEscape(os.level??'—')+' • HP '+cloudEscape(os.current_hp??'—')+'/'+cloudEscape(os.max_hp??'—')+'</div></div>'+
     '</div>'+
     '<div class="player-cloud-battle-moves">'+(buttons||'<div class="player-cloud-empty">No moves available.</div>')+'</div>'+
-    '<div class="player-cloud-damage-roll"><label>Damage d20 Roll</label><div class="player-cloud-damage-roll-row"><input id="playerCloudDamageRoll" type="number" inputmode="numeric" min="1" max="20" value="'+cloudEscape(damageRoll)+'" placeholder="1–20"><button class="small-button" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerDamageRollFromButton(this)">Submit Roll</button></div></div>'+
+    '<div class="player-cloud-damage-roll"><label>Damage d20 Roll</label><div class="player-cloud-damage-roll-row"><input id="playerCloudDamageRoll" type="number" inputmode="numeric" min="1" max="20" value="'+cloudEscape(damageRoll)+'" placeholder="1–20" oninput="cloudPlayerDamageDraft=this.value"><button class="small-button" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerDamageRollFromButton(this)">Submit Roll</button></div></div>'+
     '<div class="player-cloud-battle-message">The player or DM may enter the Damage d20. A player-submitted roll automatically fills the DM damage field, and the DM can override it if needed.</div>';
 }
 
@@ -24340,7 +24356,7 @@ function cloudSubmitPlayerMoveFromButton(button){
 async function cloudSubmitPlayerDamageRollFromButton(button){
   if(!button||!cloudSupabaseClient||!cloudCurrentUser)return;
   const input=document.getElementById("playerCloudDamageRoll");
-  const roll=input?Number(input.value):NaN;
+  const roll=Number(input?input.value:cloudPlayerDamageDraft);
   if(!Number.isInteger(roll)||roll<1||roll>20){
     alert("Enter a Damage d20 roll from 1 to 20.");
     return;
@@ -24367,13 +24383,15 @@ async function cloudSubmitPlayerDamageRollFromButton(button){
   };
   const {error}=await cloudSupabaseClient.from("battle_actions").upsert(payload,{onConflict:"participant_id,round_number"});
   if(error){alert("Unable to submit damage roll: "+error.message);return;}
+  cloudPlayerDamageDraft=String(roll);
   await cloudLoadPlayerBattle();
 }
 
 async function cloudSubmitPlayerMove(battleId,participantId,roundNumber,moveName){
   if(!cloudSupabaseClient||!cloudCurrentUser)return;
   const rollInput=document.getElementById("playerCloudDamageRoll");
-  const roll=rollInput?Number(rollInput.value):NaN;
+  if(rollInput)cloudPlayerDamageDraft=rollInput.value;
+  const roll=Number(rollInput?rollInput.value:cloudPlayerDamageDraft);
   const actionData={move_name:moveName};
   if(Number.isInteger(roll)&&roll>=1&&roll<=20)actionData.damage_roll=roll;
   const payload={
