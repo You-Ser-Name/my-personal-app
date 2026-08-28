@@ -2813,6 +2813,12 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
       <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
     </div>
     <div class="card" style="margin-top:14px;">
+      <h2 style="margin-top:0;">Campaign Account</h2>
+      <p style="line-height:1.5;">Sign out of the current campaign account to switch between the DM and player views.</p>
+      <button class="danger-button" style="width:100%;" type="button" onclick="cloudSignOut()">Sign Out</button>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
       <h2 style="margin-top:0;">App Updates</h2>
       <p>Checks the currently deployed GitHub Pages app, clears app caches, and reloads the newest copy without needing a version-file change.</p>
       <button class="primary-button" style="width:100%;" type="button" onclick="refreshAppFromGitHub(this)">Refresh App from GitHub</button>
