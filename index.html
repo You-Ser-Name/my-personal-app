@@ -2677,6 +2677,21 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
   .cloud-auth-card{padding:18px;}
 }
 
+
+/* =========================================================
+   CLOUD PLAYER BATTLE V2
+========================================================= */
+.player-cloud-battle-status{font-size:13px;color:#555;margin:4px 0 10px;}
+.player-cloud-battle-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;}
+.player-cloud-battle-side{background:#f5f5f5;border-radius:10px;padding:9px;text-align:center;}
+.player-cloud-battle-name{font-weight:900;font-size:16px;}
+.player-cloud-battle-meta{font-size:12px;color:#555;margin-top:3px;}
+.player-cloud-battle-moves{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px;}
+.player-cloud-battle-move{min-height:44px;padding:7px 6px;font-size:12px;}
+.player-cloud-battle-move.selected{outline:3px solid #cc0000;background:#fff4f4;}
+.player-cloud-battle-message{margin-top:9px;padding:8px;border-radius:8px;background:#eef5fb;font-size:12px;line-height:1.35;}
+@media(max-width:600px){.player-cloud-battle-grid{grid-template-columns:1fr 1fr;gap:5px}.player-cloud-battle-side{padding:7px 4px}.player-cloud-battle-name{font-size:14px}.player-cloud-battle-moves{grid-template-columns:1fr 1fr;gap:5px}.player-cloud-battle-move{font-size:10px;min-height:38px;padding:5px 4px}}
+
 </style>
 
 
@@ -2689,7 +2704,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 <meta name="apple-mobile-web-app-title" content="Pokémon Campaign">
 
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
-<!-- KANTO APP BUILD v34R4: player-side GitHub refresh control -->
+<!-- KANTO APP BUILD v34R5: multiplayer battle move sync -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
@@ -2737,7 +2752,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
     </div>
     <div class="player-cloud-card">
       <h2 style="margin-top:0;">Battle</h2>
-      <div class="player-cloud-empty">Player move controls will be enabled in the next multiplayer phase after we verify account permissions and live data.</div>
+      <div id="playerCloudBattleArea"><div class="player-cloud-empty">No active battle.</div></div>
     </div>
   </div>
 </div>
@@ -8264,6 +8279,10 @@ function savePokemon() {
       ownedPokemon
     )
   );
+
+  if (typeof scheduleCloudActiveBattleSync === "function") {
+    scheduleCloudActiveBattleSync();
+  }
 }
 
 function saveTrainers() {
@@ -8278,6 +8297,10 @@ function saveTrainers() {
       trainers
     )
   );
+
+  if (typeof scheduleCloudActiveBattleSync === "function") {
+    scheduleCloudActiveBattleSync();
+  }
 }
 
 
@@ -13255,6 +13278,12 @@ function advanceBattleTurn() {
 
   displayBattle();
 
+  if (typeof cloudAdvanceBattleRound === "function") {
+    cloudAdvanceBattleRound().catch(function(error){
+      console.warn("Unable to advance cloud battle round", error);
+    });
+  }
+
   if (
     selectedBattleMove
   ) {
@@ -13969,6 +13998,12 @@ function battleBack() {
 
 function endBattle(force=false){
   if(!force&&!confirm("End this battle?"))return;
+
+  if (typeof cloudCloseCurrentBattle === "function") {
+    cloudCloseCurrentBattle().catch(function(error){
+      console.warn("Unable to close cloud battle", error);
+    });
+  }
 
   const returnContext=battleReturnContext;
   battleReturnContext=null;
@@ -15326,6 +15361,12 @@ function startBattle() {
   resetBattleTemporaryState();
 
   displayBattle();
+
+  if (typeof cloudPublishCurrentBattle === "function") {
+    cloudPublishCurrentBattle().catch(function(error){
+      console.warn("Unable to publish multiplayer battle", error);
+    });
+  }
 }
 
 
@@ -23549,6 +23590,7 @@ function setCloudGateVisible(visible){
 
 function resetCloudRoleView(){
   document.body.classList.remove("cloud-player-mode");
+  if (typeof cloudStopBattlePolling === "function") cloudStopBattlePolling();
   cloudCurrentMembership=null;
   cloudCurrentCampaign=null;
 }
@@ -23653,6 +23695,7 @@ async function loadCloudRoleAndView(){
     document.body.classList.remove("cloud-player-mode");
     setCloudGateVisible(false);
     setCloudAuthStatus("");
+    if (typeof cloudStartDmBattlePolling === "function") cloudStartDmBattlePolling();
     return;
   }
 
@@ -23660,6 +23703,7 @@ async function loadCloudRoleAndView(){
     document.body.classList.add("cloud-player-mode");
     setCloudGateVisible(false);
     await renderCloudPlayerPortal();
+    if (typeof cloudStartPlayerBattlePolling === "function") cloudStartPlayerBattlePolling();
     return;
   }
 
@@ -23722,6 +23766,10 @@ async function renderCloudPlayerPortal(){
       '<div class="player-cloud-pokemon-top"><div><div class="player-cloud-pokemon-name">'+displayName+'</div><div class="player-cloud-meta">Lv. '+cloudEscape(p.level)+' • '+cloudEscape(p.storage_location||"party")+(p.status?' • '+cloudEscape(p.status):'')+'</div></div><div class="player-cloud-hp">HP '+hpText+'</div></div>'+
       '<div class="player-cloud-moves">'+moveHtml+'</div></div>';
   }).join("");
+
+  if (typeof cloudLoadPlayerBattle === "function") {
+    await cloudLoadPlayerBattle();
+  }
 }
 
 
@@ -23871,6 +23919,234 @@ window.addEventListener("DOMContentLoaded",function(){
   if(pwd){pwd.addEventListener("keydown",function(event){if(event.key==="Enter")cloudSignIn();});}
   initializeCloudClient();
 });
+</script>
+
+
+<script>
+/* =========================================================
+   SUPABASE MULTIPLAYER BATTLE V2
+   DM publishes the current local battle. A linked player can
+   submit a move from their own device. The DM automatically
+   receives that move as Side A's queued action.
+========================================================= */
+let cloudActiveBattleId = null;
+let cloudActivePlayerParticipantId = null;
+let cloudBattlePollTimer = null;
+let cloudBattleSyncTimer = null;
+let cloudLastPlayerActionKey = "";
+
+function cloudStopBattlePolling(){
+  if(cloudBattlePollTimer){ clearInterval(cloudBattlePollTimer); cloudBattlePollTimer=null; }
+}
+
+function cloudLocalPokemonSnapshot(pokemon){
+  if(!pokemon)return {};
+  const trainer=(typeof getTrainerById==="function")?getTrainerById(pokemon.trainerId):null;
+  return {
+    local_id:pokemon.id,
+    trainer_local_id:pokemon.trainerId??null,
+    trainer_name:trainer?.name||"Wild",
+    display_name:(typeof getPokemonName==="function")?getPokemonName(pokemon):(pokemon.nickname||pokemon.speciesName||pokemon.species||"Pokémon"),
+    species:pokemon.speciesName||pokemon.species||"Pokémon",
+    level:Number(pokemon.level)||1,
+    current_hp:Number(pokemon.currentHP)||0,
+    max_hp:Number(pokemon.stats?.hp)||0,
+    status:pokemon.status||null,
+    moves:Array.isArray(pokemon.moves)?pokemon.moves:[],
+    move_pp:(pokemon.movePP&&typeof pokemon.movePP==="object")?pokemon.movePP:{},
+    temporary_wild:Boolean(pokemon.temporaryWild)
+  };
+}
+
+async function cloudFindTrainerByLocalId(localId){
+  if(localId===null||localId===undefined||!cloudCurrentCampaign)return null;
+  const {data,error}=await cloudSupabaseClient
+    .from("trainers")
+    .select("id,name,extra_data")
+    .eq("campaign_id",cloudCurrentCampaign.id)
+    .contains("extra_data",{local_id:localId})
+    .maybeSingle();
+  if(error)throw error;
+  return data||null;
+}
+
+async function cloudFindPokemonByLocalId(localId){
+  if(localId===null||localId===undefined||!cloudCurrentCampaign)return null;
+  const {data,error}=await cloudSupabaseClient
+    .from("owned_pokemon")
+    .select("id,trainer_id,extra_data")
+    .eq("campaign_id",cloudCurrentCampaign.id)
+    .contains("extra_data",{local_id:localId})
+    .maybeSingle();
+  if(error)throw error;
+  return data||null;
+}
+
+async function cloudPublishCurrentBattle(){
+  if(!cloudSupabaseClient||cloudCurrentMembership?.role!=="dm"||!cloudCurrentCampaign)return;
+  const pokemonA=getBattlePokemon("A");
+  const pokemonB=getBattlePokemon("B");
+  if(!pokemonA||!pokemonB)return;
+
+  // Close any previously active cloud battle for this campaign.
+  await cloudSupabaseClient.from("battles").update({status:"cancelled",updated_at:new Date().toISOString()})
+    .eq("campaign_id",cloudCurrentCampaign.id).eq("status","active");
+
+  const cloudTrainerA=await cloudFindTrainerByLocalId(pokemonA.trainerId);
+  const cloudPokemonA=await cloudFindPokemonByLocalId(pokemonA.id);
+  let cloudTrainerB=null, cloudPokemonB=null;
+  if(!pokemonB.temporaryWild){
+    cloudTrainerB=await cloudFindTrainerByLocalId(pokemonB.trainerId);
+    cloudPokemonB=await cloudFindPokemonByLocalId(pokemonB.id);
+  }
+
+  const source=String(document.getElementById("battleOpponentSourceSelect")?.value||"wild");
+  const {data:battle,error:battleError}=await cloudSupabaseClient.from("battles").insert({
+    campaign_id:cloudCurrentCampaign.id,
+    battle_type:source==="wild"?"wild":"trainer",
+    status:"active",
+    round_number:battleTurnNumber,
+    source_location:activeMapWildEncounterLocationId||null,
+    opponent_name:cloudLocalPokemonSnapshot(pokemonB).trainer_name,
+    battle_state:{source:source,player_local_pokemon_id:pokemonA.id,opponent_local_pokemon_id:pokemonB.id}
+  }).select("id").single();
+  if(battleError)throw battleError;
+  cloudActiveBattleId=battle.id;
+
+  const participants=[
+    {battle_id:battle.id,trainer_id:cloudTrainerA?.id||null,pokemon_id:cloudPokemonA?.id||null,side:"player",slot_number:1,participant_state:cloudLocalPokemonSnapshot(pokemonA)},
+    {battle_id:battle.id,trainer_id:cloudTrainerB?.id||null,pokemon_id:cloudPokemonB?.id||null,side:"opponent",slot_number:1,participant_state:cloudLocalPokemonSnapshot(pokemonB)}
+  ];
+  const {data:created,error:participantError}=await cloudSupabaseClient.from("battle_participants").insert(participants).select("id,side");
+  if(participantError)throw participantError;
+  cloudActivePlayerParticipantId=(created||[]).find(p=>p.side==="player")?.id||null;
+  cloudLastPlayerActionKey="";
+  await cloudSyncActiveBattleNow();
+}
+
+async function cloudCloseCurrentBattle(){
+  if(!cloudSupabaseClient||!cloudActiveBattleId)return;
+  const id=cloudActiveBattleId;
+  cloudActiveBattleId=null;
+  cloudActivePlayerParticipantId=null;
+  cloudLastPlayerActionKey="";
+  await cloudSupabaseClient.from("battles").update({status:"completed",updated_at:new Date().toISOString()}).eq("id",id);
+}
+
+async function cloudAdvanceBattleRound(){
+  if(!cloudSupabaseClient||!cloudActiveBattleId||cloudCurrentMembership?.role!=="dm")return;
+  cloudLastPlayerActionKey="";
+  await cloudSupabaseClient.from("battles").update({round_number:battleTurnNumber,updated_at:new Date().toISOString()}).eq("id",cloudActiveBattleId);
+  await cloudSyncActiveBattleNow();
+}
+
+function scheduleCloudActiveBattleSync(){
+  if(cloudCurrentMembership?.role!=="dm"||!cloudActiveBattleId)return;
+  if(cloudBattleSyncTimer)clearTimeout(cloudBattleSyncTimer);
+  cloudBattleSyncTimer=setTimeout(()=>{cloudSyncActiveBattleNow().catch(e=>console.warn("Cloud battle sync warning",e));},350);
+}
+
+async function cloudSyncOneLocalPokemon(pokemon){
+  if(!pokemon||pokemon.temporaryWild||!cloudCurrentCampaign)return;
+  const cloudPokemon=await cloudFindPokemonByLocalId(pokemon.id);
+  if(!cloudPokemon)return;
+  await cloudSupabaseClient.from("owned_pokemon").update({
+    level:Number(pokemon.level)||1,
+    current_hp:Number(pokemon.currentHP)||0,
+    status:(pokemon.status&&pokemon.status!=="None")?pokemon.status:null,
+    storage_location:pokemon.storageLocation==="pc"?"pc":"party",
+    moves:Array.isArray(pokemon.moves)?pokemon.moves:[],
+    move_pp:(pokemon.movePP&&typeof pokemon.movePP==="object")?pokemon.movePP:{},
+    stats:(pokemon.stats&&typeof pokemon.stats==="object")?pokemon.stats:{},
+    updated_at:new Date().toISOString()
+  }).eq("id",cloudPokemon.id);
+}
+
+async function cloudSyncActiveBattleNow(){
+  if(!cloudSupabaseClient||cloudCurrentMembership?.role!=="dm"||!cloudActiveBattleId)return;
+  const a=getBattlePokemon("A"), b=getBattlePokemon("B");
+  if(!a||!b)return;
+  await Promise.all([cloudSyncOneLocalPokemon(a),cloudSyncOneLocalPokemon(b)]);
+  const {data:parts,error}=await cloudSupabaseClient.from("battle_participants").select("id,side").eq("battle_id",cloudActiveBattleId);
+  if(error)throw error;
+  for(const part of parts||[]){
+    const p=part.side==="player"?a:b;
+    await cloudSupabaseClient.from("battle_participants").update({participant_state:cloudLocalPokemonSnapshot(p)}).eq("id",part.id);
+    if(part.side==="player")cloudActivePlayerParticipantId=part.id;
+  }
+}
+
+async function cloudPullPlayerBattleAction(){
+  if(!cloudSupabaseClient||cloudCurrentMembership?.role!=="dm"||!cloudActiveBattleId||!cloudActivePlayerParticipantId)return;
+  const {data,error}=await cloudSupabaseClient.from("battle_actions").select("id,round_number,action_type,action_data,updated_at")
+    .eq("battle_id",cloudActiveBattleId).eq("participant_id",cloudActivePlayerParticipantId).eq("round_number",battleTurnNumber).maybeSingle();
+  if(error)throw error;
+  if(!data)return;
+  const key=data.id+"|"+data.updated_at+"|"+JSON.stringify(data.action_data||{});
+  if(key===cloudLastPlayerActionKey)return;
+  cloudLastPlayerActionKey=key;
+  if(data.action_type==="move" && data.action_data?.move_name){
+    const moveName=data.action_data.move_name;
+    const p=getBattlePokemon("A");
+    if(p&&Array.isArray(p.moves)&&p.moves.includes(moveName)){
+      battleTurnMoves.A=moveName;
+      battleTurnOrder=[]; selectedBattleMove=null; lastBattleEffectMessage="";
+      displayBattle();
+    }
+  }
+}
+
+function cloudStartDmBattlePolling(){
+  cloudStopBattlePolling();
+  cloudBattlePollTimer=setInterval(()=>{cloudPullPlayerBattleAction().catch(e=>console.warn("Player action poll warning",e));},1200);
+}
+
+function cloudStartPlayerBattlePolling(){
+  cloudStopBattlePolling();
+  cloudBattlePollTimer=setInterval(()=>{cloudLoadPlayerBattle().catch(e=>console.warn("Player battle poll warning",e));},1200);
+}
+
+async function cloudLoadPlayerBattle(){
+  const area=document.getElementById("playerCloudBattleArea");
+  if(!area||!cloudSupabaseClient||cloudCurrentMembership?.role!=="player"||!cloudCurrentCampaign)return;
+  const {data:battles,error}=await cloudSupabaseClient.from("battles").select("id,round_number,status,opponent_name,updated_at")
+    .eq("campaign_id",cloudCurrentCampaign.id).eq("status","active").order("updated_at",{ascending:false}).limit(1);
+  if(error)throw error;
+  const battle=(battles||[])[0];
+  if(!battle){ area.innerHTML='<div class="player-cloud-empty">No active battle.</div>'; return; }
+  const {data:parts,error:partError}=await cloudSupabaseClient.from("battle_participants").select("id,side,trainer_id,pokemon_id,participant_state").eq("battle_id",battle.id);
+  if(partError)throw partError;
+  const mine=(parts||[]).find(p=>p.side==="player");
+  const opp=(parts||[]).find(p=>p.side==="opponent");
+  if(!mine){ area.innerHTML='<div class="player-cloud-empty">No player participant is assigned to this battle.</div>'; return; }
+  const ms=mine.participant_state||{}, os=opp?.participant_state||{};
+  const {data:action,error:actionError}=await cloudSupabaseClient.from("battle_actions").select("id,action_type,action_data,round_number")
+    .eq("battle_id",battle.id).eq("participant_id",mine.id).eq("round_number",battle.round_number).maybeSingle();
+  if(actionError)throw actionError;
+  const selected=action?.action_type==="move"?action.action_data?.move_name:null;
+  const moves=Array.isArray(ms.moves)?ms.moves:[];
+  const pp=(ms.move_pp&&typeof ms.move_pp==="object")?ms.move_pp:{};
+  const buttons=moves.map(move=>'<button class="player-cloud-battle-move '+(selected===move?'selected':'')+'" type="button" onclick="cloudSubmitPlayerMove('+JSON.stringify(battle.id)+','+JSON.stringify(mine.id)+','+Number(battle.round_number)+','+JSON.stringify(move).replace(/"/g,'&quot;')+')"><strong>'+cloudEscape(move)+'</strong><br>PP '+cloudEscape(pp[move]??'—')+'</button>').join('');
+  area.innerHTML='<div class="player-cloud-battle-status"><strong>Round '+cloudEscape(battle.round_number)+'</strong> • '+(selected?'Move submitted: '+cloudEscape(selected):'Choose your move')+'</div>'+
+    '<div class="player-cloud-battle-grid">'+
+      '<div class="player-cloud-battle-side"><div class="player-cloud-battle-name">'+cloudEscape(ms.display_name||"Your Pokémon")+'</div><div class="player-cloud-battle-meta">Lv. '+cloudEscape(ms.level??'—')+' • HP '+cloudEscape(ms.current_hp??'—')+'/'+cloudEscape(ms.max_hp??'—')+'</div></div>'+
+      '<div class="player-cloud-battle-side"><div class="player-cloud-battle-name">'+cloudEscape(os.display_name||battle.opponent_name||"Opponent")+'</div><div class="player-cloud-battle-meta">Lv. '+cloudEscape(os.level??'—')+' • HP '+cloudEscape(os.current_hp??'—')+'/'+cloudEscape(os.max_hp??'—')+'</div></div>'+
+    '</div>'+
+    '<div class="player-cloud-battle-moves">'+(buttons||'<div class="player-cloud-empty">No moves available.</div>')+'</div>'+
+    '<div class="player-cloud-battle-message">You may change your move until the DM confirms the turn.</div>';
+}
+
+async function cloudSubmitPlayerMove(battleId,participantId,roundNumber,moveName){
+  if(!cloudSupabaseClient||!cloudCurrentUser)return;
+  const payload={
+    battle_id:battleId, participant_id:participantId, submitted_by_user_id:cloudCurrentUser.id,
+    round_number:Number(roundNumber), action_type:"move", action_data:{move_name:moveName},
+    is_locked:false,is_resolved:false,updated_at:new Date().toISOString()
+  };
+  const {error}=await cloudSupabaseClient.from("battle_actions").upsert(payload,{onConflict:"participant_id,round_number"});
+  if(error){ alert("Unable to submit move: "+error.message); return; }
+  await cloudLoadPlayerBattle();
+}
 </script>
 
 </body>
