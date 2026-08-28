@@ -2704,7 +2704,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 <meta name="apple-mobile-web-app-title" content="Pokémon Campaign">
 
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
-<!-- KANTO APP BUILD v34R5: multiplayer battle move sync -->
+<!-- KANTO APP BUILD v34R6: player battle move touch fix -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
@@ -24258,7 +24258,7 @@ async function cloudLoadPlayerBattle(){
   const selected=action?.action_type==="move"?action.action_data?.move_name:null;
   const moves=Array.isArray(ms.moves)?ms.moves:[];
   const pp=(ms.move_pp&&typeof ms.move_pp==="object")?ms.move_pp:{};
-  const buttons=moves.map(move=>'<button class="player-cloud-battle-move '+(selected===move?'selected':'')+'" type="button" onclick="cloudSubmitPlayerMove('+JSON.stringify(battle.id)+','+JSON.stringify(mine.id)+','+Number(battle.round_number)+','+JSON.stringify(move).replace(/"/g,'&quot;')+')"><strong>'+cloudEscape(move)+'</strong><br>PP '+cloudEscape(pp[move]??'—')+'</button>').join('');
+  const buttons=moves.map(move=>'<button class="player-cloud-battle-move '+(selected===move?'selected':'')+'" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" data-move-name="'+cloudEscape(encodeURIComponent(move))+'" onclick="cloudSubmitPlayerMoveFromButton(this)"><strong>'+cloudEscape(move)+'</strong><br>PP '+cloudEscape(pp[move]??'—')+'</button>').join('');
   area.innerHTML='<div class="player-cloud-battle-status"><strong>Round '+cloudEscape(battle.round_number)+'</strong> • '+(selected?'Move submitted: '+cloudEscape(selected):'Choose your move')+'</div>'+
     '<div class="player-cloud-battle-grid">'+
       '<div class="player-cloud-battle-side"><div class="player-cloud-battle-name">'+cloudEscape(ms.display_name||"Your Pokémon")+'</div><div class="player-cloud-battle-meta">Lv. '+cloudEscape(ms.level??'—')+' • HP '+cloudEscape(ms.current_hp??'—')+'/'+cloudEscape(ms.max_hp??'—')+'</div></div>'+
@@ -24266,6 +24266,31 @@ async function cloudLoadPlayerBattle(){
     '</div>'+
     '<div class="player-cloud-battle-moves">'+(buttons||'<div class="player-cloud-empty">No moves available.</div>')+'</div>'+
     '<div class="player-cloud-battle-message">You may change your move until the DM confirms the turn.</div>';
+}
+
+function cloudSubmitPlayerMoveFromButton(button){
+  if(!button)return;
+  const battleId=button.dataset.battleId||"";
+  const participantId=button.dataset.participantId||"";
+  const roundNumber=Number(button.dataset.roundNumber)||1;
+  let moveName=button.dataset.moveName||"";
+  try{ moveName=decodeURIComponent(moveName); }catch(e){}
+
+  // Give immediate visual feedback on touch devices instead of waiting for
+  // the cloud round trip and next polling refresh.
+  const group=button.closest(".player-cloud-battle-moves");
+  if(group){
+    group.querySelectorAll(".player-cloud-battle-move").forEach(btn=>btn.classList.remove("selected"));
+  }
+  button.classList.add("selected");
+  const status=document.querySelector("#playerCloudBattleArea .player-cloud-battle-status");
+  if(status)status.innerHTML='<strong>Round '+cloudEscape(roundNumber)+'</strong> • Submitting '+cloudEscape(moveName)+'…';
+
+  cloudSubmitPlayerMove(battleId,participantId,roundNumber,moveName).catch(error=>{
+    console.error("Player move submission failed",error);
+    alert("Unable to submit move: "+(error?.message||error));
+    cloudLoadPlayerBattle().catch(()=>{});
+  });
 }
 
 async function cloudSubmitPlayerMove(battleId,participantId,roundNumber,moveName){
