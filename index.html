@@ -2721,7 +2721,8 @@ select {
       <p style="text-align:center;line-height:1.5;">
         Export your complete campaign as a JSON file, including Pokémon,
         trainers, inventories, money, completed trainers, encounter/reward
-        state, PC level, Kanto route/town visited/completed progress, and gym badge progress.
+        state, PC level, Kanto route/town visited/completed progress, gym badge progress,
+        campaign notes, and other persistent campaign data added by future app features.
         On iPhone or iPad, use <strong>Share / Save to Files</strong> if you
         want to place the backup directly in the Files app.
       </p>
@@ -2783,8 +2784,8 @@ select {
         </summary>
 
         <p style="line-height:1.5;">
-          Manual snapshots include the same campaign/progress data as exported
-          backups, including Kanto map progress, gym badges, and completed route encounters.
+          Manual snapshots include the same persistent campaign data as exported
+          backups, including notes, Kanto map progress, gym badges, and completed route encounters.
           The app keeps only the newest 12 manual snapshots.
         </p>
 
@@ -2806,7 +2807,7 @@ select {
         </summary>
 
         <p style="line-height:1.5;">
-          Automatic snapshots include campaign data plus Kanto map progress
+          Automatic snapshots include persistent campaign data, notes, and Kanto map progress
           whenever the app creates a new snapshot. The app keeps only the newest
           12 automatic snapshots. Older automatic snapshots are removed automatically.
         </p>
@@ -6571,7 +6572,7 @@ const CAMPAIGN_BACKUP_FORMAT =
   "pokemon-campaign-backup";
 
 const CAMPAIGN_BACKUP_VERSION =
-  2;
+  3;
 
 const AUTOMATIC_BACKUP_KEY =
   "pokemonCampaignAutoBackups";
@@ -6602,7 +6603,74 @@ function safelyParseJSON(
 }
 
 
+const CAMPAIGN_STORAGE_EXCLUDED_KEYS = new Set([
+  AUTOMATIC_BACKUP_KEY,
+  MANUAL_BACKUP_KEY
+]);
+
+
+function shouldIncludeCampaignStorageKey(key) {
+  if (!key) return false;
+
+  if (CAMPAIGN_STORAGE_EXCLUDED_KEYS.has(key)) {
+    return false;
+  }
+
+  /*
+    One-time migration / cleanup markers are app housekeeping,
+    not campaign state. Everything else in localStorage is treated
+    as persistent campaign data so future features are automatically
+    included in backups without having to update the backup schema.
+  */
+  if (key.indexOf("pokemonCampaignKantoRebuildCleanup") === 0) {
+    return false;
+  }
+
+  return true;
+}
+
+
+function getPersistentCampaignStorageSnapshot() {
+  const snapshot = {};
+
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+
+    if (!shouldIncludeCampaignStorageKey(key)) {
+      continue;
+    }
+
+    snapshot[key] = localStorage.getItem(key);
+  }
+
+  return snapshot;
+}
+
+
+function isValidPersistentStorageSnapshot(snapshot) {
+  if (
+    !snapshot ||
+    typeof snapshot !== "object" ||
+    Array.isArray(snapshot)
+  ) {
+    return false;
+  }
+
+  return Object.keys(snapshot).every(function(key) {
+    return (
+      shouldIncludeCampaignStorageKey(key) &&
+      (
+        typeof snapshot[key] === "string" ||
+        snapshot[key] === null
+      )
+    );
+  });
+}
+
+
 function readPersistedCampaignRaw() {
+  const persistentStorage =
+    getPersistentCampaignStorageSnapshot();
 
   return {
     ownedPokemon:
@@ -6620,7 +6688,13 @@ function readPersistedCampaignRaw() {
     kantoMapProgress:
       localStorage.getItem(
         "pokemonCampaignKantoMapProgress"
-      )
+      ),
+    notes:
+      localStorage.getItem(
+        "pokemonCampaignNotes"
+      ),
+    persistentStorage:
+      persistentStorage
   };
 }
 
@@ -6635,7 +6709,12 @@ function rawCampaignHasData(
       raw.ownedPokemon !== null ||
       raw.trainers !== null ||
       raw.pcPokemonLevel !== null ||
-      raw.kantoMapProgress !== null
+      raw.kantoMapProgress !== null ||
+      raw.notes !== null ||
+      (
+        raw.persistentStorage &&
+        Object.keys(raw.persistentStorage).length
+      )
     )
   );
 }
@@ -6645,19 +6724,23 @@ function getRawCampaignSignature(
   raw
 ) {
 
+  if (
+    raw &&
+    isValidPersistentStorageSnapshot(
+      raw.persistentStorage
+    )
+  ) {
+    return JSON.stringify(
+      raw.persistentStorage
+    );
+  }
+
   return JSON.stringify([
-    raw
-    ? raw.ownedPokemon
-    : null,
-    raw
-    ? raw.trainers
-    : null,
-    raw
-    ? raw.pcPokemonLevel
-    : null,
-    raw
-    ? raw.kantoMapProgress
-    : null
+    raw ? raw.ownedPokemon : null,
+    raw ? raw.trainers : null,
+    raw ? raw.pcPokemonLevel : null,
+    raw ? raw.kantoMapProgress : null,
+    raw ? raw.notes : null
   ]);
 }
 
@@ -6880,6 +6963,14 @@ function createManualLocalSnapshot() {
 
 function getCurrentCampaignBackupObject() {
 
+  const savedNotes =
+    safelyParseJSON(
+      localStorage.getItem(
+        "pokemonCampaignNotes"
+      ),
+      []
+    );
+
   return {
     format:
       CAMPAIGN_BACKUP_FORMAT,
@@ -6908,7 +6999,18 @@ function getCurrentCampaignBackupObject() {
         ? pcPokemonLevel
         : 5,
       kantoMapProgress:
-        getKantoMapProgress()
+        getKantoMapProgress(),
+      notes:
+        Array.isArray(savedNotes)
+        ? savedNotes
+        : [],
+
+      /*
+        Future-proof copy of all persistent app/campaign localStorage
+        values except backup history and one-time housekeeping markers.
+      */
+      persistentStorage:
+        getPersistentCampaignStorageSnapshot()
     }
   };
 }
@@ -6976,6 +7078,47 @@ function validateImportedCampaignBackup(
     }
 
     let kantoMapProgress = null;
+    let notes = [];
+    let persistentStorage = null;
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        backup.data,
+        "notes"
+      )
+    ) {
+      if (!Array.isArray(backup.data.notes)) {
+        return {
+          valid:false,
+          message:
+            "The backup contains invalid campaign notes."
+        };
+      }
+
+      notes = backup.data.notes;
+    }
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        backup.data,
+        "persistentStorage"
+      )
+    ) {
+      if (
+        !isValidPersistentStorageSnapshot(
+          backup.data.persistentStorage
+        )
+      ) {
+        return {
+          valid:false,
+          message:
+            "The backup contains invalid persistent campaign storage."
+        };
+      }
+
+      persistentStorage =
+        backup.data.persistentStorage;
+    }
 
     if (
       Object.prototype.hasOwnProperty.call(
@@ -7012,7 +7155,11 @@ function validateImportedCampaignBackup(
         pcPokemonLevel:
           level,
         kantoMapProgress:
-          kantoMapProgress
+          kantoMapProgress,
+        notes:
+          notes,
+        persistentStorage:
+          persistentStorage
       }
     };
   }
@@ -7061,7 +7208,13 @@ function validateImportedCampaignBackup(
               )
             )
               ? backup.kantoMapProgress
-              : null
+              : null,
+          notes:
+            Array.isArray(backup.notes)
+              ? backup.notes
+              : [],
+          persistentStorage:
+            null
         }
       };
     }
@@ -7270,6 +7423,46 @@ function persistImportedCampaignData(
   data
 ) {
 
+  /*
+    A restore replaces current campaign-state keys while preserving
+    backup history and app housekeeping markers. This keeps old backups
+    compatible while allowing new persistent features to round-trip
+    automatically through persistentStorage.
+  */
+  const existingKeys = [];
+
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+    if (shouldIncludeCampaignStorageKey(key)) {
+      existingKeys.push(key);
+    }
+  }
+
+  existingKeys.forEach(function(key) {
+    localStorage.removeItem(key);
+  });
+
+  if (
+    data.persistentStorage &&
+    isValidPersistentStorageSnapshot(
+      data.persistentStorage
+    )
+  ) {
+    Object.keys(data.persistentStorage).forEach(function(key) {
+      const value = data.persistentStorage[key];
+
+      if (
+        shouldIncludeCampaignStorageKey(key) &&
+        typeof value === "string"
+      ) {
+        localStorage.setItem(key, value);
+      }
+    });
+
+    return;
+  }
+
+  /* Legacy backup restore path. */
   localStorage.setItem(
     "ownedPokemon",
     JSON.stringify(
@@ -7306,6 +7499,15 @@ function persistImportedCampaignData(
       )
     );
   }
+
+  localStorage.setItem(
+    "pokemonCampaignNotes",
+    JSON.stringify(
+      Array.isArray(data.notes)
+        ? data.notes
+        : []
+    )
+  );
 }
 
 
@@ -7484,6 +7686,75 @@ function getAutomaticBackupSummary(
 }
 
 
+function campaignDataFromRawSnapshot(raw) {
+  const pokemon =
+    safelyParseJSON(
+      raw.ownedPokemon,
+      []
+    );
+
+  const backupTrainers =
+    safelyParseJSON(
+      raw.trainers,
+      []
+    );
+
+  const level =
+    Number(
+      raw.pcPokemonLevel
+    );
+
+  if (
+    !Array.isArray(pokemon) ||
+    !Array.isArray(backupTrainers) ||
+    !Number.isInteger(level) ||
+    level < 1 ||
+    level > 100
+  ) {
+    return null;
+  }
+
+  const kantoMapProgress =
+    safelyParseJSON(
+      raw.kantoMapProgress,
+      null
+    );
+
+  const notes =
+    safelyParseJSON(
+      raw.notes,
+      []
+    );
+
+  return {
+    ownedPokemon:
+      pokemon,
+    trainers:
+      backupTrainers,
+    pcPokemonLevel:
+      level,
+    kantoMapProgress:
+      (
+        kantoMapProgress &&
+        typeof kantoMapProgress === "object" &&
+        !Array.isArray(kantoMapProgress)
+      )
+        ? kantoMapProgress
+        : null,
+    notes:
+      Array.isArray(notes)
+        ? notes
+        : [],
+    persistentStorage:
+      isValidPersistentStorageSnapshot(
+        raw.persistentStorage
+      )
+        ? raw.persistentStorage
+        : null
+  };
+}
+
+
 function restoreManualBackup(
   snapshotId
 ) {
@@ -7506,68 +7777,20 @@ function restoreManualBackup(
     return;
   }
 
-  const pokemon =
-    safelyParseJSON(
-      snapshot.raw.ownedPokemon,
-      []
+  const data =
+    campaignDataFromRawSnapshot(
+      snapshot.raw
     );
 
-  const backupTrainers =
-    safelyParseJSON(
-      snapshot.raw.trainers,
-      []
-    );
-
-  const level =
-    Number(
-      snapshot.raw.pcPokemonLevel
-    );
-
-  if (
-    !Array.isArray(
-      pokemon
-    ) ||
-    !Array.isArray(
-      backupTrainers
-    ) ||
-    !Number.isInteger(
-      level
-    ) ||
-    level < 1 ||
-    level > 100
-  ) {
+  if (!data) {
     alert(
       "That manual backup is invalid and cannot be restored."
     );
     return;
   }
 
-  const kantoMapProgress =
-    safelyParseJSON(
-      snapshot.raw.kantoMapProgress,
-      null
-    );
-
   restoreValidatedCampaignData(
-    {
-      ownedPokemon:
-        pokemon,
-      trainers:
-        backupTrainers,
-      pcPokemonLevel:
-        level,
-      kantoMapProgress:
-        (
-          kantoMapProgress &&
-          typeof kantoMapProgress ===
-            "object" &&
-          !Array.isArray(
-            kantoMapProgress
-          )
-        )
-          ? kantoMapProgress
-          : null
-    },
+    data,
     "the selected manual backup"
   );
 }
@@ -7699,68 +7922,20 @@ function restoreAutomaticBackup(
     return;
   }
 
-  const pokemon =
-    safelyParseJSON(
-      snapshot.raw.ownedPokemon,
-      []
+  const data =
+    campaignDataFromRawSnapshot(
+      snapshot.raw
     );
 
-  const backupTrainers =
-    safelyParseJSON(
-      snapshot.raw.trainers,
-      []
-    );
-
-  const level =
-    Number(
-      snapshot.raw.pcPokemonLevel
-    );
-
-  if (
-    !Array.isArray(
-      pokemon
-    ) ||
-    !Array.isArray(
-      backupTrainers
-    ) ||
-    !Number.isInteger(
-      level
-    ) ||
-    level < 1 ||
-    level > 100
-  ) {
+  if (!data) {
     alert(
       "That automatic backup is invalid and cannot be restored."
     );
     return;
   }
 
-  const kantoMapProgress =
-    safelyParseJSON(
-      snapshot.raw.kantoMapProgress,
-      null
-    );
-
   restoreValidatedCampaignData(
-    {
-      ownedPokemon:
-        pokemon,
-      trainers:
-        backupTrainers,
-      pcPokemonLevel:
-        level,
-      kantoMapProgress:
-        (
-          kantoMapProgress &&
-          typeof kantoMapProgress ===
-            "object" &&
-          !Array.isArray(
-            kantoMapProgress
-          )
-        )
-          ? kantoMapProgress
-          : null
-    },
+    data,
     "the selected automatic backup"
   );
 }
