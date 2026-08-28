@@ -2665,7 +2665,15 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 .player-cloud-pokemon {
   border:1px solid #e0e0e0; border-radius:12px; padding:12px; margin-top:9px;
 }
-.player-cloud-pokemon-top { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+.player-cloud-pokemon-top { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+.player-cloud-pokemon-identity { display:flex; gap:10px; align-items:center; min-width:0; flex:1; }
+.player-cloud-pokemon-icon-wrap { width:58px; height:58px; flex:0 0 58px; border-radius:10px; background:#f6f6f6; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px solid #e4e4e4; }
+.player-cloud-pokemon-icon { width:54px; height:54px; object-fit:contain; display:block; }
+.player-cloud-pokemon-icon-fallback { display:none; font-size:10px; color:#777; text-align:center; line-height:1.1; padding:4px; }
+.player-cloud-pokemon-info { min-width:0; }
+.player-cloud-moves-details { margin-top:8px; border-top:1px solid #eee; padding-top:7px; }
+.player-cloud-moves-details > summary { cursor:pointer; font-weight:800; font-size:13px; color:#444; min-height:34px; display:flex; align-items:center; }
+.player-cloud-moves-details[open] > summary { margin-bottom:5px; }
 .player-cloud-pokemon-name { font-size:18px; font-weight:900; }
 .player-cloud-hp { font-weight:900; white-space:nowrap; }
 .player-cloud-moves { margin-top:9px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
@@ -2708,7 +2716,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 <meta name="apple-mobile-web-app-title" content="Pokémon Campaign">
 
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
-<!-- KANTO APP BUILD v34R7: battle duplicate fix + shared damage d20 -->
+<!-- KANTO APP BUILD v34R10: player battle priority + compact roster + live swap sync -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
@@ -2750,13 +2758,13 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
       <div id="playerCloudConnectionStatus" class="player-cloud-statusbar"></div>
       <div id="playerCloudRefreshStatus" class="player-cloud-statusbar" style="margin-top:8px;"></div>
     </div>
+    <div id="playerCloudBattleCard" class="player-cloud-card" style="display:none;">
+      <h2 style="margin-top:0;">Battle</h2>
+      <div id="playerCloudBattleArea"></div>
+    </div>
     <div class="player-cloud-card">
       <h2 style="margin-top:0;">My Pokémon</h2>
       <div id="playerCloudPokemonList"><div class="player-cloud-empty">Loading Pokémon…</div></div>
-    </div>
-    <div class="player-cloud-card">
-      <h2 style="margin-top:0;">Battle</h2>
-      <div id="playerCloudBattleArea"><div class="player-cloud-empty">No active battle.</div></div>
     </div>
   </div>
 </div>
@@ -23741,6 +23749,24 @@ function cloudEscape(value){
   });
 }
 
+function cloudPokemonArtworkURL(pokemon){
+  const number=Number(pokemon?.pokedex_number);
+  if(!Number.isInteger(number))return "";
+  const dbPokemon=(typeof pokemonDatabase!=="undefined" && Array.isArray(pokemonDatabase))
+    ? pokemonDatabase.find(entry=>Number(entry.number)===number)
+    : null;
+  if(!dbPokemon || typeof getPokemonFandomArtworkURL!=="function")return "";
+  return getPokemonFandomArtworkURL(dbPokemon);
+}
+
+function handleCloudPokemonArtworkError(image){
+  if(!image)return;
+  image.style.display="none";
+  const wrap=image.parentElement;
+  const fallback=wrap?wrap.querySelector(".player-cloud-pokemon-icon-fallback"):null;
+  if(fallback)fallback.style.display="block";
+}
+
 async function renderCloudPlayerPortal(){
   const nameEl=document.getElementById("playerCloudTrainerName");
   const metaEl=document.getElementById("playerCloudTrainerMeta");
@@ -23787,9 +23813,17 @@ async function renderCloudPlayerPortal(){
       const val=pp[move];
       return '<div class="player-cloud-move"><strong>'+cloudEscape(move)+'</strong>'+(val!==undefined?'<br>PP '+cloudEscape(val):'')+'</div>';
     }).join(""):'<div class="player-cloud-move">No moves listed</div>';
+    const artworkURL=cloudPokemonArtworkURL(p);
+    const iconHtml=artworkURL
+      ? '<img class="player-cloud-pokemon-icon" src="'+cloudEscape(artworkURL)+'" alt="'+cloudEscape(p.species||"Pokémon")+'" loading="lazy" referrerpolicy="no-referrer" onerror="handleCloudPokemonArtworkError(this)"><span class="player-cloud-pokemon-icon-fallback">No image</span>'
+      : '<span class="player-cloud-pokemon-icon-fallback" style="display:block;">No image</span>';
     return '<div class="player-cloud-pokemon">'+
-      '<div class="player-cloud-pokemon-top"><div><div class="player-cloud-pokemon-name">'+displayName+'</div><div class="player-cloud-meta">Lv. '+cloudEscape(p.level)+' • '+cloudEscape(p.storage_location||"party")+(p.status?' • '+cloudEscape(p.status):'')+'</div></div><div class="player-cloud-hp">HP '+hpText+'</div></div>'+
-      '<div class="player-cloud-moves">'+moveHtml+'</div></div>';
+      '<div class="player-cloud-pokemon-top">'+
+        '<div class="player-cloud-pokemon-identity"><span class="player-cloud-pokemon-icon-wrap">'+iconHtml+'</span><div class="player-cloud-pokemon-info"><div class="player-cloud-pokemon-name">'+displayName+'</div><div class="player-cloud-meta">Lv. '+cloudEscape(p.level)+' • '+cloudEscape(p.storage_location||"party")+(p.status?' • '+cloudEscape(p.status):'')+'</div></div></div>'+
+        '<div class="player-cloud-hp">HP '+hpText+'</div>'+
+      '</div>'+
+      '<details class="player-cloud-moves-details"><summary>Moves ('+moves.length+')</summary><div class="player-cloud-moves">'+moveHtml+'</div></details>'+
+    '</div>';
   }).join("");
 
   if (typeof cloudLoadPlayerBattle === "function") {
@@ -24244,6 +24278,11 @@ async function cloudSyncActiveBattleNow(){
     await cloudSupabaseClient.from("battle_participants").update({participant_state:cloudLocalPokemonSnapshot(p)}).eq("id",part.id);
     if(part.side==="player")cloudActivePlayerParticipantId=part.id;
   }
+  const opponentSnapshot=cloudLocalPokemonSnapshot(b);
+  await cloudSupabaseClient.from("battles").update({
+    opponent_name:opponentSnapshot.display_name||opponentSnapshot.trainer_name||"Opponent",
+    updated_at:new Date().toISOString()
+  }).eq("id",cloudActiveBattleId);
 }
 
 async function cloudPullPlayerBattleAction(){
@@ -24285,7 +24324,12 @@ async function cloudPullPlayerBattleAction(){
 
 function cloudStartDmBattlePolling(){
   cloudStopBattlePolling();
-  cloudBattlePollTimer=setInterval(()=>{cloudPullPlayerBattleAction().catch(e=>console.warn("Player action poll warning",e));},1200);
+  cloudBattlePollTimer=setInterval(()=>{
+    // Keep the active participant snapshots current even when a fainted Pokémon
+    // is replaced through a UI path that does not save the roster itself.
+    cloudSyncActiveBattleNow().catch(e=>console.warn("Cloud battle state sync warning",e));
+    cloudPullPlayerBattleAction().catch(e=>console.warn("Player action poll warning",e));
+  },1200);
 }
 
 function cloudStartPlayerBattlePolling(){
@@ -24295,12 +24339,20 @@ function cloudStartPlayerBattlePolling(){
 
 async function cloudLoadPlayerBattle(){
   const area=document.getElementById("playerCloudBattleArea");
+  const battleCard=document.getElementById("playerCloudBattleCard");
   if(!area||!cloudSupabaseClient||cloudCurrentMembership?.role!=="player"||!cloudCurrentCampaign)return;
   const {data:battles,error}=await cloudSupabaseClient.from("battles").select("id,round_number,status,opponent_name,updated_at")
     .eq("campaign_id",cloudCurrentCampaign.id).eq("status","active").order("updated_at",{ascending:false}).limit(1);
   if(error)throw error;
   const battle=(battles||[])[0];
-  if(!battle){ cloudPlayerDamageDraft=""; cloudPlayerDamageDraftRound=null; area.innerHTML='<div class="player-cloud-empty">No active battle.</div>'; return; }
+  if(!battle){
+    cloudPlayerDamageDraft="";
+    cloudPlayerDamageDraftRound=null;
+    area.innerHTML="";
+    if(battleCard)battleCard.style.display="none";
+    return;
+  }
+  if(battleCard)battleCard.style.display="block";
   if(cloudPlayerDamageDraftRound!==Number(battle.round_number)){
     cloudPlayerDamageDraft="";
     cloudPlayerDamageDraftRound=Number(battle.round_number);
@@ -24309,7 +24361,11 @@ async function cloudLoadPlayerBattle(){
   if(partError)throw partError;
   const mine=(parts||[]).find(p=>p.side==="player");
   const opp=(parts||[]).find(p=>p.side==="opponent");
-  if(!mine){ area.innerHTML='<div class="player-cloud-empty">No player participant is assigned to this battle.</div>'; return; }
+  if(!mine){
+    area.innerHTML='<div class="player-cloud-empty">No player participant is assigned to this battle.</div>';
+    if(battleCard)battleCard.style.display="block";
+    return;
+  }
   const ms=mine.participant_state||{}, os=opp?.participant_state||{};
   const {data:action,error:actionError}=await cloudSupabaseClient.from("battle_actions").select("id,action_type,action_data,round_number")
     .eq("battle_id",battle.id).eq("participant_id",mine.id).eq("round_number",battle.round_number).maybeSingle();
