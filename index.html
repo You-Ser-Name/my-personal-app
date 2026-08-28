@@ -2703,6 +2703,14 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 .player-cloud-battle-side{background:#f5f5f5;border-radius:10px;padding:9px;text-align:center;}
 .player-cloud-battle-name{font-weight:900;font-size:16px;}
 .player-cloud-battle-meta{font-size:12px;color:#555;margin-top:3px;}
+.player-cloud-battle-art{width:86px;height:86px;object-fit:contain;display:block;margin:2px auto 5px;}
+.player-cloud-battle-art-fallback{height:86px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#777;}
+.player-cloud-map-overlay{display:none;position:fixed;inset:0;z-index:50000;background:rgba(0,0,0,.78);padding:14px;overflow:auto;}
+.player-cloud-map-overlay.open{display:block;}
+.player-cloud-map-panel{max-width:900px;margin:0 auto;background:#fff;border-radius:14px;padding:12px;}
+.player-cloud-map-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.player-cloud-map-header h2{margin:0;}
+.player-cloud-map-image{display:block;width:100%;height:auto;border-radius:10px;border:1px solid #ddd;}
 .player-cloud-battle-moves{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px;}
 .player-cloud-battle-move{min-height:44px;padding:7px 6px;font-size:12px;}
 .player-cloud-battle-move.selected{outline:3px solid #cc0000;background:#fff4f4;}
@@ -2725,7 +2733,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 <meta name="apple-mobile-web-app-title" content="Pokémon Campaign">
 
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
-<!-- KANTO APP BUILD v34R11: player collapsible inventory -->
+<!-- KANTO APP BUILD v34R12: player battle polish + quick refresh/map -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
@@ -2755,7 +2763,8 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 <div id="playerCloudPage">
   <div class="player-cloud-header">
     <h1>My Trainer</h1>
-    <div style="display:flex;gap:10px;align-items:center;">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+      <button class="small-button" type="button" onclick="openPlayerKantoMap()">View Map</button>
       <button class="small-button" type="button" onclick="refreshAppFromGitHub(this)">Refresh App</button>
       <button class="small-button" type="button" onclick="cloudSignOut()">Sign Out</button>
     </div>
@@ -2782,12 +2791,21 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
       </details>
     </div>
   </div>
+  <div id="playerCloudMapOverlay" class="player-cloud-map-overlay" onclick="if(event.target===this)closePlayerKantoMap()">
+    <div class="player-cloud-map-panel">
+      <div class="player-cloud-map-header"><h2>Kanto Map</h2><button class="small-button" type="button" onclick="closePlayerKantoMap()">Close</button></div>
+      <img class="player-cloud-map-image" src="./assets/maps/kanto-map.png?v=20260823" alt="Kanto campaign map">
+    </div>
+  </div>
 </div>
 
 
 <!-- HOME -->
 <div id="homePage">
-  <header><h1>Pokémon Campaign</h1></header>
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+    <h1>Pokémon Campaign</h1>
+    <button class="small-button" type="button" onclick="refreshAppFromGitHub(this)" title="Temporary quick refresh while multiplayer is being tested">Refresh App</button>
+  </header>
 
   <div class="home-kanto-map-wrap">
     <div id="kantoMapShell" class="kanto-map-shell">
@@ -13753,6 +13771,15 @@ function performBattleSwap(
 
     displayBattle();
     displaySelectedBattleMove();
+
+    // A forced replacement after a faint starts a fresh turn. Advance the
+    // cloud round too so the player's completed move is immediately cleared
+    // and cannot remain highlighted against the replacement Pokémon.
+    if (typeof cloudAdvanceBattleRound === "function") {
+      cloudAdvanceBattleRound().catch(function(error){
+        console.warn("Unable to advance cloud round after fainted Pokémon replacement", error);
+      });
+    }
     return;
   }
 
@@ -24180,6 +24207,7 @@ function cloudLocalPokemonSnapshot(pokemon){
     trainer_name:trainer?.name||"Wild",
     display_name:(typeof getPokemonName==="function")?getPokemonName(pokemon):(pokemon.nickname||pokemon.speciesName||pokemon.species||"Pokémon"),
     species:pokemon.speciesName||pokemon.species||"Pokémon",
+    pokedex_number:Number(pokemon.speciesNumber)||null,
     level:Number(pokemon.level)||1,
     current_hp:Number(pokemon.currentHP)||0,
     max_hp:Number(pokemon.stats?.hp)||0,
@@ -24188,6 +24216,33 @@ function cloudLocalPokemonSnapshot(pokemon){
     move_pp:(pokemon.movePP&&typeof pokemon.movePP==="object")?pokemon.movePP:{},
     temporary_wild:Boolean(pokemon.temporaryWild)
   };
+}
+
+function openPlayerKantoMap(){
+  const overlay=document.getElementById("playerCloudMapOverlay");
+  if(overlay)overlay.classList.add("open");
+}
+
+function closePlayerKantoMap(){
+  const overlay=document.getElementById("playerCloudMapOverlay");
+  if(overlay)overlay.classList.remove("open");
+}
+
+function cloudBattleSnapshotArtworkURL(snapshot){
+  if(!snapshot || typeof pokemonDatabase==="undefined" || !Array.isArray(pokemonDatabase) || typeof getPokemonFandomArtworkURL!=="function")return "";
+  const number=Number(snapshot.pokedex_number);
+  let dbPokemon=Number.isInteger(number)?pokemonDatabase.find(function(entry){return Number(entry.number)===number;}):null;
+  if(!dbPokemon && snapshot.species){
+    const wanted=String(snapshot.species).trim().toLowerCase();
+    dbPokemon=pokemonDatabase.find(function(entry){return String(entry.name||"").trim().toLowerCase()===wanted;});
+  }
+  return dbPokemon?getPokemonFandomArtworkURL(dbPokemon):"";
+}
+
+function cloudBattleArtworkHTML(snapshot){
+  const url=cloudBattleSnapshotArtworkURL(snapshot);
+  if(!url)return '<div class="player-cloud-battle-art-fallback">Artwork unavailable</div>';
+  return '<img class="player-cloud-battle-art" src="'+cloudEscape(url)+'" alt="'+cloudEscape(snapshot?.species||snapshot?.display_name||"Pokémon")+'" loading="eager" referrerpolicy="no-referrer" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';"><div class="player-cloud-battle-art-fallback" style="display:none;">Artwork unavailable</div>';
 }
 
 async function cloudFindTrainerByLocalId(localId){
@@ -24279,7 +24334,14 @@ async function cloudAdvanceBattleRound(){
   // from the legacy battle display state prevents values such as 22/33 and
   // guarantees that the player's action is stored under the same round the
   // DM is polling.
-  cloudBattleRoundNumber=(Number(cloudBattleRoundNumber)||1)+1;
+  const completedRound=Number(cloudBattleRoundNumber)||1;
+  if(cloudActivePlayerParticipantId){
+    await cloudSupabaseClient.from("battle_actions").delete()
+      .eq("battle_id",cloudActiveBattleId)
+      .eq("participant_id",cloudActivePlayerParticipantId)
+      .eq("round_number",completedRound);
+  }
+  cloudBattleRoundNumber=completedRound+1;
   await cloudSupabaseClient.from("battles").update({round_number:cloudBattleRoundNumber,updated_at:new Date().toISOString()}).eq("id",cloudActiveBattleId);
   await cloudSyncActiveBattleNow();
 }
@@ -24426,8 +24488,8 @@ async function cloudLoadPlayerBattle(){
   const buttons=moves.map(move=>'<button class="player-cloud-battle-move '+(selected===move?'selected':'')+'" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" data-move-name="'+cloudEscape(encodeURIComponent(move))+'" onclick="cloudSubmitPlayerMoveFromButton(this)"><strong>'+cloudEscape(move)+'</strong><br>PP '+cloudEscape(pp[move]??'—')+'</button>').join('');
   area.innerHTML='<div class="player-cloud-battle-status"><strong>Round '+cloudEscape(battle.round_number)+'</strong> • '+(selected?'Move submitted: '+cloudEscape(selected)+(damageRoll?' • Damage d20: '+damageRoll:''): 'Choose your move')+'</div>'+
     '<div class="player-cloud-battle-grid">'+
-      '<div class="player-cloud-battle-side"><div class="player-cloud-battle-name">'+cloudEscape(ms.display_name||"Your Pokémon")+'</div><div class="player-cloud-battle-meta">Lv. '+cloudEscape(ms.level??'—')+' • HP '+cloudEscape(ms.current_hp??'—')+'/'+cloudEscape(ms.max_hp??'—')+'</div></div>'+
-      '<div class="player-cloud-battle-side"><div class="player-cloud-battle-name">'+cloudEscape(os.display_name||battle.opponent_name||"Opponent")+'</div><div class="player-cloud-battle-meta">Lv. '+cloudEscape(os.level??'—')+' • HP '+cloudEscape(os.current_hp??'—')+'/'+cloudEscape(os.max_hp??'—')+'</div></div>'+
+      '<div class="player-cloud-battle-side">'+cloudBattleArtworkHTML(ms)+'<div class="player-cloud-battle-name">'+cloudEscape(ms.display_name||"Your Pokémon")+'</div><div class="player-cloud-battle-meta">Lv. '+cloudEscape(ms.level??'—')+' • HP '+cloudEscape(ms.current_hp??'—')+'/'+cloudEscape(ms.max_hp??'—')+'</div></div>'+
+      '<div class="player-cloud-battle-side">'+cloudBattleArtworkHTML(os)+'<div class="player-cloud-battle-name">'+cloudEscape(os.display_name||battle.opponent_name||"Opponent")+'</div><div class="player-cloud-battle-meta">Lv. '+cloudEscape(os.level??'—')+' • HP '+cloudEscape(os.current_hp??'—')+'/'+cloudEscape(os.max_hp??'—')+'</div></div>'+
     '</div>'+
     '<div class="player-cloud-battle-moves">'+(buttons||'<div class="player-cloud-empty">No moves available.</div>')+'</div>'+
     '<div class="player-cloud-damage-roll"><label>Damage d20 Roll</label><div class="player-cloud-damage-roll-row"><input id="playerCloudDamageRoll" type="number" inputmode="numeric" min="1" max="20" value="'+cloudEscape(damageRoll)+'" placeholder="1–20" oninput="cloudPlayerDamageDraft=this.value"><button class="small-button" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerDamageRollFromButton(this)">Submit Roll</button></div></div>'+
