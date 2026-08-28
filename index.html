@@ -2680,6 +2680,15 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 .player-cloud-move { background:#f5f5f5; border-radius:8px; padding:7px; font-size:12px; }
 .player-cloud-empty { color:#666; text-align:center; padding:18px 8px; }
 .player-cloud-statusbar { font-size:12px; color:#555; margin-top:6px; }
+.player-cloud-inventory-details { margin:0; }
+.player-cloud-inventory-details > summary { cursor:pointer; font-size:18px; font-weight:900; min-height:44px; display:flex; align-items:center; justify-content:space-between; gap:8px; list-style:none; }
+.player-cloud-inventory-details > summary::-webkit-details-marker { display:none; }
+.player-cloud-inventory-details > summary::after { content:"▾"; font-size:15px; color:#666; transition:transform .15s ease; }
+.player-cloud-inventory-details[open] > summary::after { transform:rotate(180deg); }
+.player-cloud-inventory-list { margin-top:8px; border-top:1px solid #eee; padding-top:6px; }
+.player-cloud-inventory-item { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:9px 2px; border-bottom:1px solid #eee; font-size:14px; }
+.player-cloud-inventory-item:last-child { border-bottom:0; }
+.player-cloud-inventory-qty { font-weight:900; white-space:nowrap; }
 @media(max-width:520px){
   .player-cloud-moves{grid-template-columns:1fr;}
   .cloud-auth-card{padding:18px;}
@@ -2716,7 +2725,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 <meta name="apple-mobile-web-app-title" content="Pokémon Campaign">
 
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
-<!-- KANTO APP BUILD v34R10: player battle priority + compact roster + live swap sync -->
+<!-- KANTO APP BUILD v34R11: player collapsible inventory -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
@@ -2765,6 +2774,12 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
     <div class="player-cloud-card">
       <h2 style="margin-top:0;">My Pokémon</h2>
       <div id="playerCloudPokemonList"><div class="player-cloud-empty">Loading Pokémon…</div></div>
+    </div>
+    <div class="player-cloud-card">
+      <details id="playerCloudInventoryDetails" class="player-cloud-inventory-details">
+        <summary id="playerCloudInventorySummary">Inventory</summary>
+        <div id="playerCloudInventoryList" class="player-cloud-inventory-list"><div class="player-cloud-empty">Loading inventory…</div></div>
+      </details>
     </div>
   </div>
 </div>
@@ -23797,6 +23812,31 @@ async function renderCloudPlayerPortal(){
   if(nameEl)nameEl.textContent=trainer.name||"My Trainer";
   if(metaEl)metaEl.textContent="Money: $"+Number(trainer.money||0).toLocaleString()+" • "+(cloudCurrentCampaign?.name||"Campaign");
   if(statusEl)statusEl.textContent="Connected as player • "+(cloudCurrentUser.email||"");
+
+  const inventory=Array.isArray(trainer.inventory)
+    ? trainer.inventory.filter(function(item){ return Number(item?.quantity||0)>0; })
+    : [];
+  const inventorySummary=document.getElementById("playerCloudInventorySummary");
+  const inventoryList=document.getElementById("playerCloudInventoryList");
+  const totalInventoryQuantity=inventory.reduce(function(total,item){
+    return total+Math.max(0,Number(item?.quantity||0));
+  },0);
+  if(inventorySummary){
+    inventorySummary.textContent="Inventory ("+totalInventoryQuantity+")";
+  }
+  if(inventoryList){
+    if(!inventory.length){
+      inventoryList.innerHTML='<div class="player-cloud-empty">No items in inventory.</div>';
+    }else{
+      inventoryList.innerHTML=inventory.map(function(item){
+        const itemName=item?.name || (typeof itemDatabase!=="undefined" && Array.isArray(itemDatabase)
+          ? (itemDatabase.find(function(dbItem){ return dbItem.id===item?.itemId; })||{}).name
+          : "") || "Item";
+        const quantity=Math.max(0,Number(item?.quantity||0));
+        return '<div class="player-cloud-inventory-item"><span><strong>'+cloudEscape(itemName)+'</strong></span><span class="player-cloud-inventory-qty">× '+cloudEscape(quantity)+'</span></div>';
+      }).join("");
+    }
+  }
 
   if(!pokemon || !pokemon.length){
     listEl.innerHTML='<div class="player-cloud-empty">No Pokémon assigned to this trainer.</div>';
