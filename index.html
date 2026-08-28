@@ -13208,7 +13208,9 @@ function moveIsReadyToRelease(
 
 function advanceBattleTurn() {
 
-  battleTurnNumber += 1;
+  // Always keep the local battle round numeric. This prevents accidental
+  // string concatenation (for example, 2 becoming 22) after state restores.
+  battleTurnNumber = (Number(battleTurnNumber) || 1) + 1;
 
   battleTurnMoves = {
     A:null,
@@ -24089,6 +24091,7 @@ let cloudLastPlayerActionKey = "";
 let cloudPlayerDamageRoll = null;
 let cloudPlayerDamageDraft = "";
 let cloudPlayerDamageDraftRound = null;
+let cloudBattleRoundNumber = 1;
 
 function cloudStopBattlePolling(){
   if(cloudBattlePollTimer){ clearInterval(cloudBattlePollTimer); cloudBattlePollTimer=null; }
@@ -24156,11 +24159,12 @@ async function cloudPublishCurrentBattle(){
   }
 
   const source=String(document.getElementById("battleOpponentSourceSelect")?.value||"wild");
+  cloudBattleRoundNumber=1;
   const {data:battle,error:battleError}=await cloudSupabaseClient.from("battles").insert({
     campaign_id:cloudCurrentCampaign.id,
     battle_type:source==="wild"?"wild":"trainer",
     status:"active",
-    round_number:battleTurnNumber,
+    round_number:cloudBattleRoundNumber,
     source_location:activeMapWildEncounterLocationId||null,
     opponent_name:cloudLocalPokemonSnapshot(pokemonB).trainer_name,
     battle_state:{source:source,player_local_pokemon_id:pokemonA.id,opponent_local_pokemon_id:pokemonB.id}
@@ -24188,6 +24192,7 @@ async function cloudCloseCurrentBattle(){
   cloudLastPlayerActionKey="";
   cloudPlayerDamageRoll=null;
   cloudPlayerDamageDraft="";
+  cloudBattleRoundNumber=1;
   await cloudSupabaseClient.from("battles").update({status:"completed",updated_at:new Date().toISOString()}).eq("id",id);
 }
 
@@ -24196,7 +24201,12 @@ async function cloudAdvanceBattleRound(){
   cloudLastPlayerActionKey="";
   cloudPlayerDamageRoll=null;
   cloudPlayerDamageDraft="";
-  await cloudSupabaseClient.from("battles").update({round_number:battleTurnNumber,updated_at:new Date().toISOString()}).eq("id",cloudActiveBattleId);
+  // Multiplayer rounds use their own numeric counter. Keeping this separate
+  // from the legacy battle display state prevents values such as 22/33 and
+  // guarantees that the player's action is stored under the same round the
+  // DM is polling.
+  cloudBattleRoundNumber=(Number(cloudBattleRoundNumber)||1)+1;
+  await cloudSupabaseClient.from("battles").update({round_number:cloudBattleRoundNumber,updated_at:new Date().toISOString()}).eq("id",cloudActiveBattleId);
   await cloudSyncActiveBattleNow();
 }
 
@@ -24239,7 +24249,7 @@ async function cloudSyncActiveBattleNow(){
 async function cloudPullPlayerBattleAction(){
   if(!cloudSupabaseClient||cloudCurrentMembership?.role!=="dm"||!cloudActiveBattleId||!cloudActivePlayerParticipantId)return;
   const {data,error}=await cloudSupabaseClient.from("battle_actions").select("id,round_number,action_type,action_data,updated_at")
-    .eq("battle_id",cloudActiveBattleId).eq("participant_id",cloudActivePlayerParticipantId).eq("round_number",battleTurnNumber).maybeSingle();
+    .eq("battle_id",cloudActiveBattleId).eq("participant_id",cloudActivePlayerParticipantId).eq("round_number",cloudBattleRoundNumber).maybeSingle();
   if(error)throw error;
   if(!data)return;
   const key=data.id+"|"+data.updated_at+"|"+JSON.stringify(data.action_data||{});
