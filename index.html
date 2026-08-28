@@ -2819,6 +2819,18 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
     </div>
 
     <div class="card" style="margin-top:14px;">
+      <h2 style="margin-top:0;">Cloud Campaign Migration</h2>
+      <p style="line-height:1.5;">
+        DM only. Upload the campaign currently stored on this device to the shared Supabase campaign.
+        This replaces the cloud trainer and Pokémon records, while keeping your local campaign intact.
+      </p>
+      <button class="primary-button" id="cloudMigrationButton" style="width:100%;" type="button" onclick="cloudMigrateLocalCampaignToSupabase()">
+        Upload This Device's Campaign to Cloud
+      </button>
+      <div id="cloudMigrationStatus" class="battle-note" style="display:none;text-align:center;margin-top:12px;"></div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
       <h2 style="margin-top:0;">App Updates</h2>
       <p>Checks the currently deployed GitHub Pages app, clears app caches, and reloads the newest copy without needing a version-file change.</p>
       <button class="primary-button" style="width:100%;" type="button" onclick="refreshAppFromGitHub(this)">Refresh App from GitHub</button>
@@ -6744,6 +6756,17 @@ function shouldIncludeCampaignStorageKey(key) {
     included in backups without having to update the backup schema.
   */
   if (key.indexOf("pokemonCampaignKantoRebuildCleanup") === 0) {
+    return false;
+  }
+
+  /*
+    Supabase authentication/session tokens are device credentials, not
+    campaign data. Never export, restore, or upload them with backups.
+  */
+  if (
+    key.indexOf("sb-") === 0 ||
+    key.indexOf("supabase.auth") === 0
+  ) {
     return false;
   }
 
@@ -23691,6 +23714,148 @@ async function renderCloudPlayerPortal(){
       '<div class="player-cloud-pokemon-top"><div><div class="player-cloud-pokemon-name">'+displayName+'</div><div class="player-cloud-meta">Lv. '+cloudEscape(p.level)+' • '+cloudEscape(p.storage_location||"party")+(p.status?' • '+cloudEscape(p.status):'')+'</div></div><div class="player-cloud-hp">HP '+hpText+'</div></div>'+
       '<div class="player-cloud-moves">'+moveHtml+'</div></div>';
   }).join("");
+}
+
+
+function setCloudMigrationStatus(message, isError=false){
+  const el=document.getElementById("cloudMigrationStatus");
+  if(!el)return;
+  el.style.display=message?"block":"none";
+  el.textContent=message||"";
+  el.style.color=isError?"#b00020":"";
+}
+
+function cloudRewardAmountFromTrainer(trainer){
+  const candidates=[trainer?.rewardAmount,trainer?.moneyReward,trainer?.reward];
+  for(const value of candidates){
+    if(typeof value==="number" && Number.isFinite(value))return Math.max(0,Math.round(value));
+    if(typeof value==="string"){
+      const match=value.replace(/,/g,"").match(/\d+/);
+      if(match)return Number(match[0])||0;
+    }
+  }
+  return 0;
+}
+
+function cloudSafeExtraData(record){
+  try{
+    return JSON.parse(JSON.stringify(record||{}));
+  }catch(error){
+    return {};
+  }
+}
+
+function cloudCampaignStateForUpload(){
+  const storage=(typeof getPersistentCampaignStorageSnapshot==="function")
+    ? getPersistentCampaignStorageSnapshot()
+    : {};
+  return {
+    schema_version:1,
+    uploaded_at:new Date().toISOString(),
+    pc_pokemon_level:Number(pcPokemonLevel)||5,
+    kanto_map_progress:(typeof getKantoMapProgress==="function")?getKantoMapProgress():{},
+    notes:localStorage.getItem("pokemonCampaignNotes")||"",
+    persistent_storage:storage
+  };
+}
+
+async function cloudMigrateLocalCampaignToSupabase(){
+  const button=document.getElementById("cloudMigrationButton");
+  try{
+    if(!cloudSupabaseClient || !cloudCurrentUser || !cloudCurrentCampaign){
+      throw new Error("Sign in to the campaign first.");
+    }
+    if(cloudCurrentMembership?.role!=="dm"){
+      throw new Error("Only the DM can upload campaign data to the cloud.");
+    }
+
+    const trainerCount=Array.isArray(trainers)?trainers.length:0;
+    const pokemonCount=Array.isArray(ownedPokemon)?ownedPokemon.length:0;
+    if(!confirm(
+      "Upload this device's campaign to the shared cloud campaign?\n\n"+
+      trainerCount+" trainers and "+pokemonCount+" Pokémon will be uploaded.\n\n"+
+      "Existing cloud trainers and Pokémon (including the temporary Test Player/Test Pikachu records) will be replaced. Your local data will not be deleted."
+    ))return;
+
+    if(button)button.disabled=true;
+    setCloudMigrationStatus("Creating local safety backup…");
+    if(typeof createAutomaticBackupFromStorage==="function"){
+      createAutomaticBackupFromStorage("Before cloud campaign migration");
+    }
+
+    const campaignId=cloudCurrentCampaign.id;
+    setCloudMigrationStatus("Clearing temporary cloud Pokémon…");
+    let result=await cloudSupabaseClient.from("owned_pokemon").delete().eq("campaign_id",campaignId);
+    if(result.error)throw result.error;
+
+    setCloudMigrationStatus("Clearing temporary cloud trainers…");
+    result=await cloudSupabaseClient.from("trainers").delete().eq("campaign_id",campaignId);
+    if(result.error)throw result.error;
+
+    const trainerIdMap=new Map();
+    for(let i=0;i<trainerCount;i++){
+      const trainer=trainers[i]||{};
+      setCloudMigrationStatus("Uploading trainers… "+(i+1)+" / "+trainerCount);
+      const payload={
+        campaign_id:campaignId,
+        name:String(trainer.name||("Trainer "+(i+1))),
+        trainer_type:trainer.trainerType==="NPC"?"npc":"pc",
+        money:Number.isFinite(Number(trainer.money))?Math.round(Number(trainer.money)):0,
+        inventory:Array.isArray(trainer.inventory)?trainer.inventory:[],
+        completed:Boolean(trainer.completed),
+        reward_claimed:Boolean(trainer.rewardClaimed),
+        reward_amount:cloudRewardAmountFromTrainer(trainer),
+        extra_data:Object.assign(cloudSafeExtraData(trainer),{local_id:trainer.id})
+      };
+      const {data,error}=await cloudSupabaseClient.from("trainers").insert(payload).select("id").single();
+      if(error)throw error;
+      trainerIdMap.set(String(trainer.id),data.id);
+    }
+
+    for(let i=0;i<pokemonCount;i++){
+      const p=ownedPokemon[i]||{};
+      setCloudMigrationStatus("Uploading Pokémon… "+(i+1)+" / "+pokemonCount);
+      const localTrainerId=(p.trainerId===null || p.trainerId===undefined)?null:String(p.trainerId);
+      const cloudTrainerId=localTrainerId===null?null:(trainerIdMap.get(localTrainerId)||null);
+      const species=String(p.speciesName||p.species||"Unknown");
+      const payload={
+        campaign_id:campaignId,
+        trainer_id:cloudTrainerId,
+        pokedex_number:Number.isFinite(Number(p.speciesNumber))?Math.round(Number(p.speciesNumber)):0,
+        species:species,
+        nickname:p.nickname?String(p.nickname):null,
+        level:Number.isFinite(Number(p.level))?Math.max(1,Math.round(Number(p.level))):1,
+        current_hp:Number.isFinite(Number(p.currentHP))?Math.round(Number(p.currentHP)):null,
+        status:(p.status && p.status!=="None")?String(p.status):null,
+        storage_location:p.storageLocation==="pc"?"pc":"party",
+        moves:Array.isArray(p.moves)?p.moves:[],
+        move_pp:(p.movePP && typeof p.movePP==="object" && !Array.isArray(p.movePP))?p.movePP:{},
+        ivs:(p.ivs && typeof p.ivs==="object")?p.ivs:{},
+        evs:(p.evs && typeof p.evs==="object")?p.evs:{},
+        stats:(p.stats && typeof p.stats==="object")?p.stats:{},
+        extra_data:Object.assign(cloudSafeExtraData(p),{local_id:p.id,local_trainer_id:p.trainerId??null})
+      };
+      const {error}=await cloudSupabaseClient.from("owned_pokemon").insert(payload);
+      if(error)throw error;
+    }
+
+    setCloudMigrationStatus("Uploading campaign progress, notes, and persistent state…");
+    const {error:stateError}=await cloudSupabaseClient.from("campaign_state").upsert({
+      campaign_id:campaignId,
+      state_data:cloudCampaignStateForUpload(),
+      updated_at:new Date().toISOString()
+    },{onConflict:"campaign_id"});
+    if(stateError)throw stateError;
+
+    setCloudMigrationStatus("Cloud migration complete: "+trainerCount+" trainers and "+pokemonCount+" Pokémon uploaded.");
+    alert("Cloud migration complete.\n\n"+trainerCount+" trainers and "+pokemonCount+" Pokémon were uploaded.\n\nNext, we can link each player account to the correct real trainer.");
+  }catch(error){
+    console.error("Cloud migration failed",error);
+    setCloudMigrationStatus(error&&error.message?error.message:"Cloud migration failed.",true);
+    alert("Cloud migration failed: "+(error&&error.message?error.message:"Unknown error"));
+  }finally{
+    if(button)button.disabled=false;
+  }
 }
 
 window.addEventListener("DOMContentLoaded",function(){
