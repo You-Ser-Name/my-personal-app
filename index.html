@@ -8445,6 +8445,16 @@ function saveTrainers() {
     )
   );
 
+  // Mark this as a local DM-side trainer change so the cloud puller does not
+  // immediately overwrite it before the upload completes.
+  if (typeof cloudLastLocalTrainerSaveAt !== "undefined") {
+    cloudLastLocalTrainerSaveAt = Date.now();
+  }
+
+  if (typeof scheduleCloudPcTrainerStateSync === "function") {
+    scheduleCloudPcTrainerStateSync();
+  }
+
   if (typeof scheduleCloudActiveBattleSync === "function") {
     scheduleCloudActiveBattleSync();
   }
@@ -23980,9 +23990,7 @@ async function renderCloudPlayerPortal(){
   const portrait=document.getElementById("playerCloudTrainerPortrait"); if(portrait){portrait.src=cloudTrainerPortraitURL(trainer);portrait.onerror=function(){this.style.display='none';};}
   cloudRenderPlayerState(state);
   cloudPlayerLoadNotesFromTrainer(trainer);
-  const inventory=Array.isArray(trainer.inventory)?trainer.inventory.filter(item=>Number(item?.quantity||0)>0):[];
-  const inventorySummary=document.getElementById("playerCloudInventorySummary"),inventoryList=document.getElementById("playerCloudInventoryList"); if(inventorySummary)inventorySummary.textContent="Inventory";
-  if(inventoryList){ inventoryList.innerHTML=!inventory.length?'<div class="player-cloud-empty">No items in inventory.</div>':inventory.map(item=>{const db=Array.isArray(itemDatabase)?itemDatabase.find(x=>x.id===item?.itemId):null;const itemName=item?.name||db?.name||"Item";return '<div class="player-cloud-inventory-item"><span><strong>'+cloudEscape(itemName)+'</strong></span><span class="player-cloud-inventory-qty">× '+cloudEscape(Math.max(0,Number(item?.quantity||0)))+'</span></div>';}).join(""); }
+  cloudRenderPlayerInventoryFromTrainer(trainer);
   const party=(pokemon||[]).filter(p=>String(p.storage_location||"party")==="party"), stored=(pokemon||[]).filter(p=>String(p.storage_location)==="pc");
   if(listEl)listEl.innerHTML=party.length?party.map(cloudPlayerPokemonCardHTML).join(""):'<div class="player-cloud-empty">No Pokémon in the active party.</div>';
   cloudRenderPlayerStorage(stored,state);
@@ -24638,6 +24646,149 @@ async function cloudDmLoadMessages(){if(cloudCurrentMembership?.role!=='dm'||!cl
 async function cloudDmSendMessage(){const target=document.getElementById('cloudDmMessageRecipient')?.value,body=(document.getElementById('cloudDmMessageBody')?.value||'').trim();if(!target||!body)return;const {error}=await cloudSupabaseClient.from('campaign_messages').insert({campaign_id:cloudCurrentCampaign.id,sender_user_id:cloudCurrentUser.id,recipient_user_id:target,body});if(error){alert('Unable to send message: '+error.message);return;}document.getElementById('cloudDmMessageBody').value='';await cloudDmLoadMessages();}
 async function cloudRefreshDmUnread(){if(cloudCurrentMembership?.role!=='dm'||!cloudCurrentUser)return;const {data}=await cloudSupabaseClient.from('campaign_messages').select('id').eq('campaign_id',cloudCurrentCampaign.id).eq('recipient_user_id',cloudCurrentUser.id).is('read_at',null);const el=document.getElementById('cloudDmUnread');if(el)el.textContent=data?.length?'('+data.length+')':'';if(document.getElementById('cloudDmMessagesPanel')?.classList.contains('open'))cloudDmLoadMessages();}
 async function setSelectedKantoCurrentLocation(){if(!selectedKantoLocationId||!cloudCurrentCampaign||cloudCurrentMembership?.role!=='dm')return;const {data,error}=await cloudSupabaseClient.from('campaign_state').select('state_data').eq('campaign_id',cloudCurrentCampaign.id).maybeSingle();if(error){alert(error.message);return;}const merged=Object.assign({},data?.state_data||{},{current_location_id:selectedKantoLocationId,updated_at:new Date().toISOString()});const {error:save}=await cloudSupabaseClient.from('campaign_state').upsert({campaign_id:cloudCurrentCampaign.id,state_data:merged,updated_at:new Date().toISOString()},{onConflict:'campaign_id'});if(save){alert(save.message);return;}updateKantoLocationStatus();}
+let cloudPcTrainerStateSyncTimer=null;
+let cloudLastLocalTrainerSaveAt=0;
+let cloudDmTrainerStatePullBusy=false;
+let cloudPlayerTrainerStateRefreshBusy=false;
+
+function cloudTrainerInventoryForCloud(trainer){
+  return Array.isArray(trainer?.inventory)
+    ? trainer.inventory.filter(item=>Number(item?.quantity||0)>0).map(item=>({
+        id:item.id,
+        itemId:item.itemId,
+        name:item.name,
+        quantity:Math.max(0,Math.floor(Number(item.quantity)||0))
+      }))
+    : [];
+}
+
+function scheduleCloudPcTrainerStateSync(){
+  if(cloudCurrentMembership?.role!=="dm"||!cloudCurrentCampaign||!cloudSupabaseClient)return;
+  if(cloudPcTrainerStateSyncTimer)clearTimeout(cloudPcTrainerStateSyncTimer);
+  cloudPcTrainerStateSyncTimer=setTimeout(()=>{
+    cloudPcTrainerStateSyncTimer=null;
+    cloudSyncPcTrainerStateNow().catch(error=>console.warn("Trainer cloud sync warning",error));
+  },250);
+}
+
+async function cloudSyncPcTrainerStateNow(){
+  if(!cloudSupabaseClient||cloudCurrentMembership?.role!=="dm"||!cloudCurrentCampaign||!Array.isArray(trainers))return;
+  const {data:rows,error}=await cloudSupabaseClient
+    .from("trainers")
+    .select("id,extra_data")
+    .eq("campaign_id",cloudCurrentCampaign.id)
+    .eq("trainer_type","pc");
+  if(error)throw error;
+  const byLocalId=new Map();
+  (rows||[]).forEach(row=>{
+    const localId=row?.extra_data?.local_id;
+    if(localId!==undefined&&localId!==null)byLocalId.set(String(localId),row);
+  });
+  for(const trainer of trainers.filter(t=>t&&String(t.trainerType||"").toUpperCase()==="PC")){
+    const row=byLocalId.get(String(trainer.id));
+    if(!row)continue;
+    const extra=Object.assign({},row.extra_data||{},{
+      local_id:trainer.id,
+      trainerName:String(trainer.trainerName||trainer.name||"")
+    });
+    const {error:updateError}=await cloudSupabaseClient.from("trainers").update({
+      name:String(trainer.name||"Trainer"),
+      money:Number(trainer.money)||0,
+      inventory:cloudTrainerInventoryForCloud(trainer),
+      extra_data:extra,
+      updated_at:new Date().toISOString()
+    }).eq("id",row.id);
+    if(updateError)throw updateError;
+  }
+}
+
+function cloudRenderPlayerInventoryFromTrainer(trainer){
+  const inventory=Array.isArray(trainer?.inventory)?trainer.inventory.filter(item=>Number(item?.quantity||0)>0):[];
+  const inventorySummary=document.getElementById("playerCloudInventorySummary");
+  const inventoryList=document.getElementById("playerCloudInventoryList");
+  if(inventorySummary)inventorySummary.textContent="Inventory";
+  if(inventoryList){
+    inventoryList.innerHTML=!inventory.length
+      ? '<div class="player-cloud-empty">No items in inventory.</div>'
+      : inventory.map(item=>{
+          const db=Array.isArray(itemDatabase)?itemDatabase.find(x=>x.id===item?.itemId):null;
+          const itemName=item?.name||db?.name||"Item";
+          return '<div class="player-cloud-inventory-item"><span><strong>'+cloudEscape(itemName)+'</strong></span><span class="player-cloud-inventory-qty">× '+cloudEscape(Math.max(0,Number(item?.quantity||0)))+'</span></div>';
+        }).join("");
+  }
+}
+
+async function cloudRefreshPlayerTrainerState(){
+  if(cloudPlayerTrainerStateRefreshBusy||!cloudSupabaseClient||cloudCurrentMembership?.role!=="player"||!cloudCurrentMembership?.trainer_id)return;
+  cloudPlayerTrainerStateRefreshBusy=true;
+  try{
+    const {data:trainer,error}=await cloudSupabaseClient.from("trainers")
+      .select("id,name,trainer_type,money,inventory,extra_data")
+      .eq("id",cloudCurrentMembership.trainer_id).single();
+    if(error)throw error;
+    cloudPlayerTrainerCache=trainer;
+    const nameEl=document.getElementById("playerCloudTrainerName");
+    const headerEl=document.getElementById("playerCloudHeaderName");
+    const metaEl=document.getElementById("playerCloudTrainerMeta");
+    const playerTrainerName=String(trainer?.extra_data?.trainerName||trainer?.extra_data?.trainer_name||trainer.name||"My Trainer");
+    if(nameEl)nameEl.textContent=playerTrainerName;
+    if(headerEl)headerEl.textContent=trainer.name||"My Trainer";
+    if(metaEl)metaEl.textContent="Money: ₽"+Number(trainer.money||0).toLocaleString();
+    cloudRenderPlayerInventoryFromTrainer(trainer);
+  }finally{
+    cloudPlayerTrainerStateRefreshBusy=false;
+  }
+}
+
+async function cloudPullPcTrainerStateToDm(){
+  if(cloudDmTrainerStatePullBusy||!cloudSupabaseClient||cloudCurrentMembership?.role!=="dm"||!cloudCurrentCampaign||!Array.isArray(trainers))return;
+  // Give locally initiated DM edits time to upload first.
+  if(Date.now()-cloudLastLocalTrainerSaveAt<1800)return;
+  cloudDmTrainerStatePullBusy=true;
+  try{
+    const {data:rows,error}=await cloudSupabaseClient.from("trainers")
+      .select("id,name,money,inventory,extra_data")
+      .eq("campaign_id",cloudCurrentCampaign.id)
+      .eq("trainer_type","pc");
+    if(error)throw error;
+    let changed=false;
+    for(const row of rows||[]){
+      const localId=row?.extra_data?.local_id;
+      const local=trainers.find(t=>String(t?.id)===String(localId));
+      if(!local)continue;
+      const cloudInventory=Array.isArray(row.inventory)?row.inventory:[];
+      const nextMoney=Number(row.money)||0;
+      if(JSON.stringify(local.inventory||[])!==JSON.stringify(cloudInventory)){
+        local.inventory=JSON.parse(JSON.stringify(cloudInventory));
+        changed=true;
+      }
+      if(Number(local.money||0)!==nextMoney){
+        local.money=nextMoney;
+        changed=true;
+      }
+    }
+    if(changed){
+      // Persist silently: do not call saveTrainers(), which would push the same
+      // cloud-originated change back and create a sync loop.
+      localStorage.setItem("trainers",JSON.stringify(trainers));
+      if(document.getElementById("inventoryPage")?.style.display!=="none" && typeof displayInventoryTrainerList==="function")displayInventoryTrainerList();
+      if(document.getElementById("trainerInventoryPage")?.style.display!=="none" && activeInventoryTrainerId!==null){
+        const active=getActiveInventoryTrainer();
+        if(active){
+          const moneyAmount=document.getElementById("moneyAmount");
+          const moneyInput=document.getElementById("moneyInput");
+          if(moneyAmount)moneyAmount.textContent=active.money;
+          if(moneyInput && document.activeElement!==moneyInput)moneyInput.value=active.money;
+          if(typeof displayTrainerInventory==="function")displayTrainerInventory();
+          if(typeof populateInventoryTransferControls==="function")populateInventoryTransferControls();
+        }
+      }
+    }
+  }finally{
+    cloudDmTrainerStatePullBusy=false;
+  }
+}
+
 async function cloudSyncTrainerIdentity(localTrainer){
   if(!localTrainer || !cloudSupabaseClient || !cloudCurrentCampaign || cloudCurrentMembership?.role!=="dm")return;
   const cloudTrainer=await cloudFindTrainerByLocalId(localTrainer.id);
@@ -24867,6 +25018,7 @@ function cloudStartDmBattlePolling(){
     // is replaced through a UI path that does not save the roster itself.
     cloudSyncActiveBattleNow().catch(e=>console.warn("Cloud battle state sync warning",e));
     cloudPullPlayerBattleAction().catch(e=>console.warn("Player action poll warning",e));
+    cloudPullPcTrainerStateToDm().catch(e=>console.warn("Trainer inventory pull warning",e));
   },1200);
 }
 
@@ -24880,6 +25032,7 @@ function cloudStartPlayerBattlePolling(){
   cloudRefreshPlayerKantoMapAccess().catch(e=>console.warn("Player map access sync warning",e));
   cloudPlayerMapAccessPollTimer=setInterval(()=>{
     cloudRefreshPlayerKantoMapAccess().catch(e=>console.warn("Player map access sync warning",e));
+    cloudRefreshPlayerTrainerState().catch(e=>console.warn("Player trainer inventory sync warning",e));
     cloudLoadPlayerMessages().catch(()=>{});
   },2000);
 }
