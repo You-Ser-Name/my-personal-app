@@ -24452,7 +24452,35 @@ function cloudPokemonTypesHTML(p){const db=cloudPokemonDbEntry(p),types=Array.is
 function cloudMoveHTML(move,pp){const md=(typeof moveDatabase!=="undefined"?moveDatabase[move]:null)||{};return '<div class="player-cloud-move"><strong>'+cloudEscape(move)+'</strong> <span class="player-move-type">'+cloudEscape(md.type||"—")+'</span><div class="player-move-stats">Damage '+cloudEscape(md.power??"—")+' • Accuracy '+cloudEscape(md.accuracy??"—")+' • PP '+cloudEscape(pp?.[move]??md.pp??"—")+'</div>'+(md.effect?'<div class="player-move-effect">'+cloudEscape(md.effect)+'</div>':'')+'</div>';}
 function cloudPlayerPokemonCardHTML(p){const display=p.nickname?cloudEscape(p.nickname)+' ('+cloudEscape(p.species)+')':cloudEscape(p.species),max=(p.stats&&(p.stats.hp??p.stats.HP))??null,hp=max!=null?cloudEscape(p.current_hp)+' / '+cloudEscape(max):cloudEscape(p.current_hp??'—'),moves=Array.isArray(p.moves)?p.moves:[],pp=p.move_pp&&typeof p.move_pp==='object'?p.move_pp:{},art=cloudPokemonArtworkURL(p),icon=art?'<img class="player-cloud-pokemon-icon" src="'+cloudEscape(art)+'" alt="'+cloudEscape(p.species)+'" onerror="handleCloudPokemonArtworkError(this)"><span class="player-cloud-pokemon-icon-fallback">No image</span>':'<span class="player-cloud-pokemon-icon-fallback" style="display:block">No image</span>';
 return '<div class="player-cloud-pokemon"><div class="player-cloud-pokemon-top"><div class="player-cloud-pokemon-identity"><span class="player-cloud-pokemon-icon-wrap">'+icon+'</span><div class="player-cloud-pokemon-info"><div class="player-cloud-pokemon-name">'+display+'</div><div class="player-cloud-meta">Lv. '+cloudEscape(p.level)+(p.status?' • '+cloudEscape(p.status):'')+'</div>'+cloudPokemonTypesHTML(p)+'</div></div><div class="player-cloud-hp">HP '+hp+'</div></div><details class="player-cloud-moves-details"><summary>Moves ('+moves.length+')</summary><div class="player-cloud-moves">'+(moves.length?moves.map(m=>cloudMoveHTML(m,pp)).join(''):'<div class="player-cloud-move">No moves listed</div>')+'</div><button class="small-button" type="button" style="width:100%;margin-top:7px;" onclick="cloudToggleMoveEditor(\''+p.id+'\')">Modify Moveset</button><div id="playerMoveEditor-'+p.id+'" class="player-move-editor"></div></details>'+(CLOUD_CENTER_LOCATIONS.has(cloudPlayerStateCache?.current_location_id)?'<button class="small-button" type="button" style="width:100%;margin-top:7px;" onclick="cloudPlayerMoveStorage(\''+p.id+'\',\'pc\')">Move to PC Storage</button>':'')+'</div>';}
-function cloudEligibleMoves(p){const learn=pokemonLearnsets?.[Number(p.pokedex_number)]||{}, out=new Map();(learn.levelMoves||[]).forEach(e=>{if(Number(e.level)<=Number(p.level))out.set(e.name,{name:e.name,method:'Level'});});(learn.tmMoves||[]).forEach(e=>out.set(e.name,{name:e.name,method:'TM'}));(learn.hmMoves||[]).forEach(e=>out.set(e.name,{name:e.name,method:'HM'}));(Array.isArray(p.moves)?p.moves:[]).forEach(m=>{if(!out.has(m))out.set(m,{name:m,method:'Current'});});return Array.from(out.values()).sort((a,b)=>a.name.localeCompare(b.name));}
+function cloudNormalizeTMNumber(value){
+  const match=String(value||'').toUpperCase().match(/TM\s*0*(\d{1,2})/);
+  return match?'TM'+String(Number(match[1])).padStart(2,'0'):'';
+}
+function cloudFindOwnedTMItem(tmEntry){
+  const tmNumber=cloudNormalizeTMNumber(tmEntry?.number);
+  if(!tmNumber||!cloudPlayerTrainerCache)return null;
+  const inventory=Array.isArray(cloudPlayerTrainerCache.inventory)?cloudPlayerTrainerCache.inventory:[];
+  return inventory.find(entry=>{
+    if(Number(entry?.quantity||0)<=0)return false;
+    const db=Array.isArray(itemDatabase)?itemDatabase.find(item=>item.id===entry?.itemId):null;
+    const itemId=String(entry?.itemId||'').toUpperCase();
+    const itemName=String(entry?.name||db?.name||'').toUpperCase();
+    return itemId.startsWith(tmNumber.toLowerCase().toUpperCase()+'-') || itemId===tmNumber || itemName.startsWith(tmNumber+' ') || itemName.startsWith(tmNumber+' —') || itemName.startsWith(tmNumber+':');
+  })||null;
+}
+function cloudEligibleMoves(p){
+  const learn=pokemonLearnsets?.[Number(p.pokedex_number)]||{},out=new Map(),current=new Set(Array.isArray(p.moves)?p.moves:[]);
+  (learn.levelMoves||[]).forEach(e=>{if(Number(e.level)<=Number(p.level))out.set(e.name,{name:e.name,method:'Level',current:current.has(e.name)});});
+  (learn.hmMoves||[]).forEach(e=>{if(!out.has(e.name))out.set(e.name,{name:e.name,method:'HM',hmNumber:e.number||'HM',current:current.has(e.name)});});
+  (learn.tmMoves||[]).forEach(e=>{
+    if(out.has(e.name))return;
+    const owned=cloudFindOwnedTMItem(e),isCurrent=current.has(e.name);
+    if(!owned&&!isCurrent)return;
+    out.set(e.name,{name:e.name,method:'TM',tmNumber:cloudNormalizeTMNumber(e.number)||'TM',tmItemId:owned?.itemId||'',tmQuantity:Number(owned?.quantity||0),current:isCurrent});
+  });
+  current.forEach(name=>{if(!out.has(name))out.set(name,{name,method:'Current',current:true});});
+  return Array.from(out.values()).sort((a,b)=>a.name.localeCompare(b.name));
+}
 function cloudToggleMoveEditor(id){const box=document.getElementById('playerMoveEditor-'+id);if(!box)return;if(box.classList.toggle('open'))cloudRenderMoveEditor(id);}
 function cloudRenderMoveEditor(id){
   const p=cloudPlayerPokemonCache.find(x=>x.id===id),box=document.getElementById('playerMoveEditor-'+id);
@@ -24463,17 +24491,35 @@ function cloudRenderMoveEditor(id){
   const rows=choices.map(x=>{
     const md=(typeof moveDatabase!=="undefined"?moveDatabase[x.name]:null)||{};
     const type=md.type||'—', power=md.power??'—', accuracy=md.accuracy??'—', pp=md.pp??'—', effect=md.effect||'';
+    const methodLabel=x.method==='TM'?(x.tmNumber||'TM')+(x.current?' • Current':(' • Owned '+x.tmQuantity)):(x.method==='HM'?(x.hmNumber||'HM'):x.method);
     return '<label class="player-move-choice">'
-      +'<input type="checkbox" data-move="'+cloudEscape(encodeURIComponent(x.name))+'" data-method="'+cloudEscape(x.method)+'" '+(current.has(x.name)?'checked':'')+'>'
+      +'<input type="checkbox" data-move="'+cloudEscape(encodeURIComponent(x.name))+'" data-method="'+cloudEscape(x.method)+'" data-current="'+(x.current?'1':'0')+'" data-tm-item="'+cloudEscape(x.tmItemId||'')+'" data-tm-number="'+cloudEscape(x.tmNumber||'')+'" '+(current.has(x.name)?'checked':'')+'>'
       +'<div class="player-move-choice-content">'
-        +'<div class="player-move-choice-head"><span class="player-move-choice-title">'+cloudEscape(x.name)+'</span><span class="player-move-method">'+cloudEscape(x.method)+'</span><span class="player-move-type">'+cloudEscape(type)+'</span></div>'
+        +'<div class="player-move-choice-head"><span class="player-move-choice-title">'+cloudEscape(x.name)+'</span><span class="player-move-method">'+cloudEscape(methodLabel)+'</span><span class="player-move-type">'+cloudEscape(type)+'</span></div>'
         +'<div class="player-move-stats">Damage '+cloudEscape(power)+' • Accuracy '+cloudEscape(accuracy)+' • PP '+cloudEscape(pp)+'</div>'
         +(effect?'<div class="player-move-effect">'+cloudEscape(effect)+'</div>':'')
       +'</div></label>';
   }).join('');
-  box.innerHTML='<strong>Select moves</strong><div class="player-cloud-meta">Up to 5 standard moves, plus one free HM when only one HM is selected.</div><div class="player-move-editor-list">'+rows+'</div><button class="primary-button small-button" type="button" style="width:100%" onclick="cloudSaveMoveset(\''+id+'\')">Save Moveset</button>';
+  box.innerHTML='<strong>Select moves</strong><div class="player-cloud-meta">Up to 5 standard moves, plus one free HM when only one HM is selected. TM moves only appear when you own that TM; teaching a new TM consumes one copy.</div><div class="player-move-editor-list">'+rows+'</div><button class="primary-button small-button" type="button" style="width:100%" onclick="cloudSaveMoveset(\''+id+'\')">Save Moveset</button>';
 }
-async function cloudSaveMoveset(id){const p=cloudPlayerPokemonCache.find(x=>x.id===id),box=document.getElementById('playerMoveEditor-'+id);if(!p||!box)return;const checked=Array.from(box.querySelectorAll('input[type=checkbox]:checked')).map(el=>({name:decodeURIComponent(el.dataset.move||''),method:el.dataset.method||''}));const hm=checked.filter(x=>x.method==='HM').length,non=checked.length-hm,allowed=(hm===1?non<=5:checked.length<=5);if(!allowed){alert('This moveset exceeds the campaign move-slot rules. You may have up to 5 standard moves, plus one free HM if exactly one HM is selected.');return;}const pp={};checked.forEach(x=>{const md=moveDatabase?.[x.name];pp[x.name]=Number(p.move_pp?.[x.name]??md?.pp??0);});const {error}=await cloudSupabaseClient.rpc('player_update_pokemon_moves',{p_pokemon_id:id,p_moves:checked.map(x=>x.name),p_move_pp:pp});if(error){alert('Unable to update moves: '+error.message);return;}await renderCloudPlayerPortal();}
+async function cloudSaveMoveset(id){
+  const p=cloudPlayerPokemonCache.find(x=>x.id===id),box=document.getElementById('playerMoveEditor-'+id);
+  if(!p||!box)return;
+  const checked=Array.from(box.querySelectorAll('input[type=checkbox]:checked')).map(el=>({name:decodeURIComponent(el.dataset.move||''),method:el.dataset.method||'',current:el.dataset.current==='1',tmItemId:el.dataset.tmItem||'',tmNumber:el.dataset.tmNumber||''}));
+  const hm=checked.filter(x=>x.method==='HM').length,non=checked.length-hm,allowed=(hm===1?non<=5:checked.length<=5);
+  if(!allowed){alert('This moveset exceeds the campaign move-slot rules. You may have up to 5 standard moves, plus one free HM if exactly one HM is selected.');return;}
+  const tmConsumptions=checked.filter(x=>x.method==='TM'&&!x.current);
+  if(tmConsumptions.some(x=>!x.tmItemId)){alert('One of the selected TM moves is no longer available in your inventory. Reopen Modify Moveset and try again.');await renderCloudPlayerPortal();return;}
+  if(tmConsumptions.length){
+    const labels=tmConsumptions.map(x=>(x.tmNumber||'TM')+' ('+x.name+')').join(', ');
+    if(!confirm('Teaching '+labels+' will consume '+tmConsumptions.length+' TM'+(tmConsumptions.length===1?'':'s')+' from your inventory. Continue?'))return;
+  }
+  const pp={};
+  checked.forEach(x=>{const md=moveDatabase?.[x.name];pp[x.name]=Number(p.move_pp?.[x.name]??md?.pp??0);});
+  const {error}=await cloudSupabaseClient.rpc('player_update_pokemon_moves_with_tms',{p_pokemon_id:id,p_moves:checked.map(x=>x.name),p_move_pp:pp,p_tm_item_ids:tmConsumptions.map(x=>x.tmItemId)});
+  if(error){alert('Unable to update moves: '+error.message);await renderCloudPlayerPortal();return;}
+  await renderCloudPlayerPortal();
+}
 async function cloudPlayerLoadCampaignState(){const {data,error}=await cloudSupabaseClient.from('campaign_state').select('state_data').eq('campaign_id',cloudCurrentCampaign.id).maybeSingle();if(error)throw error;cloudPlayerStateCache=data?.state_data||{};return cloudPlayerStateCache;}
 function cloudLocationName(id){return (kantoMapLocations||[]).find(x=>x.id===id)?.name||id||'Not set';}
 function cloudRenderPlayerState(state){const loc=state?.current_location_id||'';const el=document.getElementById('playerCloudCurrentLocation');if(el)el.textContent='Current Location: '+cloudLocationName(loc);const badges=document.getElementById('playerCloudBadgeStrip'),progress=state?.kanto_map_progress||{};if(badges)badges.innerHTML=(kantoGymBadges||[]).filter(b=>progress?.[b.gymKey]?.completed).map(b=>'<img src="'+cloudEscape(b.color)+'" alt="'+cloudEscape(b.badge)+'" title="'+cloudEscape(b.badge)+'">').join('')||'<span class="player-cloud-meta">No badges earned yet</span>';}
