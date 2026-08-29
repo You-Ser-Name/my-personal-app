@@ -22465,6 +22465,7 @@ function createTrainer() {
   trainers.push({
     id:Date.now(),
     name:name,
+    trainerName:name,
     trainerType:"PC",
     money:0,
     inventory:[],
@@ -22620,11 +22621,20 @@ function displayTrainerModifyPage() {
   header.textContent = trainer.name + " — Modify Trainer";
   content.innerHTML = `
     <div class="form-row">
-      <label>Trainer Name</label>
+      <label>Player Name</label>
       <input
         id="trainerNameEdit${trainer.id}"
         type="text"
         value="${trainer.name.replace(/&/g,"&amp;").replace(/"/g,"&quot;")}">
+    </div>
+
+    <div class="form-row">
+      <label>Trainer Name</label>
+      <input
+        id="trainerCharacterNameEdit${trainer.id}"
+        type="text"
+        value="${String(trainer.trainerName || trainer.name).replace(/&/g,"&amp;").replace(/"/g,"&quot;")}"
+        placeholder="In-game trainer name">
     </div>
 
     <button
@@ -22644,13 +22654,35 @@ function displayTrainerModifyPage() {
   `;
 }
 
-function renameTrainerFromModifyPage(trainerId) {
-  renameTrainer(trainerId);
+async function renameTrainerFromModifyPage(trainerId) {
   const trainer = getTrainerById(trainerId);
-  if (trainer) {
-    activeTrainerModifyId = Number(trainerId);
-    displayTrainerModifyPage();
+  const playerInput = document.getElementById("trainerNameEdit" + trainerId);
+  const trainerInput = document.getElementById("trainerCharacterNameEdit" + trainerId);
+  if (!trainer || !playerInput || !trainerInput) return;
+
+  const playerName = playerInput.value.trim();
+  const trainerName = trainerInput.value.trim();
+  if (!playerName) {
+    alert("Player name cannot be blank.");
+    return;
   }
+  if (!trainerName) {
+    alert("Trainer name cannot be blank.");
+    return;
+  }
+
+  trainer.name = playerName;
+  trainer.trainerName = trainerName;
+  saveTrainers();
+
+  if (typeof cloudSyncTrainerIdentity === "function") {
+    try { await cloudSyncTrainerIdentity(trainer); }
+    catch (error) { console.warn("Unable to sync trainer identity", error); }
+  }
+
+  activeTrainerModifyId = Number(trainerId);
+  displayTrainerModifyPage();
+  displayTrainers();
 }
 
 function deleteTrainerFromModifyPage(trainerId) {
@@ -23941,7 +23973,8 @@ async function renderCloudPlayerPortal(){
   const {data:pokemon,error:pokemonError}=await cloudSupabaseClient.from("owned_pokemon").select("id,pokedex_number,species,nickname,level,current_hp,status,storage_location,moves,move_pp,stats").eq("trainer_id",trainer.id).order("created_at",{ascending:true}); if(pokemonError)throw pokemonError;
   cloudPlayerTrainerCache=trainer; cloudPlayerPokemonCache=pokemon||[];
   const state=await cloudPlayerLoadCampaignState();
-  if(nameEl)nameEl.textContent=trainer.name||"My Trainer"; if(headerEl)headerEl.textContent=trainer.name||"My Trainer";
+  const playerTrainerName=String(trainer?.extra_data?.trainerName||trainer?.extra_data?.trainer_name||trainer.name||"My Trainer");
+  if(nameEl)nameEl.textContent=playerTrainerName; if(headerEl)headerEl.textContent=trainer.name||"My Trainer";
   if(metaEl)metaEl.textContent="Money: ₽"+Number(trainer.money||0).toLocaleString();
   if(statusEl)statusEl.textContent="";
   const portrait=document.getElementById("playerCloudTrainerPortrait"); if(portrait){portrait.src=cloudTrainerPortraitURL(trainer);portrait.onerror=function(){this.style.display='none';};}
@@ -24541,6 +24574,22 @@ async function cloudDmLoadMessages(){if(cloudCurrentMembership?.role!=='dm'||!cl
 async function cloudDmSendMessage(){const target=document.getElementById('cloudDmMessageRecipient')?.value,body=(document.getElementById('cloudDmMessageBody')?.value||'').trim();if(!target||!body)return;const {error}=await cloudSupabaseClient.from('campaign_messages').insert({campaign_id:cloudCurrentCampaign.id,sender_user_id:cloudCurrentUser.id,recipient_user_id:target,body});if(error){alert('Unable to send message: '+error.message);return;}document.getElementById('cloudDmMessageBody').value='';await cloudDmLoadMessages();}
 async function cloudRefreshDmUnread(){if(cloudCurrentMembership?.role!=='dm'||!cloudCurrentUser)return;const {data}=await cloudSupabaseClient.from('campaign_messages').select('id').eq('campaign_id',cloudCurrentCampaign.id).eq('recipient_user_id',cloudCurrentUser.id).is('read_at',null);const el=document.getElementById('cloudDmUnread');if(el)el.textContent=data?.length?'('+data.length+')':'';if(document.getElementById('cloudDmMessagesPanel')?.classList.contains('open'))cloudDmLoadMessages();}
 async function setSelectedKantoCurrentLocation(){if(!selectedKantoLocationId||!cloudCurrentCampaign||cloudCurrentMembership?.role!=='dm')return;const {data,error}=await cloudSupabaseClient.from('campaign_state').select('state_data').eq('campaign_id',cloudCurrentCampaign.id).maybeSingle();if(error){alert(error.message);return;}const merged=Object.assign({},data?.state_data||{},{current_location_id:selectedKantoLocationId,updated_at:new Date().toISOString()});const {error:save}=await cloudSupabaseClient.from('campaign_state').upsert({campaign_id:cloudCurrentCampaign.id,state_data:merged,updated_at:new Date().toISOString()},{onConflict:'campaign_id'});if(save){alert(save.message);return;}updateKantoLocationStatus();}
+async function cloudSyncTrainerIdentity(localTrainer){
+  if(!localTrainer || !cloudSupabaseClient || !cloudCurrentCampaign || cloudCurrentMembership?.role!=="dm")return;
+  const cloudTrainer=await cloudFindTrainerByLocalId(localTrainer.id);
+  if(!cloudTrainer)return;
+  const extra=Object.assign({}, cloudTrainer.extra_data||{}, {
+    local_id:localTrainer.id,
+    trainerName:String(localTrainer.trainerName||localTrainer.name||"")
+  });
+  const {error}=await cloudSupabaseClient.from("trainers").update({
+    name:String(localTrainer.name||"Trainer"),
+    extra_data:extra,
+    updated_at:new Date().toISOString()
+  }).eq("id",cloudTrainer.id);
+  if(error)throw error;
+}
+
 async function cloudFindTrainerByLocalId(localId){
   if(localId===null||localId===undefined||!cloudCurrentCampaign)return null;
   const {data,error}=await cloudSupabaseClient
