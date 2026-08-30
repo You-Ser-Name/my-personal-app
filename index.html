@@ -24450,6 +24450,7 @@ function cloudTrainerPortraitURL(trainer){
   const rawKey=String(trainer?.name||extra.local_id||'trainer');
   const normalizedName=rawKey.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
   if(normalizedName==='cameron b')return './cameron-b-trainer.png?v=20260828';
+  if(normalizedName==='cameron m')return './cameron-m-trainer.png?v=20260829';
   const sprites=["red","leaf","blue","ethan","lyra","brendan","may","calem","serena"];
   let n=0;
   for(let i=0;i<rawKey.length;i++)n=(n+rawKey.charCodeAt(i))%sprites.length;
