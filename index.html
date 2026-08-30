@@ -2814,6 +2814,9 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
         <button id="playerCloudLocationMapButton" class="primary-button player-service-button" type="button" onclick="cloudPlayerOpenCurrentLocationMap()">Map</button>
       </div>
       <div id="playerCloudMartArea" style="display:none;margin-top:8px;"></div>
+      <div id="playerCloudLocationMapArea" style="display:none;margin-top:10px;">
+        <img id="playerCloudLocationMapImage" class="player-cloud-map-image" src="" alt="">
+      </div>
     </div>
     <div class="player-cloud-card">
       <h2 style="margin-top:0;">My Pokémon</h2>
@@ -2827,16 +2830,6 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
       <details id="playerCloudInventoryDetails" class="player-cloud-inventory-details">
         <summary id="playerCloudInventorySummary">Inventory</summary>
         <div id="playerCloudInventoryList" class="player-cloud-inventory-list"><div class="player-cloud-empty">Loading inventory…</div></div>
-      </details>
-    </div>
-    <div class="player-cloud-card">
-      <details class="player-cloud-inventory-details">
-        <summary>Messages <span id="playerCloudMessageUnread"></span></summary>
-        <div class="player-cloud-inventory-list">
-          <div id="playerCloudMessageThread" class="player-message-thread"></div>
-          <div class="player-message-compose"><textarea id="playerCloudMessageBody" placeholder="Send a private message to the DM..."></textarea></div>
-          <button class="small-button" type="button" style="width:100%;margin-top:6px;" onclick="cloudPlayerSendMessage()">Send to DM</button>
-        </div>
       </details>
     </div>
     <div class="player-cloud-card player-notes">
@@ -24528,8 +24521,26 @@ async function cloudPlayerLoadCampaignState(){const {data,error}=await cloudSupa
 function cloudLocationName(id){return (kantoMapLocations||[]).find(x=>x.id===id)?.name||id||'Not set';}
 function cloudRenderPlayerState(state){const loc=state?.current_location_id||'';const el=document.getElementById('playerCloudCurrentLocation');if(el)el.textContent='Current Location: '+cloudLocationName(loc);const badges=document.getElementById('playerCloudBadgeStrip'),progress=state?.kanto_map_progress||{};if(badges)badges.innerHTML=(kantoGymBadges||[]).filter(b=>progress?.[b.gymKey]?.completed).map(b=>'<img src="'+cloudEscape(b.color)+'" alt="'+cloudEscape(b.badge)+'" title="'+cloudEscape(b.badge)+'">').join('')||'<span class="player-cloud-meta">No badges earned yet</span>';}
 function cloudRenderPlayerStorage(stored,state){const list=document.getElementById('playerCloudStorageList');if(!list)return;const atCenter=CLOUD_CENTER_LOCATIONS.has(state?.current_location_id);list.innerHTML=stored.length?stored.map(p=>{const art=cloudPokemonArtworkURL(p);return '<div class="player-storage-item">'+(art?'<img src="'+cloudEscape(art)+'" alt="'+cloudEscape(p.species)+'">':'')+'<div><strong>'+cloudEscape(p.nickname||p.species)+'</strong><div class="player-cloud-meta">'+cloudEscape(p.species)+' • Lv. '+cloudEscape(p.level)+'</div>'+cloudPokemonTypesHTML(p)+'</div><div class="player-storage-actions"><button class="small-button" type="button" '+(atCenter?'':'disabled')+' onclick="cloudPlayerMoveStorage(\''+p.id+'\',\'party\')">Move to Party</button></div></div>';}).join(''):'<div class="player-cloud-empty">PC storage is empty.</div>';if(!atCenter)list.innerHTML+='<div class="player-cloud-meta" style="margin-top:7px;">Storage is view-only outside a Poké Center.</div>';}
-function cloudRenderPlayerServices(state){const card=document.getElementById('playerCloudServicesCard'),loc=state?.current_location_id||'',hasCenter=CLOUD_CENTER_LOCATIONS.has(loc),hasMart=CLOUD_MART_LOCATIONS.has(loc),hasMap=!!kantoDetailMaps?.[loc],title=document.getElementById('playerCloudServicesTitle');if(card)card.style.display=(hasCenter||hasMart||hasMap)?'block':'none';if(title)title.textContent=cloudLocationName(loc);const cb=document.getElementById('playerCloudCenterButton'),mb=document.getElementById('playerCloudMartButton'),mapButton=document.getElementById('playerCloudLocationMapButton');if(cb)cb.style.display=hasCenter?'block':'none';if(mb)mb.style.display=hasMart?'block':'none';if(mapButton)mapButton.style.display=hasMap?'block':'none';}
-function cloudPlayerOpenCurrentLocationMap(){const loc=cloudPlayerStateCache?.current_location_id||'';if(!loc||!kantoDetailMaps?.[loc]){alert('No map is available for the current location.');return;}const details=document.getElementById('playerCloudMapDetails');if(details)details.open=true;openPlayerKantoDetailMap(loc);if(details&&typeof details.scrollIntoView==='function')details.scrollIntoView({behavior:'smooth',block:'start'});}
+function cloudRenderPlayerServices(state){const card=document.getElementById('playerCloudServicesCard'),loc=state?.current_location_id||'',hasCenter=CLOUD_CENTER_LOCATIONS.has(loc),hasMart=CLOUD_MART_LOCATIONS.has(loc),hasMap=!!kantoDetailMaps?.[loc],title=document.getElementById('playerCloudServicesTitle');if(card)card.style.display=(hasCenter||hasMart||hasMap)?'block':'none';if(title)title.textContent=cloudLocationName(loc);const cb=document.getElementById('playerCloudCenterButton'),mb=document.getElementById('playerCloudMartButton'),mapButton=document.getElementById('playerCloudLocationMapButton'),mapArea=document.getElementById('playerCloudLocationMapArea'),mapImage=document.getElementById('playerCloudLocationMapImage');if(cb)cb.style.display=hasCenter?'block':'none';if(mb)mb.style.display=hasMart?'block':'none';if(mapButton){mapButton.style.display=hasMap?'block':'none';if(mapArea?.style.display!=='block')mapButton.textContent='Map';}if(!hasMap&&mapArea)mapArea.style.display='none';if(mapArea?.style.display==='block'&&mapImage&&hasMap){const detail=kantoDetailMaps[loc];mapImage.src=detail.image;mapImage.alt=detail.alt||((detail.title||cloudLocationName(loc))+' map');}}
+function cloudPlayerOpenCurrentLocationMap(){
+  const loc=cloudPlayerStateCache?.current_location_id||'';
+  const detail=kantoDetailMaps?.[loc];
+  if(!loc||!detail){alert('No map is available for the current location.');return;}
+  const area=document.getElementById('playerCloudLocationMapArea');
+  const image=document.getElementById('playerCloudLocationMapImage');
+  const button=document.getElementById('playerCloudLocationMapButton');
+  if(!area||!image)return;
+  const opening=area.style.display!=='block';
+  if(opening){
+    image.src=detail.image;
+    image.alt=detail.alt||((detail.title||cloudLocationName(loc))+' map');
+    area.style.display='block';
+    if(button)button.textContent='Hide Map';
+  }else{
+    area.style.display='none';
+    if(button)button.textContent='Map';
+  }
+}
 async function cloudPlayerMoveStorage(id,location){const {error}=await cloudSupabaseClient.rpc('player_move_pokemon_storage',{p_pokemon_id:id,p_location:location});if(error){alert('Unable to move Pokémon: '+error.message);return;}await renderCloudPlayerPortal();}
 async function cloudPlayerUsePokemonCenter(){if(!cloudPlayerTrainerCache)return;const ppMap={};cloudPlayerPokemonCache.forEach(p=>{const map={};(Array.isArray(p.moves)?p.moves:[]).forEach(m=>{map[m]=Number(moveDatabase?.[m]?.pp??p.move_pp?.[m]??0);});ppMap[p.id]=map;});const {error}=await cloudSupabaseClient.rpc('player_use_pokecenter',{p_trainer_id:cloudPlayerTrainerCache.id,p_pp_by_pokemon:ppMap});if(error){alert('Poké Center unavailable: '+error.message);return;}alert('Your Pokémon have been fully healed.');await renderCloudPlayerPortal();}
 function cloudPlayerToggleMart(){const area=document.getElementById('playerCloudMartArea');if(!area)return;const opening=area.style.display!=='block';area.style.display=opening?'block':'none';if(opening)cloudRenderPlayerMart();}
