@@ -2718,28 +2718,32 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 /* =========================================================
    CLOUD PLAYER BATTLE V2
 ========================================================= */
-.player-cloud-battle-status{font-size:13px;color:#555;margin:4px 0 10px;}
-.player-cloud-battle-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;}
-.player-cloud-battle-side{background:#f5f5f5;border-radius:10px;padding:9px;text-align:center;}
-.player-cloud-battle-name{font-weight:900;font-size:16px;}
-.player-cloud-battle-meta{font-size:12px;color:#555;margin-top:3px;}
-.player-cloud-battle-art{width:86px;height:86px;object-fit:contain;display:block;margin:2px auto 5px;}
-.player-cloud-battle-art-fallback{height:86px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#777;}
+.player-cloud-battle-status{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:#555;margin:2px 0 8px;line-height:1.25;}
+.player-cloud-battle-status strong{display:inline-flex;align-items:center;min-height:22px;padding:2px 8px;border-radius:999px;background:#f1efed;color:#2f2b28;font-size:11px;}
+.player-cloud-battle-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0 8px;}
+.player-cloud-battle-side{background:#f7f6f4;border-radius:10px;padding:8px 7px;text-align:center;border:1px solid #ece7e2;}
+.player-cloud-battle-name{font-weight:900;font-size:15px;line-height:1.1;}
+.player-cloud-battle-meta{font-size:11px;color:#666;margin-top:3px;}
+.player-cloud-battle-art{width:74px;height:74px;object-fit:contain;display:block;margin:0 auto 4px;}
+.player-cloud-battle-art-fallback{height:74px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#777;}
 .player-cloud-map-overlay{display:none;position:fixed;inset:0;z-index:50000;background:rgba(0,0,0,.78);padding:14px;overflow:auto;}
 .player-cloud-map-overlay.open{display:block;}
 .player-cloud-map-panel{max-width:900px;margin:0 auto;background:#fff;border-radius:14px;padding:12px;}
 .player-cloud-map-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
 .player-cloud-map-header h2{margin:0;}
 .player-cloud-map-image{display:block;width:100%;height:auto;border-radius:10px;border:1px solid #ddd;}
-.player-cloud-battle-moves{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px;}
-.player-cloud-battle-move{min-height:44px;padding:7px 6px;font-size:12px;}
-.player-cloud-battle-move.selected{outline:3px solid #cc0000;background:#fff4f4;}
-.player-cloud-damage-roll{margin-top:10px;padding:9px;border:1px solid #ddd;border-radius:9px;background:#fafafa;}
-.player-cloud-damage-roll label{display:block;font-weight:700;margin-bottom:6px;}
-.player-cloud-damage-roll-row{display:grid;grid-template-columns:90px 1fr;gap:7px;align-items:center;}
-.player-cloud-damage-roll input{margin:0;}
-.player-cloud-battle-message{margin-top:9px;padding:8px;border-radius:8px;background:#eef5fb;font-size:12px;line-height:1.35;}
-@media(max-width:600px){.player-cloud-battle-grid{grid-template-columns:1fr 1fr;gap:5px}.player-cloud-battle-side{padding:7px 4px}.player-cloud-battle-name{font-size:14px}.player-cloud-battle-moves{grid-template-columns:1fr 1fr;gap:5px}.player-cloud-battle-move{font-size:10px;min-height:38px;padding:5px 4px}}
+.player-cloud-battle-moves{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;}
+.player-cloud-battle-move{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;min-height:104px;padding:7px 6px;font-size:11px;line-height:1.2;text-align:center;border-radius:10px;}
+.player-cloud-battle-move strong{display:block;font-size:12px;line-height:1.15;}
+.player-cloud-battle-move .player-move-type{font-size:10px;}
+.player-cloud-battle-move .player-move-effect{margin-top:3px;font-size:10px;line-height:1.25;min-height:2.5em;color:#666;}
+.player-cloud-battle-move.selected{outline:2px solid #c62810;background:#fff4f1;box-shadow:0 0 0 1px rgba(198,40,16,.1);}
+.player-cloud-damage-roll{margin-top:8px;padding:8px;border:1px solid #e3dfda;border-radius:10px;background:#fbfaf9;}
+.player-cloud-damage-roll label{display:block;font-weight:800;font-size:12px;margin-bottom:5px;}
+.player-cloud-damage-roll-row{display:grid;grid-template-columns:78px 1fr;gap:6px;align-items:center;}
+.player-cloud-damage-roll input{margin:0;height:38px;font-size:16px;text-align:center;padding:6px 8px;}
+.player-cloud-damage-roll .small-button{min-height:38px!important;padding:6px 12px!important;font-size:14px!important;}
+@media(max-width:600px){.player-cloud-battle-status{font-size:11px;gap:5px}.player-cloud-battle-status strong{min-height:20px;padding:2px 7px;font-size:10px}.player-cloud-battle-grid{grid-template-columns:1fr 1fr;gap:5px}.player-cloud-battle-side{padding:6px 5px}.player-cloud-battle-name{font-size:14px}.player-cloud-battle-art,.player-cloud-battle-art-fallback{width:68px;height:68px}.player-cloud-battle-moves{grid-template-columns:1fr 1fr;gap:5px}.player-cloud-battle-move{font-size:10px;min-height:96px;padding:6px 4px}.player-cloud-battle-move strong{font-size:11px}.player-cloud-damage-roll-row{grid-template-columns:74px 1fr}.player-cloud-damage-roll input{height:36px;font-size:15px}.player-cloud-damage-roll .small-button{min-height:36px!important;font-size:13px!important}}
 
 
 /* Player dashboard cohesion pass v34R17 */
@@ -2774,10 +2778,15 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 .player-service-button{width:100%!important;justify-self:stretch!important;min-height:34px!important;padding:6px 7px!important;font-size:12px!important;border-radius:9px!important;}
 .player-kanto-map-utility{display:flex;justify-content:center;margin-top:7px;}
 .player-kanto-map-utility .player-trainer-map-button{margin:0!important;background:transparent!important;border:1px solid #c9c5c1!important;color:#555!important;font-size:10px!important;padding:5px 9px!important;border-radius:8px!important;box-shadow:none!important;}
-.player-campaign-status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 9px;}
-.player-campaign-status-item{background:#fff;border:1px solid #e4e0dc;border-radius:11px;padding:7px 6px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.035);min-width:0;}
-.player-campaign-status-label{font-size:7px;line-height:1.1;text-transform:uppercase;letter-spacing:.07em;color:#999;font-weight:800;}
-.player-campaign-status-value{margin-top:2px;font-size:10px;line-height:1.2;font-weight:900;color:#4f4b47;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#playerCloudPage.player-battle-active #playerCloudServicesCard{padding:10px 12px;}
+#playerCloudPage.player-battle-active #playerCloudServicesCard .player-location-eyebrow{display:none;}
+#playerCloudPage.player-battle-active #playerCloudServicesCard h2{font-size:18px;line-height:1.15;margin:0 0 8px;text-align:left;}
+#playerCloudPage.player-battle-active #playerCloudServicesCard .player-service-grid{justify-content:stretch;gap:6px;}
+#playerCloudPage.player-battle-active #playerCloudServicesCard .player-service-button{min-height:32px!important;padding:6px!important;font-size:11.5px!important;}
+#playerCloudPage.player-battle-active #playerCloudServicesCard .player-kanto-map-utility{justify-content:flex-start;margin-top:6px;}
+#playerCloudPage.player-battle-active #playerCloudServicesCard #playerCloudMartArea,
+#playerCloudPage.player-battle-active #playerCloudServicesCard #playerCloudLocationMapArea,
+#playerCloudPage.player-battle-active #playerCloudServicesCard #playerCloudCenterStatus{margin-top:8px!important;}
 .player-dashboard-details>summary{min-height:44px;font-size:16px;}
 .player-section-icon{width:24px;height:24px;flex-basis:24px;border-radius:7px;background:#fff7f5;}
 .player-section-icon svg{width:15px;height:15px;stroke:#c62810;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
@@ -2787,7 +2796,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 .player-party-strip{gap:4px;}
 .player-party-icon-wrap{width:28px;height:28px;flex-basis:28px;}
 .player-party-icon-wrap img{width:26px;height:26px;}
-@media(max-width:600px){.player-cloud-content{padding:9px}.player-cloud-card{margin-bottom:8px}.player-trainer-hero{min-height:120px}.player-trainer-portrait{height:120px;width:42%;flex-basis:42%}.player-trainer-info{padding-top:8px}.player-cloud-trainer-name{font-size:18px}.player-service-button{font-size:11.5px!important;padding:6px 5px!important}.player-party-icon-wrap{width:27px;height:27px;flex-basis:27px}.player-party-icon-wrap img{width:25px;height:25px}.player-campaign-status{gap:5px}.player-campaign-status-item{padding:6px 4px}}
+@media(max-width:600px){.player-cloud-content{padding:9px}.player-cloud-card{margin-bottom:8px}.player-trainer-hero{min-height:120px}.player-trainer-portrait{height:120px;width:42%;flex-basis:42%}.player-trainer-info{padding-top:8px}.player-cloud-trainer-name{font-size:18px}.player-service-button{font-size:11.5px!important;padding:6px 5px!important}.player-party-icon-wrap{width:27px;height:27px;flex-basis:27px}.player-party-icon-wrap img{width:25px;height:25px}}
 
 
 </style>
@@ -2881,11 +2890,6 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
         <img id="playerCloudLocationMapImage" class="player-cloud-map-image" src="" alt="">
       </div>
       <div id="playerCloudCenterStatus" class="player-cloud-center-status" style="display:none;"></div>
-    </div>
-    <div class="player-campaign-status" aria-label="Campaign status">
-      <div class="player-campaign-status-item"><div class="player-campaign-status-label">Location</div><div id="playerCampaignStatusLocation" class="player-campaign-status-value">—</div></div>
-      <div class="player-campaign-status-item"><div class="player-campaign-status-label">Badges</div><div id="playerCampaignStatusBadges" class="player-campaign-status-value">0/8</div></div>
-      <div class="player-campaign-status-item"><div class="player-campaign-status-label">Pokédex</div><div id="playerCampaignStatusPokedex" class="player-campaign-status-value">0/151</div></div>
     </div>
     <div class="player-cloud-card">
       <details id="playerCloudMyPokemonDetails" class="player-cloud-inventory-details player-dashboard-details">
@@ -24611,6 +24615,7 @@ async function cloudSaveMoveset(id){
 }
 async function cloudPlayerLoadCampaignState(){const {data,error}=await cloudSupabaseClient.from('campaign_state').select('state_data').eq('campaign_id',cloudCurrentCampaign.id).maybeSingle();if(error)throw error;cloudPlayerStateCache=data?.state_data||{};return cloudPlayerStateCache;}
 function cloudLocationName(id){return (kantoMapLocations||[]).find(x=>x.id===id)?.name||id||'Not set';}
+function cloudPlayerSetBattleLayout(active){const page=document.getElementById('playerCloudPage');if(page)page.classList.toggle('player-battle-active',!!active);}
 function cloudRenderPlayerState(state){const progress=state?.kanto_map_progress||{},badges=document.getElementById('playerCloudBadgeStrip'),allBadges=(kantoGymBadges||[]),earned=allBadges.filter(b=>progress?.[b.gymKey]?.completed);if(badges)badges.innerHTML=earned.length?earned.map(b=>'<img src="'+cloudEscape(b.color)+'" alt="'+cloudEscape(b.badge)+'" title="'+cloudEscape(b.badge)+'">').join(''):'<span class="player-badge-count">Badges '+earned.length+'/'+allBadges.length+'</span>';const badgeStatus=document.getElementById('playerCampaignStatusBadges');if(badgeStatus)badgeStatus.textContent=earned.length+'/'+allBadges.length;const locationStatus=document.getElementById('playerCampaignStatusLocation');if(locationStatus)locationStatus.textContent=cloudLocationName(state?.current_location_id||''); }
 function cloudRenderPlayerPartyStrip(party){
   const strip=document.getElementById('playerCloudPartyStrip');
@@ -25320,10 +25325,12 @@ async function cloudLoadPlayerBattle(){
     cloudPlayerDamageDraftRound=null;
     area.innerHTML="";
     if(battleCard)battleCard.style.display="none";
+    cloudPlayerSetBattleLayout(false);
     await cloudCheckPlayerBattleCompletion();
     return;
   }
   if(battleCard)battleCard.style.display="block";
+  cloudPlayerSetBattleLayout(true);
   if(cloudPlayerDamageDraftRound!==Number(battle.round_number)){
     cloudPlayerDamageDraft="";
     cloudPlayerDamageDraftRound=Number(battle.round_number);
@@ -25335,6 +25342,7 @@ async function cloudLoadPlayerBattle(){
   if(!mine){
     area.innerHTML='<div class="player-cloud-empty">No player participant is assigned to this battle.</div>';
     if(battleCard)battleCard.style.display="block";
+    cloudPlayerSetBattleLayout(true);
     return;
   }
   const ms=mine.participant_state||{}, os=opp?.participant_state||{};
@@ -25355,14 +25363,13 @@ async function cloudLoadPlayerBattle(){
   const moves=Array.isArray(ms.moves)?ms.moves:[];
   const pp=(ms.move_pp&&typeof ms.move_pp==="object")?ms.move_pp:{};
   const buttons=moves.map(move=>{const md=(typeof moveDatabase!=="undefined"?moveDatabase[move]:null)||{};return '<button class="player-cloud-battle-move '+(selected===move?'selected':'')+'" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" data-move-name="'+cloudEscape(encodeURIComponent(move))+'" onclick="cloudSubmitPlayerMoveFromButton(this)"><strong>'+cloudEscape(move)+'</strong><br><span class="player-move-type">'+cloudEscape(md.type||'—')+'</span> • Dmg '+cloudEscape(md.power??'—')+' • Acc '+cloudEscape(md.accuracy??'—')+'<br>PP '+cloudEscape(pp[move]??'—')+(md.effect?'<div class="player-move-effect">'+cloudEscape(md.effect)+'</div>':'')+'</button>';}).join('');
-  area.innerHTML='<div class="player-cloud-battle-status"><strong>Round '+cloudEscape(battle.round_number)+'</strong> • '+(selected?'Move submitted: '+cloudEscape(selected)+(damageRoll?' • Damage d20: '+damageRoll:''): 'Choose your move')+'</div>'+
+  area.innerHTML='<div class="player-cloud-battle-status"><strong>Round '+cloudEscape(battle.round_number)+'</strong>'+(selected?'Move submitted: '+cloudEscape(selected)+(damageRoll?' • Damage d20: '+damageRoll:''):'Choose your move')+'</div>'+
     '<div class="player-cloud-battle-grid">'+
       '<div class="player-cloud-battle-side">'+cloudBattleArtworkHTML(ms)+'<div class="player-cloud-battle-name">'+cloudEscape(ms.display_name||"Your Pokémon")+'</div><div class="player-cloud-battle-meta">Lv. '+cloudEscape(ms.level??'—')+' • HP '+cloudEscape(ms.current_hp??'—')+'/'+cloudEscape(ms.max_hp??'—')+'</div></div>'+
       '<div class="player-cloud-battle-side">'+cloudBattleArtworkHTML(os)+'<div class="player-cloud-battle-name">'+cloudEscape(os.display_name||battle.opponent_name||"Opponent")+'</div><div class="player-cloud-battle-meta">Lv. '+cloudEscape(os.level??'—')+' • HP '+cloudEscape(os.current_hp??'—')+'/'+cloudEscape(os.max_hp??'—')+'</div></div>'+
     '</div>'+
     '<div class="player-cloud-battle-moves">'+(buttons||'<div class="player-cloud-empty">No moves available.</div>')+'</div>'+
-    '<div class="player-cloud-damage-roll"><label>Damage d20 Roll</label><div class="player-cloud-damage-roll-row"><input id="playerCloudDamageRoll" type="number" inputmode="numeric" min="1" max="20" value="'+cloudEscape(damageRoll)+'" placeholder="1–20" oninput="cloudPlayerDamageDraft=this.value"><button class="small-button" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerDamageRollFromButton(this)">Submit Roll</button></div></div>'+
-    '<div class="player-cloud-battle-message">The player or DM may enter the Damage d20. A player-submitted roll automatically fills the DM damage field, and the DM can override it if needed.</div>';
+    '<div class="player-cloud-damage-roll"><label for="playerCloudDamageRoll">Damage d20</label><div class="player-cloud-damage-roll-row"><input id="playerCloudDamageRoll" type="number" inputmode="numeric" min="1" max="20" value="'+cloudEscape(damageRoll)+'" placeholder="1–20" oninput="cloudPlayerDamageDraft=this.value"><button class="small-button" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerDamageRollFromButton(this)">Submit Roll</button></div></div>';
 }
 
 function cloudSubmitPlayerMoveFromButton(button){
