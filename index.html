@@ -25310,8 +25310,15 @@ async function cloudSyncActiveBattleNow(){
   if(error)throw error;
   for(const part of parts||[]){
     const p=part.side==="player"?a:b;
-    await cloudSupabaseClient.from("battle_participants").update({participant_state:cloudLocalPokemonSnapshot(p)}).eq("id",part.id);
-    if(part.side==="player")cloudActivePlayerParticipantId=part.id;
+    const updatePayload={participant_state:cloudLocalPokemonSnapshot(p)};
+    if(part.side==='player'){
+      const activeCloudPokemon=await cloudFindPokemonByLocalId(p.id);
+      const activeCloudTrainer=await cloudFindTrainerByLocalId(p.trainerId);
+      updatePayload.pokemon_id=activeCloudPokemon?.id||null;
+      updatePayload.trainer_id=activeCloudTrainer?.id||null;
+      cloudActivePlayerParticipantId=part.id;
+    }
+    await cloudSupabaseClient.from("battle_participants").update(updatePayload).eq("id",part.id);
   }
   const opponentSnapshot=cloudLocalPokemonSnapshot(b);
   await cloudSupabaseClient.from("battles").update({
@@ -25498,9 +25505,31 @@ function cloudBattleActionLabel(action){
   if(action.action_type==='run')return 'Run selected';
   return '';
 }
-function cloudBattleSupportedInventory(){
-  const supported=new Set(['antidote','burn-heal','ice-heal','awakening','paralyze-heal','full-heal','potion','super-potion','hyper-potion','max-potion','full-restore','x-accuracy','x-attack','x-defense','x-special','x-speed','poke-ball','great-ball','ultra-ball']);
+function cloudBattleSupportedInventory(battleType){
+  const supported=new Set(['antidote','burn-heal','ice-heal','awakening','paralyze-heal','full-heal','potion','super-potion','hyper-potion','max-potion','full-restore','x-accuracy','x-attack','x-defense','x-special','x-speed']);
+  if(String(battleType||'').toLowerCase()==='wild'){
+    supported.add('poke-ball');
+    supported.add('great-ball');
+    supported.add('ultra-ball');
+  }
   return (Array.isArray(cloudPlayerTrainerCache?.inventory)?cloudPlayerTrainerCache.inventory:[]).filter(x=>Number(x.quantity)>0&&supported.has(x.itemId));
+}
+let cloudSharedPartyPokemonCache=[];
+let cloudSharedPartyPokemonLoadedAt=0;
+let cloudPlayerBattleSelectFocused=false;
+function cloudPlayerBattleSelectFocus(active){
+  if(active){cloudPlayerBattleSelectFocused=true;return;}
+  setTimeout(()=>{cloudPlayerBattleSelectFocused=false;},180);
+}
+async function cloudLoadSharedPartyPokemon(force=false){
+  if(!cloudSupabaseClient||!cloudCurrentCampaign)return [];
+  const now=Date.now();
+  if(!force&&cloudSharedPartyPokemonCache.length&&now-cloudSharedPartyPokemonLoadedAt<4000)return cloudSharedPartyPokemonCache;
+  const {data,error}=await cloudSupabaseClient.rpc('player_active_party_pokemon',{p_campaign_id:cloudCurrentCampaign.id});
+  if(error)throw error;
+  cloudSharedPartyPokemonCache=Array.isArray(data)?data:[];
+  cloudSharedPartyPokemonLoadedAt=now;
+  return cloudSharedPartyPokemonCache;
 }
 function cloudBattleActionTabsHTML(){
   const panels=[['fight','Fight'],['pokemon','Pokémon'],['inventory','Inventory'],['run','Run']];
@@ -25508,20 +25537,23 @@ function cloudBattleActionTabsHTML(){
 }
 function cloudBattleSecondaryPanelHTML(battle,mine,action){
   if(cloudPlayerBattlePanel==='pokemon'){
-    const options=(cloudPlayerPokemonCache||[]).filter(p=>p.storage_location==='party'&&p.id!==mine.pokemon_id&&Number(p.current_hp)>0);
-    return '<div class="player-battle-action-panel"><p class="player-battle-action-note">Choose another healthy Pokémon from your party.</p><div class="player-battle-action-panel-row"><select id="playerBattleSwapSelect">'+(options.length?options.map(p=>'<option value="'+cloudEscape(p.id)+'">'+cloudEscape(p.nickname||p.species)+' • Lv. '+cloudEscape(p.level)+'</option>').join(''):'<option value="">No other healthy party Pokémon</option>')+'</select><button class="small-button" type="button" '+(options.length?'':'disabled')+' data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerSwapFromButton(this)">Select</button></div></div>';
+    const options=(cloudSharedPartyPokemonCache||[]).filter(p=>String(p.pokemon_id)!==String(mine.pokemon_id)&&Number(p.current_hp)>0);
+    return '<div class="player-battle-action-panel"><p class="player-battle-action-note">Choose any healthy Pokémon in the shared active party. PC Storage Pokémon are not available.</p><div class="player-battle-action-panel-row"><select id="playerBattleSwapSelect" onfocus="cloudPlayerBattleSelectFocus(true)" onblur="cloudPlayerBattleSelectFocus(false)">'+(options.length?options.map(p=>'<option value="'+cloudEscape(p.pokemon_id)+'">'+cloudEscape(p.nickname||p.species)+' • Lv. '+cloudEscape(p.level)+' • '+cloudEscape(p.trainer_name||'Trainer')+'</option>').join(''):'<option value="">No other healthy active-party Pokémon</option>')+'</select><button class="small-button" type="button" '+(options.length?'':'disabled')+' data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerSwapFromButton(this)">Select</button></div></div>';
   }
   if(cloudPlayerBattlePanel==='inventory'){
-    const items=cloudBattleSupportedInventory();
-    return '<div class="player-battle-action-panel"><p class="player-battle-action-note">Select a battle item from your inventory.</p><div class="player-battle-action-panel-row"><select id="playerBattleItemSelect">'+(items.length?items.map(x=>'<option value="'+cloudEscape(x.itemId)+'">'+cloudEscape(x.name||itemDatabase?.find(i=>i.id===x.itemId)?.name||x.itemId)+' ×'+Number(x.quantity)+'</option>').join(''):'<option value="">No battle items available</option>')+'</select><button class="small-button" type="button" '+(items.length?'':'disabled')+' data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerItemFromButton(this)">Select</button></div></div>';
+    const items=cloudBattleSupportedInventory(battle.battle_type);
+    return '<div class="player-battle-action-panel"><p class="player-battle-action-note">Select a battle item from your inventory.'+(String(battle.battle_type).toLowerCase()==='wild'?' Poké Balls are available in wild battles.':' Poké Balls cannot be used in trainer battles.')+'</p><div class="player-battle-action-panel-row"><select id="playerBattleItemSelect" onfocus="cloudPlayerBattleSelectFocus(true)" onblur="cloudPlayerBattleSelectFocus(false)">'+(items.length?items.map(x=>'<option value="'+cloudEscape(x.itemId)+'">'+cloudEscape(x.name||itemDatabase?.find(i=>i.id===x.itemId)?.name||x.itemId)+' ×'+Number(x.quantity)+'</option>').join(''):'<option value="">No battle items available</option>')+'</select><button class="small-button" type="button" '+(items.length?'':'disabled')+' data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" data-battle-type="'+cloudEscape(battle.battle_type||'')+'" onclick="cloudSubmitPlayerItemFromButton(this)">Select</button></div></div>';
   }
   if(cloudPlayerBattlePanel==='run'){
     return '<div class="player-battle-action-panel"><p class="player-battle-action-note">Attempt to run from the battle. The DM will resolve the attempt.</p><button class="primary-button" style="width:100%;margin:0" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerRunFromButton(this)">Run</button></div>';
   }
   return '';
 }
-function cloudSetPlayerBattlePanel(panel){
+async function cloudSetPlayerBattlePanel(panel){
   cloudPlayerBattlePanel=panel||'fight';
+  if(cloudPlayerBattlePanel==='pokemon'){
+    try{await cloudLoadSharedPartyPokemon(true);}catch(error){console.warn('Unable to load shared active party',error);}
+  }
   cloudLoadPlayerBattle().catch(()=>{});
 }
 
@@ -25529,6 +25561,8 @@ async function cloudLoadPlayerBattle(){
   const area=document.getElementById("playerCloudBattleArea");
   const battleCard=document.getElementById("playerCloudBattleCard");
   if(!area||!cloudSupabaseClient||cloudCurrentMembership?.role!=="player"||!cloudCurrentCampaign)return;
+  const focused=document.activeElement;
+  if(cloudPlayerBattleSelectFocused || (focused && (focused.id==='playerBattleSwapSelect'||focused.id==='playerBattleItemSelect')))return;
   const {data:battles,error}=await cloudSupabaseClient.from("battles").select("id,round_number,status,battle_type,opponent_name,updated_at")
     .eq("campaign_id",cloudCurrentCampaign.id).eq("status","active").order("updated_at",{ascending:false}).limit(1);
   if(error)throw error;
@@ -25598,6 +25632,9 @@ async function cloudLoadPlayerBattle(){
   if(serverDamageRoll!=="" && cloudPlayerDamageDraft==="")cloudPlayerDamageDraft=serverDamageRoll;
   const moves=Array.isArray(ms.moves)?ms.moves:[];
   const pp=(ms.move_pp&&typeof ms.move_pp==="object")?ms.move_pp:{};
+  if(cloudPlayerBattlePanel==='pokemon' && (!cloudSharedPartyPokemonCache.length || Date.now()-cloudSharedPartyPokemonLoadedAt>4000)){
+    try{await cloudLoadSharedPartyPokemon(true);}catch(error){console.warn('Unable to refresh shared active party',error);}
+  }
   const moveButtons=moves.map(move=>cloudPlayerBattleMoveButtonHTML(move,selected,battle,playerSide,pp)).join('');
   const actionLabel=cloudBattleActionLabel(action);
   const fightPanel='<div class="player-cloud-battle-moves">'+(moveButtons||'<div class="player-cloud-empty">No moves available.</div>')+'</div>'+
@@ -25665,14 +25702,16 @@ async function cloudSubmitPlayerSwapFromButton(button){
   const select=document.getElementById('playerBattleSwapSelect');
   const pokemonId=select?.value||'';
   if(!pokemonId)return;
-  const p=(cloudPlayerPokemonCache||[]).find(x=>x.id===pokemonId);
-  await cloudSubmitPlayerGenericAction(button.dataset.battleId,button.dataset.participantId,Number(button.dataset.roundNumber)||1,'swap',{pokemon_id:pokemonId,display_name:p?.nickname||p?.species||'Pokémon'}).catch(e=>alert('Unable to select Pokémon: '+e.message));
+  const p=(cloudSharedPartyPokemonCache||[]).find(x=>String(x.pokemon_id)===String(pokemonId));
+  await cloudSubmitPlayerGenericAction(button.dataset.battleId,button.dataset.participantId,Number(button.dataset.roundNumber)||1,'swap',{pokemon_id:pokemonId,display_name:p?.nickname||p?.species||'Pokémon',trainer_name:p?.trainer_name||''}).catch(e=>alert('Unable to select Pokémon: '+e.message));
 }
 async function cloudSubmitPlayerItemFromButton(button){
   const select=document.getElementById('playerBattleItemSelect');
   const itemId=select?.value||'';
   if(!itemId)return;
-  const entry=cloudBattleSupportedInventory().find(x=>x.itemId===itemId);
+  const battleType=button?.dataset?.battleType||'';
+  const entry=cloudBattleSupportedInventory(battleType).find(x=>x.itemId===itemId);
+  if(!entry){alert('That item is not available for this type of battle.');await cloudLoadPlayerBattle();return;}
   const itemName=entry?.name||itemDatabase?.find(i=>i.id===itemId)?.name||itemId;
   await cloudSubmitPlayerGenericAction(button.dataset.battleId,button.dataset.participantId,Number(button.dataset.roundNumber)||1,'item',{item_id:itemId,item_name:itemName}).catch(e=>alert('Unable to select item: '+e.message));
 }
