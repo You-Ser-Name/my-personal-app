@@ -2795,8 +2795,19 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
         <div style="min-width:0;flex:1;">
           <div id="playerCloudTrainerName" class="player-cloud-trainer-name">Loading…</div>
           <div id="playerCloudTrainerMeta" class="player-cloud-meta"></div>
-          <div id="playerCloudCurrentLocation" class="player-current-location">Current Location: —</div>
           <div id="playerCloudBadgeStrip" class="player-badge-strip"></div>
+          <button id="playerCloudKantoMapButton" class="small-button" type="button" onclick="cloudPlayerToggleTrainerKantoMap()" style="margin-top:7px;background:#e6e6e6;color:#333;border-color:#c8c8c8;padding:5px 10px;min-height:0;">Kanto Map</button>
+          <div id="playerCloudTrainerKantoMapArea" style="display:none;margin-top:9px;">
+            <div id="playerCloudMainMapStage" class="kanto-map-shell player-cloud-map-stage">
+              <img class="kanto-map-image" src="./assets/maps/kanto-map.png?v=20260823" alt="Kanto campaign map" draggable="false">
+              <div id="playerCloudKantoHotspotLayer" class="player-cloud-map-hotspot-layer"></div>
+            </div>
+            <div id="playerCloudDetailMap" class="player-cloud-detail-map">
+              <div class="player-cloud-detail-map-header"><div id="playerCloudDetailMapTitle" class="player-cloud-detail-map-title"></div><button class="small-button" type="button" onclick="closePlayerKantoDetailMap()">Back to Kanto Map</button></div>
+              <img id="playerCloudDetailMapImage" src="" alt="">
+              <div id="playerCloudDetailMapCaption" class="player-cloud-detail-map-caption"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div id="playerCloudConnectionStatus" class="player-cloud-statusbar"></div>
@@ -2856,22 +2867,6 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
                 <button class="small-button" type="button" onclick="cloudPlayerCloseNoteEditor()">Done</button>
               </div>
             </div>
-          </div>
-        </div>
-      </details>
-    </div>
-    <div class="player-cloud-card">
-      <details id="playerCloudMapDetails" class="player-cloud-map-details" ontoggle="handlePlayerKantoMapToggle(this)">
-        <summary>Kanto Map</summary>
-        <div class="player-cloud-map-content">
-          <div id="playerCloudMainMapStage" class="kanto-map-shell player-cloud-map-stage">
-            <img class="kanto-map-image" src="./assets/maps/kanto-map.png?v=20260823" alt="Kanto campaign map" draggable="false">
-            <div id="playerCloudKantoHotspotLayer" class="player-cloud-map-hotspot-layer"></div>
-          </div>
-          <div id="playerCloudDetailMap" class="player-cloud-detail-map">
-            <div class="player-cloud-detail-map-header"><div id="playerCloudDetailMapTitle" class="player-cloud-detail-map-title"></div><button class="small-button" type="button" onclick="closePlayerKantoDetailMap()">Back to Kanto Map</button></div>
-            <img id="playerCloudDetailMapImage" src="" alt="">
-            <div id="playerCloudDetailMapCaption" class="player-cloud-detail-map-caption"></div>
           </div>
         </div>
       </details>
@@ -23989,7 +23984,7 @@ async function renderCloudPlayerPortal(){
   cloudRenderPlayerServices(state);
   await cloudLoadPlayerMessages();
   if(typeof cloudLoadPlayerBattle==="function")await cloudLoadPlayerBattle();
-  const playerMapDetails=document.getElementById("playerCloudMapDetails"); if(playerMapDetails?.open && typeof cloudRefreshPlayerKantoMapAccess==="function")await cloudRefreshPlayerKantoMapAccess();
+  const trainerMapArea=document.getElementById("playerCloudTrainerKantoMapArea"); if(trainerMapArea?.style.display==="block" && typeof cloudRefreshPlayerKantoMapAccess==="function")await cloudRefreshPlayerKantoMapAccess();
 }
 
 function setCloudMigrationStatus(message, isError=false){
@@ -24342,6 +24337,28 @@ async function handlePlayerKantoMapToggle(details){
   }
 }
 
+function cloudPlayerCloseTrainerKantoMap(){
+  const area=document.getElementById('playerCloudTrainerKantoMapArea');
+  if(area)area.style.display='none';
+  closePlayerKantoDetailMap();
+}
+
+async function cloudPlayerToggleTrainerKantoMap(){
+  const area=document.getElementById('playerCloudTrainerKantoMapArea');
+  if(!area)return;
+  const opening=area.style.display!=='block';
+  if(opening){
+    const locationMap=document.getElementById('playerCloudLocationMapArea');
+    if(locationMap)locationMap.style.display='none';
+    closePlayerKantoDetailMap();
+    area.style.display='block';
+    await cloudRefreshPlayerKantoMapAccess();
+  }else{
+    area.style.display='none';
+    closePlayerKantoDetailMap();
+  }
+}
+
 async function cloudRefreshPlayerKantoMapAccess(){
   if(!cloudSupabaseClient || !cloudCurrentCampaign || cloudCurrentMembership?.role!=="player")return;
   const {data,error}=await cloudSupabaseClient.from("campaign_state")
@@ -24519,7 +24536,7 @@ async function cloudSaveMoveset(id){
 }
 async function cloudPlayerLoadCampaignState(){const {data,error}=await cloudSupabaseClient.from('campaign_state').select('state_data').eq('campaign_id',cloudCurrentCampaign.id).maybeSingle();if(error)throw error;cloudPlayerStateCache=data?.state_data||{};return cloudPlayerStateCache;}
 function cloudLocationName(id){return (kantoMapLocations||[]).find(x=>x.id===id)?.name||id||'Not set';}
-function cloudRenderPlayerState(state){const loc=state?.current_location_id||'';const el=document.getElementById('playerCloudCurrentLocation');if(el)el.textContent='Current Location: '+cloudLocationName(loc);const badges=document.getElementById('playerCloudBadgeStrip'),progress=state?.kanto_map_progress||{};if(badges)badges.innerHTML=(kantoGymBadges||[]).filter(b=>progress?.[b.gymKey]?.completed).map(b=>'<img src="'+cloudEscape(b.color)+'" alt="'+cloudEscape(b.badge)+'" title="'+cloudEscape(b.badge)+'">').join('')||'<span class="player-cloud-meta">No badges earned yet</span>';}
+function cloudRenderPlayerState(state){const progress=state?.kanto_map_progress||{},badges=document.getElementById('playerCloudBadgeStrip');if(badges)badges.innerHTML=(kantoGymBadges||[]).filter(b=>progress?.[b.gymKey]?.completed).map(b=>'<img src="'+cloudEscape(b.color)+'" alt="'+cloudEscape(b.badge)+'" title="'+cloudEscape(b.badge)+'">').join('')||'<span class="player-cloud-meta">No badges earned yet</span>';}
 function cloudRenderPlayerStorage(stored,state){const list=document.getElementById('playerCloudStorageList');if(!list)return;const atCenter=CLOUD_CENTER_LOCATIONS.has(state?.current_location_id);list.innerHTML=stored.length?stored.map(p=>{const art=cloudPokemonArtworkURL(p);return '<div class="player-storage-item">'+(art?'<img src="'+cloudEscape(art)+'" alt="'+cloudEscape(p.species)+'">':'')+'<div><strong>'+cloudEscape(p.nickname||p.species)+'</strong><div class="player-cloud-meta">'+cloudEscape(p.species)+' • Lv. '+cloudEscape(p.level)+'</div>'+cloudPokemonTypesHTML(p)+'</div><div class="player-storage-actions"><button class="small-button" type="button" '+(atCenter?'':'disabled')+' onclick="cloudPlayerMoveStorage(\''+p.id+'\',\'party\')">Move to Party</button></div></div>';}).join(''):'<div class="player-cloud-empty">PC storage is empty.</div>';if(!atCenter)list.innerHTML+='<div class="player-cloud-meta" style="margin-top:7px;">Storage is view-only outside a Poké Center.</div>';}
 function cloudRenderPlayerServices(state){const card=document.getElementById('playerCloudServicesCard'),loc=state?.current_location_id||'',hasCenter=CLOUD_CENTER_LOCATIONS.has(loc),hasMart=CLOUD_MART_LOCATIONS.has(loc),hasMap=!!kantoDetailMaps?.[loc],title=document.getElementById('playerCloudServicesTitle');if(card)card.style.display=(hasCenter||hasMart||hasMap)?'block':'none';if(title)title.textContent=cloudLocationName(loc);const cb=document.getElementById('playerCloudCenterButton'),mb=document.getElementById('playerCloudMartButton'),mapButton=document.getElementById('playerCloudLocationMapButton'),mapArea=document.getElementById('playerCloudLocationMapArea'),mapImage=document.getElementById('playerCloudLocationMapImage');if(cb)cb.style.display=hasCenter?'block':'none';if(mb)mb.style.display=hasMart?'block':'none';if(mapButton){mapButton.style.display=hasMap?'block':'none';if(mapArea?.style.display!=='block')mapButton.textContent='Map';}if(!hasMap&&mapArea)mapArea.style.display='none';if(mapArea?.style.display==='block'&&mapImage&&hasMap){const detail=kantoDetailMaps[loc];mapImage.src=detail.image;mapImage.alt=detail.alt||((detail.title||cloudLocationName(loc))+' map');}}
 function cloudPlayerOpenCurrentLocationMap(){
@@ -24528,22 +24545,22 @@ function cloudPlayerOpenCurrentLocationMap(){
   if(!loc||!detail){alert('No map is available for the current location.');return;}
   const area=document.getElementById('playerCloudLocationMapArea');
   const image=document.getElementById('playerCloudLocationMapImage');
-  const button=document.getElementById('playerCloudLocationMapButton');
   if(!area||!image)return;
   const opening=area.style.display!=='block';
   if(opening){
+    const mart=document.getElementById('playerCloudMartArea');
+    if(mart)mart.style.display='none';
+    cloudPlayerCloseTrainerKantoMap();
     image.src=detail.image;
     image.alt=detail.alt||((detail.title||cloudLocationName(loc))+' map');
     area.style.display='block';
-    if(button)button.textContent='Hide Map';
   }else{
     area.style.display='none';
-    if(button)button.textContent='Map';
   }
 }
 async function cloudPlayerMoveStorage(id,location){const {error}=await cloudSupabaseClient.rpc('player_move_pokemon_storage',{p_pokemon_id:id,p_location:location});if(error){alert('Unable to move Pokémon: '+error.message);return;}await renderCloudPlayerPortal();}
 async function cloudPlayerUsePokemonCenter(){if(!cloudPlayerTrainerCache)return;const ppMap={};cloudPlayerPokemonCache.forEach(p=>{const map={};(Array.isArray(p.moves)?p.moves:[]).forEach(m=>{map[m]=Number(moveDatabase?.[m]?.pp??p.move_pp?.[m]??0);});ppMap[p.id]=map;});const {error}=await cloudSupabaseClient.rpc('player_use_pokecenter',{p_trainer_id:cloudPlayerTrainerCache.id,p_pp_by_pokemon:ppMap});if(error){alert('Poké Center unavailable: '+error.message);return;}alert('Your Pokémon have been fully healed.');await renderCloudPlayerPortal();}
-function cloudPlayerToggleMart(){const area=document.getElementById('playerCloudMartArea');if(!area)return;const opening=area.style.display!=='block';area.style.display=opening?'block':'none';if(opening)cloudRenderPlayerMart();}
+function cloudPlayerToggleMart(){const area=document.getElementById('playerCloudMartArea');if(!area)return;const opening=area.style.display!=='block';if(opening){const mapArea=document.getElementById('playerCloudLocationMapArea');if(mapArea)mapArea.style.display='none';area.style.display='block';cloudRenderPlayerMart();}else{area.style.display='none';}}
 function cloudRenderPlayerMart(){const area=document.getElementById('playerCloudMartArea');if(!area||!cloudPlayerTrainerCache)return;const loc=cloudPlayerStateCache?.current_location_id,ids=gen1PokeMartStock?.[loc]||[],stock=ids.map(id=>itemDatabase.find(x=>x.id===id)).filter(Boolean),inv=Array.isArray(cloudPlayerTrainerCache.inventory)?cloudPlayerTrainerCache.inventory:[];area.innerHTML='<h3 style="margin:5px 0">Buy</h3><div class="player-shop-list">'+stock.map(i=>'<div class="player-shop-row"><div><strong>'+cloudEscape(i.name)+'</strong><br><small>'+cloudEscape(i.description||'')+'</small></div><div style="text-align:right">₽'+Number(i.buyPrice||0).toLocaleString()+'<br><button class="small-button" type="button" onclick="cloudPlayerShop(\'buy\',\''+cloudEscape(i.id)+'\')">Buy</button></div></div>').join('')+'</div><h3>Sell</h3><div class="player-shop-list">'+(inv.filter(x=>Number(x.quantity)>0).map(x=>{const i=itemDatabase.find(d=>d.id===x.itemId);return '<div class="player-shop-row"><div><strong>'+cloudEscape(x.name||i?.name||'Item')+'</strong><br><small>Owned: '+Number(x.quantity)+'</small></div><div style="text-align:right">'+(i?.sellPrice==null?'Cannot sell':'₽'+Number(i.sellPrice).toLocaleString()+'<br><button class="small-button" type="button" onclick="cloudPlayerShop(\'sell\',\''+cloudEscape(x.itemId)+'\')">Sell 1</button>')+'</div></div>';}).join('')||'<div class="player-cloud-empty">Nothing to sell.</div>')+'</div>';}
 async function cloudPlayerShop(mode,itemId){const i=itemDatabase.find(x=>x.id===itemId);if(!i)return;const price=mode==='buy'?Number(i.buyPrice||0):Number(i.sellPrice||0);const {error}=await cloudSupabaseClient.rpc('player_shop_transaction',{p_trainer_id:cloudPlayerTrainerCache.id,p_mode:mode,p_item_id:itemId,p_item_name:i.name,p_unit_price:price});if(error){alert('Shop transaction failed: '+error.message);return;}await renderCloudPlayerPortal();cloudPlayerToggleMart();cloudPlayerToggleMart();}
 let cloudPlayerNotes=[];
