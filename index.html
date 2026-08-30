@@ -2848,50 +2848,42 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
  .player-location-card.battle-compact .player-service-button{font-size:11px!important}
 }
 
-/* Player battle-mode final polish */
-#playerCloudTrainerCard.player-battle-hidden{display:none!important}
-.player-battle-dashboard-card{padding:12px 14px!important}
-.player-battle-dashboard-title{margin-bottom:3px!important}
-.player-battle-dashboard-title h2{font-size:21px!important;margin:0!important}
-.player-live-pill{font-size:9px!important;letter-spacing:.04em;padding:5px 9px!important}
-.player-cloud-battle-status{margin:0 0 6px!important;font-size:11.5px!important;color:#666!important}
-.player-cloud-battle-status strong{display:none!important}
-.player-cloud-battle-grid{gap:7px!important;margin:4px 0 6px!important}
-.player-cloud-battle-side{padding:5px 6px 6px!important}
-.player-cloud-battle-side-label{font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#999;font-weight:900;margin-bottom:1px}
-.player-cloud-battle-art{width:58px!important;height:58px!important;margin:0 auto 1px!important}
-.player-cloud-battle-art-fallback{height:58px!important}
-.player-cloud-battle-name{font-size:13.5px!important}
-.player-cloud-battle-meta{font-size:10px!important}
-.player-cloud-hpbar{height:5px;background:#e5e1dd;border-radius:999px;overflow:hidden;margin:4px 5px 0}
-.player-cloud-hpbar-fill{height:100%;background:#43a047;border-radius:999px;transition:width .2s ease}
-.player-cloud-hpbar-fill.mid{background:#e0a800}
-.player-cloud-hpbar-fill.low{background:#cf2a16}
-.player-cloud-battle-moves{gap:5px!important;margin-top:5px!important}
-.player-cloud-battle-move{min-height:72px!important;padding:6px 6px!important;font-size:9.5px!important;line-height:1.16!important;color:#333!important;box-shadow:0 1px 4px rgba(0,0,0,.045)!important}
-.player-cloud-battle-move strong{font-size:11.5px!important;color:#222!important}
-.player-cloud-battle-move .player-move-type{margin:2px 0 1px!important;font-size:8.5px!important;padding:1px 5px!important}
-.player-cloud-battle-move .player-move-effect{font-size:8.5px!important;line-height:1.12!important;margin-top:3px!important;color:#777!important}
-.player-cloud-battle-move.selected{border:2px solid #cf2a16!important;background:#fff2ef!important;color:#222!important}
-.player-cloud-battle-move.selected strong{color:#b51f0e!important}
-.player-cloud-battle-move.selected:before{content:'Selected';position:absolute;top:4px;left:5px;font-size:7px;line-height:1;text-transform:uppercase;letter-spacing:.04em;color:#b51f0e;font-weight:900}
-.player-cloud-battle-move.selected:after{top:4px!important;right:5px!important;width:14px!important;height:14px!important;line-height:14px!important;font-size:9px!important}
-.player-cloud-damage-roll{display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;align-items:center!important;gap:8px!important;padding:7px 8px!important;margin-top:6px!important}
-.player-cloud-damage-roll label{margin:0!important;font-size:11px!important;white-space:nowrap}
-.player-cloud-damage-roll-row{display:grid!important;grid-template-columns:64px minmax(0,1fr)!important;gap:6px!important}
-.player-cloud-damage-roll input,.player-cloud-damage-roll button{height:36px!important;min-height:36px!important;font-size:13px!important}
-.player-location-card.battle-compact{padding:8px 10px!important}
-.player-location-card.battle-compact h2{font-size:16px!important;margin:0 0 6px!important}
-.player-location-card.battle-compact .player-service-button{min-height:29px!important;padding:4px 6px!important;font-size:10.5px!important}
-.player-location-card.battle-compact .player-trainer-map-button{font-size:10px!important;padding:4px 8px!important;margin-top:5px!important}
+/* 0106 final player battle polish + status display */
+#playerCloudPage.player-battle-active .player-cloud-content{padding-top:6px;}
+#playerCloudPage.player-battle-active #playerCloudTrainerCard{display:none!important;}
+#playerCloudPage.player-battle-active #playerCloudServicesCard{padding:9px 12px!important;}
+#playerCloudPage.player-battle-active #playerCloudServicesCard .player-location-eyebrow{display:none!important;}
+#playerCloudPage.player-battle-active #playerCloudServicesCard h2{text-align:left!important;font-size:18px!important;margin:0 0 8px!important;}
+#playerCloudPage.player-battle-active #playerCloudServicesCard .player-kanto-map-utility{display:none!important;}
+#playerCloudPage.player-battle-active #playerCloudCenterButton:disabled,
+#playerCloudPage.player-battle-active #playerCloudMartButton:disabled{opacity:.42!important;filter:saturate(.45);cursor:not-allowed;}
+.player-cloud-battle-status{margin:0 0 7px!important;font-size:12px!important;min-height:18px;}
+.player-live-pill{letter-spacing:.04em!important;font-size:9px!important;white-space:nowrap;}
+.player-cloud-battle-side-label{font-size:8px;line-height:1;text-transform:uppercase;letter-spacing:.09em;color:#929292;font-weight:900;margin-bottom:3px;}
+.player-cloud-battle-status-chip{display:inline-flex;align-items:center;justify-content:center;margin-top:4px;padding:2px 7px;border-radius:999px;background:#eee9e5;border:1px solid #d6cec8;color:#5b5550;font-size:9px;font-weight:900;line-height:1.1;}
+.player-cloud-hp-track{height:7px;border-radius:999px;background:#e6e2de;overflow:hidden;margin:6px 1px 0;}
+.player-cloud-hp-fill{height:100%;border-radius:inherit;background:#39a84a;transition:width .2s ease;}
+.player-cloud-hp-fill.mid{background:#d9a51f;}
+.player-cloud-hp-fill.low{background:#d13a2c;}
+.player-cloud-battle-move{min-height:82px!important;padding:7px 6px!important;color:#282522!important;}
+.player-cloud-battle-move strong{color:#282522!important;font-size:12.5px!important;}
+.player-cloud-battle-move .player-move-effect{font-size:9.5px!important;line-height:1.15!important;color:#77716c!important;margin-top:4px!important;}
+.player-cloud-battle-move.selected{border-color:#cf2a16!important;background:#fff2ef!important;}
+.player-cloud-battle-move.selected strong{color:#b91f0e!important;}
+.player-cloud-battle-move.selected:before{content:'SELECTED';position:absolute;top:5px;left:7px;font-size:7px;line-height:1;font-weight:900;letter-spacing:.09em;color:#b91f0e;}
+.player-cloud-damage-roll{display:grid!important;grid-template-columns:auto 1fr!important;align-items:center!important;gap:8px!important;padding:7px 9px!important;}
+.player-cloud-damage-roll label{margin:0!important;font-size:12px!important;white-space:nowrap;}
+.player-cloud-damage-roll-row{grid-template-columns:64px 1fr!important;gap:6px!important;}
+.player-cloud-damage-roll input,.player-cloud-damage-roll button{height:38px!important;min-height:38px!important;}
+.player-cloud-damage-roll input{padding:4px 6px!important;text-align:center!important;font-size:16px!important;}
+.player-cloud-damage-roll button{font-size:12px!important;}
 @media(max-width:600px){
- .player-battle-dashboard-card{padding:10px!important}
- .player-cloud-battle-art{width:54px!important;height:54px!important}
- .player-cloud-battle-art-fallback{height:54px!important}
- .player-cloud-battle-move{min-height:68px!important;padding:5px 4px!important;font-size:9px!important}
- .player-cloud-battle-move strong{font-size:11px!important}
- .player-cloud-damage-roll{grid-template-columns:auto minmax(0,1fr)!important}
- .player-cloud-damage-roll-row{grid-template-columns:60px minmax(0,1fr)!important}
+  #playerCloudPage.player-battle-active #playerCloudServicesCard h2{font-size:17px!important;}
+  .player-cloud-battle-art{width:60px!important;height:60px!important;}
+  .player-cloud-battle-art-fallback{height:60px!important;}
+  .player-cloud-battle-move{min-height:78px!important;}
+  .player-cloud-damage-roll{grid-template-columns:auto minmax(0,1fr)!important;}
+  .player-cloud-damage-roll-row{grid-template-columns:60px minmax(0,1fr)!important;}
 }
 </style>
 </head>
@@ -2941,7 +2933,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
       <div id="playerCloudRefreshStatus" class="player-cloud-statusbar" style="margin-top:8px;"></div>
     </div>
     <div id="playerCloudBattleCard" class="player-cloud-card player-battle-dashboard-card" style="display:none;">
-      <div class="player-battle-dashboard-title"><h2>Battle</h2><span id="playerCloudLivePill" class="player-live-pill">LIVE</span></div>
+      <div class="player-battle-dashboard-title"><h2>Battle</h2><span id="playerCloudLivePill" class="player-live-pill">LIVE • ROUND 1</span></div>
       <div id="playerCloudBattleArea"></div>
     </div>
     <div id="playerCloudServicesCard" class="player-cloud-card player-location-card" style="display:none;">
@@ -25391,18 +25383,40 @@ async function cloudCheckPlayerBattleCompletion(){
 }
 
 let cloudPlayerBattleWasActive=false;
-function cloudSetPlayerBattleMode(active){
-  const trainer=document.getElementById("playerCloudTrainerCard");
-  const location=document.getElementById("playerCloudServicesCard");
-  if(trainer)trainer.classList.toggle("player-battle-hidden",!!active);
-  if(location)location.classList.toggle("battle-compact",!!active);
+function cloudBattleStatusText(status){
+  const s=String(status||'').trim();
+  return (!s||s.toLowerCase()==='none'||s.toLowerCase()==='normal')?'':s;
+}
+function cloudBattleStatusHTML(snapshot){
+  const s=cloudBattleStatusText(snapshot?.status);
+  return s?'<div class="player-cloud-battle-status-chip">'+cloudEscape(s)+'</div>':'';
 }
 function cloudBattleHpBarHTML(snapshot){
-  const hp=Math.max(0,Number(snapshot?.current_hp)||0);
+  const current=Math.max(0,Number(snapshot?.current_hp)||0);
   const max=Math.max(0,Number(snapshot?.max_hp)||0);
-  const pct=max>0?Math.max(0,Math.min(100,(hp/max)*100)):0;
+  const pct=max>0?Math.max(0,Math.min(100,(current/max)*100)):0;
   const cls=pct<=25?' low':(pct<=50?' mid':'');
-  return '<div class="player-cloud-hpbar" aria-label="HP '+Math.round(pct)+' percent"><div class="player-cloud-hpbar-fill'+cls+'" style="width:'+pct.toFixed(1)+'%"></div></div>';
+  return '<div class="player-cloud-hp-track" aria-label="HP '+Math.round(pct)+' percent"><div class="player-cloud-hp-fill'+cls+'" style="width:'+pct.toFixed(1)+'%"></div></div>';
+}
+function cloudSetPlayerBattleMode(active,battle){
+  const page=document.getElementById('playerCloudPage');
+  const trainer=document.getElementById('playerCloudTrainerCard');
+  const services=document.getElementById('playerCloudServicesCard');
+  const center=document.getElementById('playerCloudCenterButton');
+  const mart=document.getElementById('playerCloudMartButton');
+  const kanto=document.getElementById('playerCloudTrainerKantoMapArea');
+  const kantoButton=document.getElementById('playerCloudKantoMapButton');
+  const live=document.getElementById('playerCloudLivePill');
+  if(page)page.classList.toggle('player-battle-active',!!active);
+  if(trainer)trainer.style.display=active?'none':'';
+  if(services)services.classList.toggle('battle-compact',!!active);
+  if(center){center.disabled=!!active;center.title=active?'Unavailable during battle':'';}
+  if(mart){mart.disabled=!!active;mart.title=active?'Unavailable during battle':'';}
+  if(active){
+    if(kanto)kanto.style.display='none';
+    if(kantoButton)kantoButton.classList.remove('active');
+    if(live)live.textContent='LIVE • ROUND '+Number(battle?.round_number||1);
+  }
 }
 
 async function cloudLoadPlayerBattle(){
@@ -25414,21 +25428,21 @@ async function cloudLoadPlayerBattle(){
   if(error)throw error;
   const battle=(battles||[])[0];
   if(!battle){
+    cloudSetPlayerBattleMode(false,null);
+    cloudPlayerBattleWasActive=false;
     cloudPlayerDamageDraft="";
     cloudPlayerDamageDraftRound=null;
     area.innerHTML="";
     if(battleCard)battleCard.style.display="none";
-    cloudSetPlayerBattleMode(false);
-    cloudPlayerBattleWasActive=false;
     await cloudCheckPlayerBattleCompletion();
     return;
   }
-  const battleJustStarted=!cloudPlayerBattleWasActive;
   if(battleCard)battleCard.style.display="block";
-  cloudSetPlayerBattleMode(true);
-  cloudPlayerBattleWasActive=true;
-  const livePill=document.getElementById("playerCloudLivePill");
-  if(livePill)livePill.textContent="LIVE • R"+Number(battle.round_number);
+  cloudSetPlayerBattleMode(true,battle);
+  if(!cloudPlayerBattleWasActive){
+    cloudPlayerBattleWasActive=true;
+    setTimeout(()=>{try{battleCard?.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){}},80);
+  }
   if(cloudPlayerDamageDraftRound!==Number(battle.round_number)){
     cloudPlayerDamageDraft="";
     cloudPlayerDamageDraftRound=Number(battle.round_number);
@@ -25459,17 +25473,15 @@ async function cloudLoadPlayerBattle(){
   if(serverDamageRoll!=="" && cloudPlayerDamageDraft==="")cloudPlayerDamageDraft=serverDamageRoll;
   const moves=Array.isArray(ms.moves)?ms.moves:[];
   const pp=(ms.move_pp&&typeof ms.move_pp==="object")?ms.move_pp:{};
-  const buttons=moves.map(move=>{const md=(typeof moveDatabase!=="undefined"?moveDatabase[move]:null)||{};return '<button class="player-cloud-battle-move '+(selected===move?'selected':'')+'" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" data-move-name="'+cloudEscape(encodeURIComponent(move))+'" onclick="cloudSubmitPlayerMoveFromButton(this)"><strong>'+cloudEscape(move)+'</strong><br><span class="player-move-type">'+cloudEscape(md.type||'—')+'</span> · Dmg '+cloudEscape(md.power??'—')+' · Acc '+cloudEscape(md.accuracy??'—')+' · PP '+cloudEscape(pp[move]??'—')+(md.effect?'<div class="player-move-effect">'+cloudEscape(md.effect)+'</div>':'')+'</button>';}).join('');
-  area.innerHTML='<div class="player-cloud-battle-status">'+(selected?'Move selected: '+cloudEscape(selected)+(damageRoll?' · d20 '+damageRoll:''):'Choose your move')+'</div>'+
+  const buttons=moves.map(move=>{const md=(typeof moveDatabase!=="undefined"?moveDatabase[move]:null)||{};return '<button class="player-cloud-battle-move '+(selected===move?'selected':'')+'" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" data-move-name="'+cloudEscape(encodeURIComponent(move))+'" onclick="cloudSubmitPlayerMoveFromButton(this)"><strong>'+cloudEscape(move)+'</strong><br><span class="player-move-type">'+cloudEscape(md.type||'—')+'</span> • Dmg '+cloudEscape(md.power??'—')+' • Acc '+cloudEscape(md.accuracy??'—')+'<br>PP '+cloudEscape(pp[move]??'—')+(md.effect?'<div class="player-move-effect">'+cloudEscape(md.effect)+'</div>':'')+'</button>';}).join('');
+  const livePill=document.getElementById('playerCloudLivePill'); if(livePill)livePill.textContent='LIVE • ROUND '+Number(battle.round_number);
+  area.innerHTML='<div class="player-cloud-battle-status">'+(selected?'Move selected: '+cloudEscape(selected)+(damageRoll?' • Damage roll: '+damageRoll:''):'Choose your move')+'</div>'+
     '<div class="player-cloud-battle-grid">'+
-      '<div class="player-cloud-battle-side"><div class="player-cloud-battle-side-label">Your Pokémon</div>'+cloudBattleArtworkHTML(ms)+'<div class="player-cloud-battle-name">'+cloudEscape(ms.display_name||"Your Pokémon")+'</div><div class="player-cloud-battle-meta">Lv. '+cloudEscape(ms.level??'—')+' · HP '+cloudEscape(ms.current_hp??'—')+'/'+cloudEscape(ms.max_hp??'—')+'</div>'+cloudBattleHpBarHTML(ms)+'</div>'+
-      '<div class="player-cloud-battle-side"><div class="player-cloud-battle-side-label">Opponent</div>'+cloudBattleArtworkHTML(os)+'<div class="player-cloud-battle-name">'+cloudEscape(os.display_name||battle.opponent_name||"Opponent")+'</div><div class="player-cloud-battle-meta">Lv. '+cloudEscape(os.level??'—')+' · HP '+cloudEscape(os.current_hp??'—')+'/'+cloudEscape(os.max_hp??'—')+'</div>'+cloudBattleHpBarHTML(os)+'</div>'+
+      '<div class="player-cloud-battle-side"><div class="player-cloud-battle-side-label">Your Pokémon</div>'+cloudBattleArtworkHTML(ms)+'<div class="player-cloud-battle-name">'+cloudEscape(ms.display_name||"Your Pokémon")+'</div><div class="player-cloud-battle-meta">Lv. '+cloudEscape(ms.level??'—')+' • HP '+cloudEscape(ms.current_hp??'—')+'/'+cloudEscape(ms.max_hp??'—')+'</div>'+cloudBattleStatusHTML(ms)+cloudBattleHpBarHTML(ms)+'</div>'+
+      '<div class="player-cloud-battle-side"><div class="player-cloud-battle-side-label">Opponent</div>'+cloudBattleArtworkHTML(os)+'<div class="player-cloud-battle-name">'+cloudEscape(os.display_name||battle.opponent_name||"Opponent")+'</div><div class="player-cloud-battle-meta">Lv. '+cloudEscape(os.level??'—')+' • HP '+cloudEscape(os.current_hp??'—')+'/'+cloudEscape(os.max_hp??'—')+'</div>'+cloudBattleStatusHTML(os)+cloudBattleHpBarHTML(os)+'</div>'+
     '</div>'+
     '<div class="player-cloud-battle-moves">'+(buttons||'<div class="player-cloud-empty">No moves available.</div>')+'</div>'+
-    '<div class="player-cloud-damage-roll"><label>Damage Roll</label><div class="player-cloud-damage-roll-row"><input id="playerCloudDamageRoll" type="number" inputmode="numeric" min="1" max="20" value="'+cloudEscape(damageRoll)+'" placeholder="1–20" oninput="cloudPlayerDamageDraft=this.value"><button class="small-button" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerDamageRollFromButton(this)">Submit</button></div></div>';
-  if(battleJustStarted&&battleCard){
-    setTimeout(()=>battleCard.scrollIntoView({behavior:'smooth',block:'start'}),50);
-  }
+    '<div class="player-cloud-damage-roll"><label>Damage Roll</label><div class="player-cloud-damage-roll-row"><input id="playerCloudDamageRoll" type="number" inputmode="numeric" min="1" max="20" value="'+cloudEscape(damageRoll)+'" placeholder="1–20" oninput="cloudPlayerDamageDraft=this.value"><button class="small-button" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerDamageRollFromButton(this)">Submit Roll</button></div></div>';
 }
 
 function cloudSubmitPlayerMoveFromButton(button){
@@ -25488,7 +25500,7 @@ function cloudSubmitPlayerMoveFromButton(button){
   }
   button.classList.add("selected");
   const status=document.querySelector("#playerCloudBattleArea .player-cloud-battle-status");
-  if(status)status.innerHTML='<strong>Round '+cloudEscape(roundNumber)+'</strong> • Submitting '+cloudEscape(moveName)+'…';
+  if(status)status.textContent='Submitting '+moveName+'…';
 
   cloudSubmitPlayerMove(battleId,participantId,roundNumber,moveName).catch(error=>{
     console.error("Player move submission failed",error);
