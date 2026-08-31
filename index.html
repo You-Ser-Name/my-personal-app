@@ -444,6 +444,24 @@ select {
   margin-top:10px;
 }
 
+.dm-player-selection-summary {
+  margin:12px 0 8px;
+  padding:10px 12px;
+  border:1px solid #d8d8d8;
+  border-radius:8px;
+  background:#f7f7f7;
+  font-size:14px;
+  line-height:1.35;
+}
+
+.dm-player-selection-summary strong {
+  font-weight:800;
+}
+
+.dm-player-selection-summary span {
+  font-weight:700;
+}
+
 .battle-collapsible {
   display:none;
   margin-top:8px;
@@ -12181,11 +12199,13 @@ function getGen1AccuracyStageMultiplier(
 const battleOpenSections = {
   A:{
     Stats:false,
-    Stages:false
+    Stages:false,
+    Details:false
   },
   B:{
     Stats:false,
-    Stages:false
+    Stages:false,
+    Details:false
   }
 };
 
@@ -12195,13 +12215,15 @@ function restoreBattleOpenSections() {
   ["A","B"].forEach(
     function(side) {
 
-      ["Stats","Stages"].forEach(
+      ["Stats","Stages","Details"].forEach(
         function(sectionName) {
 
           const id =
             sectionName === "Stats"
             ? "battleStats" + side
-            : "battleStages" + side;
+            : sectionName === "Stages"
+              ? "battleStages" + side
+              : "battlePartyDetails" + side;
 
           const section =
             document.getElementById(
@@ -14315,8 +14337,10 @@ function endBattle(force=false){
   battleUndoHistory=[];
   battleOpenSections.A.Stats=false;
   battleOpenSections.A.Stages=false;
+  battleOpenSections.A.Details=false;
   battleOpenSections.B.Stats=false;
   battleOpenSections.B.Stages=false;
+  battleOpenSections.B.Details=false;
   activeBattlePokemonAId=null;
   activeBattlePokemonBId=null;
   activeWildBattlePokemon=null;
@@ -15779,6 +15803,42 @@ function getBattleMoveButtonsHTML(
 }
 
 
+function getDmPartySelectionSummaryHTML(pokemon) {
+
+  const trainerName =
+    getTrainerNameForPokemon(pokemon) ||
+    "Trainer";
+
+  const action = battleTurnMoves.A;
+  let selection = "Waiting for selection";
+
+  if (action) {
+    if (isBattleRunAction(action)) {
+      selection = "Request to flee";
+    }
+    else if (isBattleSwapAction(action)) {
+      selection = getBattleActionDisplayName("A");
+    }
+    else if (isBattleItemAction(action)) {
+      selection = getBattleActionDisplayName("A");
+    }
+    else if (isBattleMoveAction(action)) {
+      selection = action;
+    }
+    else {
+      selection = getBattleActionDisplayName("A");
+    }
+  }
+
+  return `
+    <div class="dm-player-selection-summary">
+      <strong>${trainerName}'s selection:</strong>
+      <span>${selection}</span>
+    </div>
+  `;
+}
+
+
 function buildBattleCardHTML(
   pokemon,
   side
@@ -15999,6 +16059,21 @@ function buildBattleCardHTML(
       : ""
     }
 
+    ${
+      side === "A"
+      ? `
+        ${getDmPartySelectionSummaryHTML(pokemon)}
+        <button
+          id="battlePartyDetailsButtonA"
+          class="small-button battle-collapse-button"
+          onclick="toggleBattleSection('A','Details')">
+          Show Party Pokémon Controls
+        </button>
+        <div id="battlePartyDetailsA" class="battle-collapsible">
+      `
+      : ""
+    }
+
     <div class="form-row" style="margin-top:15px;">
       <label>Major Status</label>
       <select
@@ -16117,6 +16192,8 @@ function buildBattleCardHTML(
     <div style="margin-top:14px;">
       ${actionControls}
     </div>
+
+    ${side === "A" ? "</div>" : ""}
   `;
 }
 
@@ -16148,7 +16225,9 @@ function toggleBattleSection(
   const id =
     sectionName === "Stats"
     ? "battleStats" + side
-    : "battleStages" + side;
+    : sectionName === "Stages"
+      ? "battleStages" + side
+      : "battlePartyDetails" + side;
 
   const section =
     document.getElementById(
@@ -16156,14 +16235,27 @@ function toggleBattleSection(
     );
 
   if (section) {
+    const isOpen =
+      battleOpenSections[side][sectionName];
+
     section.style.display =
-      battleOpenSections[
-        side
-      ][
-        sectionName
-      ]
+      isOpen
       ? "block"
       : "none";
+
+    if (sectionName === "Details") {
+      const button =
+        document.getElementById(
+          "battlePartyDetailsButton" + side
+        );
+
+      if (button) {
+        button.textContent =
+          isOpen
+          ? "Hide Party Pokémon Controls"
+          : "Show Party Pokémon Controls";
+      }
+    }
   }
 }
 
