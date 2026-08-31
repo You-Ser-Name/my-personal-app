@@ -2457,6 +2457,25 @@ select {
 }
 
 
+
+/* Restore compact detailed-map sizing after the story-system update. */
+#kantoDetailMapPage .kanto-detail-map-stage{
+  width:100%;
+  max-width:680px;
+  margin-left:auto;
+  margin-right:auto;
+}
+#kantoDetailMapPage .kanto-detail-map-caption,
+#kantoDetailMapPage #dmStoryMapBanner,
+#kantoDetailMapPage #kantoDetailWildEncounterButton,
+#kantoDetailMapPage #kantoDetailLocationPanel,
+#kantoDetailMapPage #kantoDetailTrainerPanel{
+  width:100%;
+  max-width:680px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
 /* DM-only Campaign Story system */
 .story-arc-card{border:1px solid #dfd4c3;background:linear-gradient(180deg,#fffdf8,#fff9ee);box-shadow:0 2px 8px rgba(84,60,20,.08)}
 .story-arc-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
@@ -8954,6 +8973,14 @@ const dmCampaignStoryEvents=[
 {id:"resonance-19",order:19,arc:"The Kanto Resonance",type:"Endgame",locationId:"indigo-plateau",location:"Endgame",building:"Final Resonance Site",title:"Mewtwo and the Truth of the Project",hook:"The final phase of the Resonance Project collides with the existence of Mewtwo—the clearest possible consequence of treating Pokémon power as something humans can engineer and control.",playerInfo:"The party finally understands that the campaign's scattered mysteries were pieces of one decades-long argument about the relationship between people, Pokémon, and control.",dmSecret:"The antagonist's plan should force a genuine choice: destroy the technology, preserve only passive monitoring, attempt strict safeguards, or find another solution. Mewtwo's own perspective can challenge both sides.",objective:"Resolve the network crisis, confront its architect, survive or negotiate the Mewtwo encounter, and decide the future of the Resonance technology.",npcs:"Mewtwo; modern Resonance architect; surviving researchers; allies gathered through the campaign",encounter:"Final multi-stage story encounter combining technology, Pokémon conflict, and a meaningful decision.",clues:"All prior clues converge here; no new mystery is required—the payoff is understanding and choice.",reward:"Campaign-defining resolution and the long-term fate of Kanto's Resonance network.",unlocks:"Epilogue."}
 ];
 
+function dmStoryEscape(value){
+  return String(value==null?"":value)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#39;");
+}
 function getDmStoryState(){
   let stored={};
   try{stored=JSON.parse(localStorage.getItem(DM_STORY_STATE_KEY)||"{}")||{};}catch(e){stored={};}
@@ -9002,7 +9029,7 @@ function setDmStoryFilter(filter,button){
 }
 function storyFieldHTML(label,value){
   if(!value)return"";
-  return '<div class="story-field"><div class="story-field-label">'+escapeHtml(label)+'</div><div class="story-field-text">'+escapeHtml(value)+'</div></div>';
+  return '<div class="story-field"><div class="story-field-label">'+dmStoryEscape(label)+'</div><div class="story-field-text">'+dmStoryEscape(value)+'</div></div>';
 }
 function renderDmStoryDashboard(){
   const list=document.getElementById("dmStoryEventList"); if(!list)return;
@@ -9019,12 +9046,12 @@ function renderDmStoryDashboard(){
   list.innerHTML=visible.map(event=>{
     const status=state.events[event.id];
     return '<details class="story-event-card story-'+status+'" id="story-card-'+event.id+'">'+
-      '<summary class="story-event-summary"><span class="story-order-badge">'+event.order+'</span><span><div class="story-event-name">'+escapeHtml(event.title)+'</div><div class="story-event-location">'+escapeHtml(event.location)+' • '+escapeHtml(event.building)+' • '+escapeHtml(event.type)+'</div></span><span class="story-status-pill '+status+'">'+dmStoryStatusLabel(status)+'</span></summary>'+
-      '<div class="story-event-body"><div class="story-event-hook">'+escapeHtml(event.hook)+'</div>'+
+      '<summary class="story-event-summary"><span class="story-order-badge">'+event.order+'</span><span><div class="story-event-name">'+dmStoryEscape(event.title)+'</div><div class="story-event-location">'+dmStoryEscape(event.location)+' • '+dmStoryEscape(event.building)+' • '+dmStoryEscape(event.type)+'</div></span><span class="story-status-pill '+status+'">'+dmStoryStatusLabel(status)+'</span></summary>'+
+      '<div class="story-event-body"><div class="story-event-hook">'+dmStoryEscape(event.hook)+'</div>'+
       storyFieldHTML("Player Information",event.playerInfo)+storyFieldHTML("DM Secret",event.dmSecret)+storyFieldHTML("Objective",event.objective)+storyFieldHTML("NPCs",event.npcs)+storyFieldHTML("Encounter / Challenge",event.encounter)+storyFieldHTML("Clues",event.clues)+storyFieldHTML("Reward",event.reward)+storyFieldHTML("Unlocks",event.unlocks)+
-      '<div class="story-field"><div class="story-field-label">DM Notes</div><textarea class="story-event-notes" placeholder="Session notes, changes, NPC names, outcomes…" data-story-id="'+escapeHtml(event.id)+'" oninput="saveDmStoryNote(this.dataset.storyId,this.value)">'+escapeHtml(state.notes[event.id]||"")+'</textarea></div>'+
-      '<div class="story-event-actions"><label>Status<select data-story-id="'+escapeHtml(event.id)+'" onchange="setDmStoryStatus(this.dataset.storyId,this.value)"><option value="locked" '+(status==="locked"?"selected":"")+'>Locked</option><option value="available" '+(status==="available"?"selected":"")+'>Available</option><option value="active" '+(status==="active"?"selected":"")+'>Active</option><option value="completed" '+(status==="completed"?"selected":"")+'>Completed</option></select></label><button class="small-button" type="button" data-story-id="'+escapeHtml(event.id)+'" onclick="event.preventDefault();openDmStoryLocation(this.dataset.storyId)">Open Map</button></div>'+
-      (event.order<dmCampaignStoryEvents.length?'<button class="small-button story-unlock-next" type="button" data-story-id="'+escapeHtml(event.id)+'" onclick="unlockNextDmStoryEvent(this.dataset.storyId)">Complete & Unlock Next Story Event</button>':'')+
+      '<div class="story-field"><div class="story-field-label">DM Notes</div><textarea class="story-event-notes" placeholder="Session notes, changes, NPC names, outcomes…" data-story-id="'+dmStoryEscape(event.id)+'" oninput="saveDmStoryNote(this.dataset.storyId,this.value)">'+dmStoryEscape(state.notes[event.id]||"")+'</textarea></div>'+
+      '<div class="story-event-actions"><label>Status<select data-story-id="'+dmStoryEscape(event.id)+'" onchange="setDmStoryStatus(this.dataset.storyId,this.value)"><option value="locked" '+(status==="locked"?"selected":"")+'>Locked</option><option value="available" '+(status==="available"?"selected":"")+'>Available</option><option value="active" '+(status==="active"?"selected":"")+'>Active</option><option value="completed" '+(status==="completed"?"selected":"")+'>Completed</option></select></label><button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="event.preventDefault();openDmStoryLocation(this.dataset.storyId)">Open Map</button></div>'+
+      (event.order<dmCampaignStoryEvents.length?'<button class="small-button story-unlock-next" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="unlockNextDmStoryEvent(this.dataset.storyId)">Complete & Unlock Next Story Event</button>':'')+
       '</div></details>';
   }).join("")||'<div class="empty-message">No story events match this filter.</div>';
 }
@@ -9055,17 +9082,17 @@ function renderDmStoryMapBanner(locationId){
   const leadStatus=getDmStoryStatus(lead.id);
   box.className="story-map-banner show";
   box.innerHTML='<div class="story-map-banner-eyebrow">Campaign Arc'+(actionable.length>1?' • '+actionable.length+' events available':'')+'</div>'+
-    '<div class="story-map-banner-title">'+escapeHtml(lead.title)+'</div>'+
-    '<div class="story-map-banner-text">'+escapeHtml(lead.hook)+'</div>'+
-    '<div class="story-map-banner-actions"><button class="small-button" type="button" data-story-id="'+escapeHtml(lead.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">View Story Details</button>'+
-    (leadStatus==="available"?'<button class="small-button" type="button" data-story-id="'+escapeHtml(lead.id)+'" onclick="setDmStoryStatus(this.dataset.storyId,\'active\')">Start Event</button>':'')+'</div>';
+    '<div class="story-map-banner-title">'+dmStoryEscape(lead.title)+'</div>'+
+    '<div class="story-map-banner-text">'+dmStoryEscape(lead.hook)+'</div>'+
+    '<div class="story-map-banner-actions"><button class="small-button" type="button" data-story-id="'+dmStoryEscape(lead.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">View Story Details</button>'+
+    (leadStatus==="available"?'<button class="small-button" type="button" data-story-id="'+dmStoryEscape(lead.id)+'" onclick="setDmStoryStatus(this.dataset.storyId,\'active\')">Start Event</button>':'')+'</div>';
 }
 function renderDmStoryLandmarkPanel(location){
   const panel=document.getElementById("dmStoryLandmarkPanel");if(!panel)return;
   const event=location?.storyEventId?getDmStoryEvent(location.storyEventId):null;
   if(!event||!dmStoryVisibleOnMap(event)){panel.innerHTML="";return;}
   const status=getDmStoryStatus(event.id);
-  panel.innerHTML='<div class="story-landmark-panel"><div class="story-landmark-title">Campaign Story: '+escapeHtml(event.title)+'</div><div class="story-landmark-status">'+dmStoryStatusLabel(status)+'</div><div class="story-landmark-hook">'+escapeHtml(event.hook)+'</div><button class="small-button story-landmark-button" type="button" data-story-id="'+escapeHtml(event.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">Open DM Story Guide</button></div>';
+  panel.innerHTML='<div class="story-landmark-panel"><div class="story-landmark-title">Campaign Story: '+dmStoryEscape(event.title)+'</div><div class="story-landmark-status">'+dmStoryStatusLabel(status)+'</div><div class="story-landmark-hook">'+dmStoryEscape(event.hook)+'</div><button class="small-button story-landmark-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">Open DM Story Guide</button></div>';
 }
 
 const KANTO_MAP_PROGRESS_KEY =
