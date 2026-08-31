@@ -23930,30 +23930,52 @@ function cloudEscape(value){
   });
 }
 
-function cloudPokemonArtworkURL(pokemon){
-  if(typeof getPokemonFandomArtworkURL!=="function")return "";
+function cloudResolvePokemonArtworkNumber(pokemon){
   let number=Number(pokemon?.pokedex_number ?? pokemon?.speciesNumber ?? pokemon?.pokedexNumber ?? pokemon?.number);
+  if(Number.isInteger(number) && number>0)return number;
+
   const species=String(pokemon?.species ?? pokemon?.speciesName ?? pokemon?.name ?? "").trim();
-  let dbPokemon=null;
-  if(typeof pokemonDatabase!=="undefined" && Array.isArray(pokemonDatabase)){
-    if(Number.isInteger(number) && number>0){
-      dbPokemon=pokemonDatabase.find(entry=>Number(entry.number)===number)||null;
-    }
-    // Some post-migration cloud Pokémon (notably newer players such as Ryan)
-    // can briefly have pokedex_number=0 even though species is valid. Resolve
-    // the Pokédex number by species so artwork survives a hard refresh.
-    if(!dbPokemon && species){
-      const wanted=species.toLowerCase();
-      dbPokemon=pokemonDatabase.find(entry=>String(entry.name||"").trim().toLowerCase()===wanted)||null;
-      if(dbPokemon)number=Number(dbPokemon.number);
+  if(species && typeof pokemonDatabase!=="undefined" && Array.isArray(pokemonDatabase)){
+    const wanted=species.toLowerCase();
+    const match=pokemonDatabase.find(entry=>String(entry.name||"").trim().toLowerCase()===wanted)||null;
+    if(match){
+      number=Number(match.number);
+      if(Number.isInteger(number) && number>0)return number;
     }
   }
-  const artworkPokemon=dbPokemon || ((Number.isInteger(number) && number>0 && species)?{number:number,name:species}:null);
-  return artworkPokemon ? getPokemonFandomArtworkURL(artworkPokemon) : "";
+  return 0;
+}
+
+function cloudPokemonArtworkURL(pokemon){
+  const number=cloudResolvePokemonArtworkNumber(pokemon);
+  if(!number)return "";
+
+  // Player-facing cloud artwork now uses a number-only source. This avoids a
+  // refresh-time race between cloud rows and the local Pokédex database and
+  // also avoids Fandom filename/redirect failures. It works the same for
+  // original migrated players and players added later.
+  return "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/"+number+".png";
+}
+
+function cloudPokemonArtworkFallbackURL(image){
+  if(!image || typeof getPokemonFandomArtworkURL!=="function")return "";
+  const match=String(image.src||"").match(/official-artwork\/(\d+)\.png/i);
+  const number=match?Number(match[1]):0;
+  const species=String(image.alt||"").trim();
+  if(!Number.isInteger(number)||number<=0||!species)return "";
+  return getPokemonFandomArtworkURL({number:number,name:species});
 }
 
 function handleCloudPokemonArtworkError(image){
   if(!image)return;
+  if(image.dataset && image.dataset.artFallbackTried!=="1"){
+    const fallbackURL=cloudPokemonArtworkFallbackURL(image);
+    if(fallbackURL && fallbackURL!==image.src){
+      image.dataset.artFallbackTried="1";
+      image.src=fallbackURL;
+      return;
+    }
+  }
   image.style.display="none";
   const wrap=image.parentElement;
   const fallback=wrap?wrap.querySelector(".player-cloud-pokemon-icon-fallback"):null;
@@ -24428,25 +24450,30 @@ function closePlayerKantoDetailMap(){
 }
 
 function cloudBattleSnapshotArtworkURL(snapshot){
-  if(!snapshot || typeof getPokemonFandomArtworkURL!=="function")return "";
-  const number=Number(snapshot.pokedex_number);
-  const species=String(snapshot.species||snapshot.display_name||"").trim();
-  let dbPokemon=null;
-  if(typeof pokemonDatabase!=="undefined" && Array.isArray(pokemonDatabase)){
-    dbPokemon=(Number.isInteger(number)&&number>0)?pokemonDatabase.find(function(entry){return Number(entry.number)===number;}):null;
-    if(!dbPokemon && species){
-      const wanted=species.toLowerCase();
-      dbPokemon=pokemonDatabase.find(function(entry){return String(entry.name||"").trim().toLowerCase()===wanted;});
+  return snapshot?cloudPokemonArtworkURL({
+    pokedex_number:snapshot.pokedex_number,
+    species:snapshot.species||snapshot.display_name||""
+  }):"";
+}
+
+function handleCloudBattleArtworkError(image){
+  if(!image)return;
+  if(image.dataset && image.dataset.artFallbackTried!=="1"){
+    const fallbackURL=cloudPokemonArtworkFallbackURL(image);
+    if(fallbackURL && fallbackURL!==image.src){
+      image.dataset.artFallbackTried="1";
+      image.src=fallbackURL;
+      return;
     }
   }
-  const artworkPokemon=dbPokemon || (Number.isInteger(number) && number>0 && species ? {number:number,name:species} : null);
-  return artworkPokemon?getPokemonFandomArtworkURL(artworkPokemon):"";
+  image.style.display="none";
+  if(image.nextElementSibling)image.nextElementSibling.style.display="flex";
 }
 
 function cloudBattleArtworkHTML(snapshot){
   const url=cloudBattleSnapshotArtworkURL(snapshot);
   if(!url)return '<div class="player-cloud-battle-art-fallback">Artwork unavailable</div>';
-  return '<img class="player-cloud-battle-art" src="'+cloudEscape(url)+'" alt="'+cloudEscape(snapshot?.species||snapshot?.display_name||"Pokémon")+'" loading="eager" referrerpolicy="no-referrer" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';"><div class="player-cloud-battle-art-fallback" style="display:none;">Artwork unavailable</div>';
+  return '<img class="player-cloud-battle-art" src="'+cloudEscape(url)+'" alt="'+cloudEscape(snapshot?.species||snapshot?.display_name||"Pokémon")+'" loading="eager" referrerpolicy="no-referrer" onerror="handleCloudBattleArtworkError(this)"><div class="player-cloud-battle-art-fallback" style="display:none;">Artwork unavailable</div>';
 }
 
 
@@ -24553,7 +24580,7 @@ function cloudRenderPlayerPartyStrip(party){
   }).join('');
   strip.style.display=members.length?'flex':'none';
 }
-function cloudRenderPlayerStorage(stored,state){const list=document.getElementById('playerCloudStorageList');if(!list)return;const atCenter=CLOUD_CENTER_LOCATIONS.has(state?.current_location_id);list.innerHTML=stored.length?stored.map(p=>{const art=cloudPokemonArtworkURL(p);return '<div class="player-storage-item">'+(art?'<img src="'+cloudEscape(art)+'" alt="'+cloudEscape(p.species)+'">':'')+'<div><strong>'+cloudEscape(p.nickname||p.species)+'</strong><div class="player-cloud-meta">'+cloudEscape(p.species)+' • Lv. '+cloudEscape(p.level)+'</div>'+cloudPokemonTypesHTML(p)+'</div><div class="player-storage-actions"><button class="small-button" type="button" '+(atCenter?'':'disabled')+' onclick="cloudPlayerMoveStorage(\''+p.id+'\',\'party\')">Move to Party</button></div></div>';}).join(''):'<div class="player-cloud-empty">PC storage is empty.</div>';if(!atCenter)list.innerHTML+='<div class="player-cloud-meta" style="margin-top:7px;">Storage is view-only outside a Poké Center.</div>';}
+function cloudRenderPlayerStorage(stored,state){const list=document.getElementById('playerCloudStorageList');if(!list)return;const atCenter=CLOUD_CENTER_LOCATIONS.has(state?.current_location_id);list.innerHTML=stored.length?stored.map(p=>{const art=cloudPokemonArtworkURL(p);return '<div class="player-storage-item">'+(art?'<img src="'+cloudEscape(art)+'" alt="'+cloudEscape(p.species)+'" onerror="handleCloudPokemonArtworkError(this)">':'')+'<div><strong>'+cloudEscape(p.nickname||p.species)+'</strong><div class="player-cloud-meta">'+cloudEscape(p.species)+' • Lv. '+cloudEscape(p.level)+'</div>'+cloudPokemonTypesHTML(p)+'</div><div class="player-storage-actions"><button class="small-button" type="button" '+(atCenter?'':'disabled')+' onclick="cloudPlayerMoveStorage(\''+p.id+'\',\'party\')">Move to Party</button></div></div>';}).join(''):'<div class="player-cloud-empty">PC storage is empty.</div>';if(!atCenter)list.innerHTML+='<div class="player-cloud-meta" style="margin-top:7px;">Storage is view-only outside a Poké Center.</div>';}
 function cloudRenderPlayerServices(state){const card=document.getElementById('playerCloudServicesCard'),loc=state?.current_location_id||'',hasCenter=CLOUD_CENTER_LOCATIONS.has(loc),hasMart=CLOUD_MART_LOCATIONS.has(loc),hasMap=!!kantoDetailMaps?.[loc],title=document.getElementById('playerCloudServicesTitle');if(card)card.style.display=(hasCenter||hasMart||hasMap)?'block':'none';if(title)title.textContent=cloudLocationName(loc);const cb=document.getElementById('playerCloudCenterButton'),mb=document.getElementById('playerCloudMartButton'),mapButton=document.getElementById('playerCloudLocationMapButton'),mapArea=document.getElementById('playerCloudLocationMapArea'),mapImage=document.getElementById('playerCloudLocationMapImage');if(cb)cb.style.display=hasCenter?'block':'none';if(mb)mb.style.display=hasMart?'block':'none';if(mapButton){mapButton.style.display=hasMap?'block':'none';if(mapArea?.style.display!=='block')mapButton.textContent='Map';}if(!hasMap&&mapArea)mapArea.style.display='none';if(mapArea?.style.display==='block'&&mapImage&&hasMap){const detail=kantoDetailMaps[loc];mapImage.src=detail.image;mapImage.alt=detail.alt||((detail.title||cloudLocationName(loc))+' map');}}
 function cloudPlayerOpenCurrentLocationMap(){
   const loc=cloudPlayerStateCache?.current_location_id||'';
