@@ -23931,13 +23931,18 @@ function cloudEscape(value){
 }
 
 function cloudPokemonArtworkURL(pokemon){
-  const number=Number(pokemon?.pokedex_number);
+  const number=Number(pokemon?.pokedex_number ?? pokemon?.number);
   if(!Number.isInteger(number))return "";
   const dbPokemon=(typeof pokemonDatabase!=="undefined" && Array.isArray(pokemonDatabase))
     ? pokemonDatabase.find(entry=>Number(entry.number)===number)
     : null;
-  if(!dbPokemon || typeof getPokemonFandomArtworkURL!=="function")return "";
-  return getPokemonFandomArtworkURL(dbPokemon);
+  const species=String(pokemon?.species ?? pokemon?.name ?? dbPokemon?.name ?? "").trim();
+  if(typeof getPokemonFandomArtworkURL!=="function")return "";
+  // The player portal can render before pokemonDatabase finishes initializing
+  // after a hard refresh. Fall back to the cloud species/number immediately so
+  // artwork does not wait for a later state change to appear.
+  const artworkPokemon=dbPokemon || (species ? {number:number,name:species} : null);
+  return artworkPokemon ? getPokemonFandomArtworkURL(artworkPokemon) : "";
 }
 
 function handleCloudPokemonArtworkError(image){
@@ -24416,14 +24421,19 @@ function closePlayerKantoDetailMap(){
 }
 
 function cloudBattleSnapshotArtworkURL(snapshot){
-  if(!snapshot || typeof pokemonDatabase==="undefined" || !Array.isArray(pokemonDatabase) || typeof getPokemonFandomArtworkURL!=="function")return "";
+  if(!snapshot || typeof getPokemonFandomArtworkURL!=="function")return "";
   const number=Number(snapshot.pokedex_number);
-  let dbPokemon=Number.isInteger(number)?pokemonDatabase.find(function(entry){return Number(entry.number)===number;}):null;
-  if(!dbPokemon && snapshot.species){
-    const wanted=String(snapshot.species).trim().toLowerCase();
-    dbPokemon=pokemonDatabase.find(function(entry){return String(entry.name||"").trim().toLowerCase()===wanted;});
+  const species=String(snapshot.species||snapshot.display_name||"").trim();
+  let dbPokemon=null;
+  if(typeof pokemonDatabase!=="undefined" && Array.isArray(pokemonDatabase)){
+    dbPokemon=Number.isInteger(number)?pokemonDatabase.find(function(entry){return Number(entry.number)===number;}):null;
+    if(!dbPokemon && species){
+      const wanted=species.toLowerCase();
+      dbPokemon=pokemonDatabase.find(function(entry){return String(entry.name||"").trim().toLowerCase()===wanted;});
+    }
   }
-  return dbPokemon?getPokemonFandomArtworkURL(dbPokemon):"";
+  const artworkPokemon=dbPokemon || (Number.isInteger(number) && species ? {number:number,name:species} : null);
+  return artworkPokemon?getPokemonFandomArtworkURL(artworkPokemon):"";
 }
 
 function cloudBattleArtworkHTML(snapshot){
