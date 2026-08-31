@@ -3090,7 +3090,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
     </div>
     <div class="player-cloud-card">
       <details id="playerCloudPartyDetails" class="player-cloud-inventory-details player-dashboard-details">
-        <summary><span class="player-section-summary-main"><span class="player-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"></circle><circle cx="16" cy="8" r="3"></circle><path d="M3.5 19c.4-3.2 2.1-5 4.5-5s4.1 1.8 4.5 5M11.5 19c.4-3.2 2.1-5 4.5-5s4.1 1.8 4.5 5"></path></svg></span><span>Party</span></span><span id="playerCloudPartyCount" class="player-summary-pill player-party-count-pill">0 players</span></summary>
+        <summary><span class="player-section-summary-main"><span class="player-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"></circle><circle cx="16" cy="8" r="3"></circle><path d="M3.5 19c.4-3.2 2.1-5 4.5-5s4.1 1.8 4.5 5M11.5 19c.4-3.2 2.1-5 4.5-5s4.1 1.8 4.5 5"></path></svg></span><span>Party</span></span><span id="playerCloudSharedPartyStrip" class="player-party-strip" aria-label="Active party Pokémon"></span></summary>
         <div id="playerCloudPartyOverview" class="player-party-overview-list"><div class="player-cloud-empty">Loading party…</div></div>
       </details>
     </div>
@@ -24877,8 +24877,12 @@ async function cloudLoadPlayerPartyOverview(forceRender=false){
   if(!cloudSupabaseClient||!cloudCurrentCampaign?.id||cloudCurrentMembership?.role!=='player')return;
   const {data,error}=await cloudSupabaseClient.rpc('player_party_overview',{p_campaign_id:cloudCurrentCampaign.id});
   const list=document.getElementById('playerCloudPartyOverview');
-  const count=document.getElementById('playerCloudPartyCount');
-  if(error){if(list)list.innerHTML='<div class="player-cloud-empty">Party overview unavailable until the latest database update is installed.</div>';return;}
+  const sharedStrip=document.getElementById('playerCloudSharedPartyStrip');
+  if(error){
+    if(list)list.innerHTML='<div class="player-cloud-empty">Party overview unavailable until the latest database update is installed.</div>';
+    if(sharedStrip){sharedStrip.innerHTML='';sharedStrip.style.display='none';}
+    return;
+  }
   const rows=Array.isArray(data)?data:[];
   const grouped=new Map();
   rows.forEach(row=>{
@@ -24888,7 +24892,19 @@ async function cloudLoadPlayerPartyOverview(forceRender=false){
     if(row.pokemon_id)grouped.get(id).pokemon.push(row);
   });
   const members=Array.from(grouped.values());
-  if(count)count.textContent=members.length+' Player'+(members.length===1?'':'s');
+
+  // Minimized Party summary: use the exact same Pokémon-icon presentation as
+  // the minimized My Pokémon section, but show every active party Pokémon.
+  if(sharedStrip){
+    const allActivePokemon=members.flatMap(member=>member.pokemon||[]);
+    sharedStrip.innerHTML=allActivePokemon.map(p=>{
+      const art=cloudPokemonArtworkURL({pokedex_number:p.pokedex_number,species:p.species});
+      const name=cloudEscape(p.nickname||p.species||'Pokémon');
+      return art?'<span class="player-party-icon-wrap" title="'+name+'"><img src="'+cloudEscape(art)+'" alt="'+name+'" onerror="handleCloudPokemonArtworkError(this)"></span>':'';
+    }).join('');
+    sharedStrip.style.display=allActivePokemon.length?'flex':'none';
+  }
+
   const signature=JSON.stringify(members.map(m=>[m.trainer_id,m.player_name,m.trainer_name,m.pokemon.map(p=>[p.pokemon_id,p.current_hp,p.status]).flat()]));
   if(!forceRender&&signature===cloudPlayerPartyOverviewSignature)return;
   cloudPlayerPartyOverviewSignature=signature;
