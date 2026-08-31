@@ -24814,21 +24814,48 @@ async function cloudSyncPcTrainerStateNow(){
   if(!cloudSupabaseClient||cloudCurrentMembership?.role!=="dm"||!cloudCurrentCampaign||!Array.isArray(trainers))return;
   const {data:rows,error}=await cloudSupabaseClient
     .from("trainers")
-    .select("id,extra_data")
+    .select("id,name,extra_data")
     .eq("campaign_id",cloudCurrentCampaign.id)
     .eq("trainer_type","pc");
   if(error)throw error;
+
+  const normalize=value=>String(value??"").trim().toLowerCase();
   const byLocalId=new Map();
+  const unlinkedByName=new Map();
   (rows||[]).forEach(row=>{
     const localId=row?.extra_data?.local_id;
-    if(localId!==undefined&&localId!==null)byLocalId.set(String(localId),row);
+    if(localId!==undefined&&localId!==null&&String(localId)!==""){
+      byLocalId.set(String(localId),row);
+      return;
+    }
+    // Cloud-created players (for example a newly added Auth user/trainer) may
+    // not yet have a local_id. Fall back to the stored player name so the DM's
+    // existing local trainer can be linked automatically on first save.
+    const keys=[row?.name,row?.extra_data?.player_name].map(normalize).filter(Boolean);
+    keys.forEach(key=>{
+      if(!unlinkedByName.has(key))unlinkedByName.set(key,[]);
+      unlinkedByName.get(key).push(row);
+    });
   });
+
   for(const trainer of trainers.filter(t=>t&&String(t.trainerType||"").toUpperCase()==="PC")){
-    const row=byLocalId.get(String(trainer.id));
+    let row=byLocalId.get(String(trainer.id));
+    if(!row){
+      const nameKey=normalize(trainer.name);
+      const candidates=unlinkedByName.get(nameKey)||[];
+      if(candidates.length===1){
+        row=candidates[0];
+        byLocalId.set(String(trainer.id),row);
+        unlinkedByName.delete(nameKey);
+      }
+    }
     if(!row)continue;
-    const extra=Object.assign({},row.extra_data||{},{
+
+    const extra=Object.assign({},row.extra_data||{}, {
       local_id:trainer.id,
-      trainerName:String(trainer.trainerName||trainer.name||"")
+      player_name:String(trainer.name||"Trainer"),
+      trainerName:String(trainer.trainerName||trainer.name||""),
+      trainer_name:String(trainer.trainerName||trainer.name||"")
     });
     const {error:updateError}=await cloudSupabaseClient.from("trainers").update({
       name:String(trainer.name||"Trainer"),
@@ -24894,7 +24921,12 @@ async function cloudPullPcTrainerStateToDm(){
     let changed=false;
     for(const row of rows||[]){
       const localId=row?.extra_data?.local_id;
-      const local=trainers.find(t=>String(t?.id)===String(localId));
+      let local=trainers.find(t=>localId!==undefined&&localId!==null&&String(t?.id)===String(localId));
+      if(!local){
+        const cloudPlayerName=String(row?.extra_data?.player_name||row?.name||"").trim().toLowerCase();
+        const matches=trainers.filter(t=>String(t?.trainerType||"").toUpperCase()==="PC"&&String(t?.name||"").trim().toLowerCase()===cloudPlayerName);
+        if(matches.length===1)local=matches[0];
+      }
       if(!local)continue;
       const cloudInventory=Array.isArray(row.inventory)?row.inventory:[];
       const nextMoney=Number(row.money)||0;
