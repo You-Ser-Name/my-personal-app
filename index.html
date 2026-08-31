@@ -2552,7 +2552,15 @@ select {
 .story-map-banner-other-label{font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#8a641e;margin-bottom:6px}
 .story-map-banner-other-list{display:flex;gap:6px;flex-wrap:wrap}
 .story-map-banner-note{font-size:10px;color:#7a6d5d;margin-top:7px}
-.story-map-hotspot-marker::after{content:"!";position:absolute;left:var(--story-marker-left,50%);top:var(--story-marker-top,50%);transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:#c28b25;color:white;border:2px solid rgba(255,255,255,.95);box-shadow:0 2px 6px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:950;pointer-events:none}
+.story-map-banner-list{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.story-map-entry{padding:10px 0 0}
+.story-map-entry + .story-map-entry{border-top:1px solid rgba(138,100,30,.18)}
+.story-map-entry:first-child{padding-top:0}
+.story-map-entry-meta{font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#8a641e;margin-bottom:3px}
+.story-map-entry-title{font-size:14px;font-weight:950;line-height:1.2}
+.story-map-entry-hook{font-size:10.5px;line-height:1.4;color:#665b4d;margin-top:4px}
+.story-map-entry-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.story-map-hotspot-marker::after{content:"!";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:#c28b25;color:white;border:2px solid rgba(255,255,255,.95);box-shadow:0 2px 6px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:950;pointer-events:none}
 .story-map-hotspot-marker.story-completed-marker::after{content:"✓";background:#5e855b}
 .story-landmark-panel{margin-top:10px;padding:10px;border-radius:9px;background:#fff7e5;border:1px solid #dfc68d}
 .story-landmark-title{font-size:12px;font-weight:950;color:#6e5016}
@@ -9223,30 +9231,33 @@ function getDmStoryEventsForLocation(locationId){
 function renderDmStoryMapBanner(locationId){
   const box=document.getElementById("dmStoryMapBanner");if(!box)return;
   const events=getDmStoryEventsForLocation(locationId).filter(dmStoryVisibleOnMap);
-  const actionable=events.filter(e=>["available","active"].includes(getDmStoryStatus(e.id)));
   if(!events.length){box.className="story-map-banner";box.innerHTML="";return;}
-  const lead=actionable[0]||events[events.length-1];
   const arcShort={"The Kanto Resonance":"Kanto Resonance","Always One Step Ahead":"Rival","The Business of Pokémon":"Team Rocket","Side Stories":"Side Story"};
-  const leadStatus=getDmStoryStatus(lead.id);
-  const additional=events.filter(event=>event.id!==lead.id).slice(0,2);
-  const remainingCount=Math.max(0,events.length-1-additional.length);
+  const statusLabelMap={available:"Available",active:"Active",completed:"Completed"};
+  const ordered=[...events].sort((a,b)=>{
+    const statusRank={active:0,available:1,completed:2};
+    return (statusRank[getDmStoryStatus(a.id)]??9)-(statusRank[getDmStoryStatus(b.id)]??9);
+  });
 
   box.className="story-map-banner show";
   box.innerHTML=
-    '<div class="story-map-banner-eyebrow">'+(events.length===1?'Campaign Story':'Campaign Stories')+(actionable.length?' • '+actionable.length+' available':'')+'</div>'+
-    '<div class="story-map-banner-title">'+dmStoryEscape(lead.title)+'</div>'+
-    '<div class="story-map-banner-text">'+dmStoryEscape(arcShort[lead.arc]||lead.arc)+' — '+dmStoryEscape(lead.hook)+'</div>'+
-    '<div class="story-map-banner-actions">'+
-      '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(lead.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">Open Story Details</button>'+
-      (leadStatus==="available"
-        ? '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(lead.id)+'" data-story-start="active" onclick="setDmStoryStatus(this.dataset.storyId,this.dataset.storyStart)">Start Event</button>'
-        : '')+
-    '</div>'+
-    (additional.length
-      ? '<div class="story-map-banner-other"><div class="story-map-banner-other-label">Also at this location</div><div class="story-map-banner-other-list">'+
-          additional.map(event=>'<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">'+dmStoryEscape((arcShort[event.arc]||event.arc))+': '+dmStoryEscape(event.title)+'</button>').join("")+
-        '</div>'+(remainingCount?'<div class="story-map-banner-note">+'+remainingCount+' more in the Campaign tab.</div>':'')+'</div>'
-      : '');
+    '<div class="story-map-banner-eyebrow">'+(ordered.length===1?'Campaign Story':'Campaign Stories')+' • '+ordered.length+' total</div>'+
+    '<div class="story-map-banner-list">'+
+      ordered.map(event=>{
+        const status=getDmStoryStatus(event.id);
+        return '<div class="story-map-entry">'+
+          '<div class="story-map-entry-meta">'+dmStoryEscape(arcShort[event.arc]||event.arc)+' • '+dmStoryEscape(statusLabelMap[status]||status)+'</div>'+
+          '<div class="story-map-entry-title">'+dmStoryEscape(event.title)+'</div>'+
+          '<div class="story-map-entry-hook">'+dmStoryEscape(event.hook)+'</div>'+
+          '<div class="story-map-entry-actions">'+
+            '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">Open Story Details</button>'+
+            (status==="available"
+              ? '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" data-story-start="active" onclick="setDmStoryStatus(this.dataset.storyId,this.dataset.storyStart)">Start Event</button>'
+              : '')+
+          '</div>'+
+        '</div>';
+      }).join("")+
+    '</div>';
 }
 function renderDmStoryLandmarkPanel(location){
   const panel=document.getElementById("dmStoryLandmarkPanel");
@@ -9809,9 +9820,9 @@ const kantoDetailLocationHotspots = {
     {name:"Indigo Plateau",target:"indigo-plateau",x:76,y:0,w:16,h:17}
   ],
   "pallet-town": [
-    {name:"Rival's House",action:"landmark",landmarkType:"Home",storyEventId:"rival-01",description:"The rival family's home in Pallet Town.",x:31,y:13,w:21,h:17,markerX:42,markerY:22},
-    {name:"Professor Oak's Lab",action:"landmark",landmarkType:"Laboratory",storyEventId:"resonance-01",description:"Professor Oak's Pokémon research laboratory and the starting point for many trainers.",x:57,y:10,w:29,h:20,markerX:58,markerY:22},
-    {name:"Mom's House",action:"landmark",landmarkType:"Home",storyEventId:"side-01",description:"The player's family home in Pallet Town.",x:68,y:31,w:19,h:16,markerX:60,markerY:60},
+    {name:"Rival's House",action:"landmark",landmarkType:"Home",storyEventId:"rival-01",description:"The rival family's home in Pallet Town.",x:31,y:13,w:21,h:17},
+    {name:"Professor Oak's Lab",action:"landmark",landmarkType:"Laboratory",storyEventId:"resonance-01",description:"Professor Oak's Pokémon research laboratory and the starting point for many trainers.",x:57,y:10,w:29,h:20},
+    {name:"Mom's House",action:"landmark",landmarkType:"Home",storyEventId:"side-01",description:"The player's family home in Pallet Town.",x:68,y:31,w:19,h:16},
     {name:"Route 1",target:"route-1",x:46,y:92,w:16,h:8}
   ],
   "route-1": [
@@ -10262,8 +10273,6 @@ function renderKantoDetailTrainerHotspots(locationId) {
       const visibleStoryEvents=hotspotStoryEvents.filter(dmStoryVisibleOnMap);
       if(visibleStoryEvents.length){
         button.classList.add("story-map-hotspot-marker");
-        if(location.markerX!=null)button.style.setProperty("--story-marker-left",location.markerX+"%");
-        if(location.markerY!=null)button.style.setProperty("--story-marker-top",location.markerY+"%");
         if(visibleStoryEvents.every(event=>getDmStoryStatus(event.id)==="completed"))button.classList.add("story-completed-marker");
         button.title=location.name+" — Campaign Story: "+visibleStoryEvents.map(event=>event.title).join(" / ");
       }
