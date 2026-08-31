@@ -8594,6 +8594,12 @@ function savePokemon() {
     )
   );
 
+  cloudLastLocalPokemonSaveAt=Date.now();
+
+  if (typeof scheduleCloudPcPokemonStateSync === "function") {
+    scheduleCloudPcPokemonStateSync();
+  }
+
   if (typeof scheduleCloudActiveBattleSync === "function") {
     scheduleCloudActiveBattleSync();
   }
@@ -23882,7 +23888,7 @@ async function renderCloudPlayerPortal(){
   if(!cloudCurrentMembership?.trainer_id){ if(nameEl)nameEl.textContent="Trainer not assigned"; if(headerEl)headerEl.textContent="My Trainer"; if(metaEl)metaEl.textContent="Ask the DM to assign this account to a trainer."; if(listEl)listEl.innerHTML='<div class="player-cloud-empty">No trainer assignment yet.</div>'; return; }
   const {data:trainer,error:trainerError}=await cloudSupabaseClient.from("trainers").select("id,name,trainer_type,money,inventory,extra_data").eq("id",cloudCurrentMembership.trainer_id).single(); if(trainerError)throw trainerError;
   const {data:pokemon,error:pokemonError}=await cloudSupabaseClient.from("owned_pokemon").select("id,pokedex_number,species,nickname,level,current_hp,status,storage_location,moves,move_pp,stats").eq("trainer_id",trainer.id).order("created_at",{ascending:true}); if(pokemonError)throw pokemonError;
-  cloudPlayerTrainerCache=trainer; cloudPlayerPokemonCache=pokemon||[];
+  cloudPlayerTrainerCache=trainer; cloudPlayerPokemonCache=pokemon||[]; cloudPlayerPokemonStateSignature=JSON.stringify(pokemon||[]);
   const state=await cloudPlayerLoadCampaignState();
   const playerTrainerName=String(trainer?.extra_data?.trainerName||trainer?.extra_data?.trainer_name||trainer.name||"My Trainer");
   if(nameEl)nameEl.textContent=playerTrainerName; if(headerEl)headerEl.textContent=trainer.name||"My Trainer";
@@ -24789,6 +24795,11 @@ let cloudPcTrainerStateSyncTimer=null;
 let cloudLastLocalTrainerSaveAt=0;
 let cloudDmTrainerStatePullBusy=false;
 let cloudPlayerTrainerStateRefreshBusy=false;
+let cloudPcPokemonStateSyncTimer=null;
+let cloudPcPokemonStateSyncBusy=false;
+let cloudPlayerPokemonStateRefreshBusy=false;
+let cloudPlayerPokemonStateSignature="";
+let cloudLastLocalPokemonSaveAt=0;
 
 function cloudTrainerInventoryForCloud(trainer){
   return Array.isArray(trainer?.inventory)
@@ -24904,6 +24915,150 @@ async function cloudSyncPcTrainerStateNow(){
   }
 }
 
+
+function scheduleCloudPcPokemonStateSync(){
+  if(cloudCurrentMembership?.role!=="dm"||!cloudCurrentCampaign||!cloudSupabaseClient)return;
+  if(cloudPcPokemonStateSyncTimer)clearTimeout(cloudPcPokemonStateSyncTimer);
+  cloudPcPokemonStateSyncTimer=setTimeout(()=>{
+    cloudPcPokemonStateSyncTimer=null;
+    cloudSyncPcPokemonStateNow().catch(error=>console.warn("Pokémon cloud sync warning",error));
+  },300);
+}
+
+function cloudLocalPokemonPayload(pokemon,cloudTrainerId,existingExtra){
+  const species=String(pokemon?.speciesName||pokemon?.species||"Unknown");
+  return {
+    campaign_id:cloudCurrentCampaign.id,
+    trainer_id:cloudTrainerId||null,
+    pokedex_number:Number.isFinite(Number(pokemon?.speciesNumber))?Math.round(Number(pokemon.speciesNumber)):0,
+    species,
+    nickname:pokemon?.nickname?String(pokemon.nickname):null,
+    level:Number.isFinite(Number(pokemon?.level))?Math.max(1,Math.round(Number(pokemon.level))):1,
+    current_hp:Number.isFinite(Number(pokemon?.currentHP))?Math.round(Number(pokemon.currentHP)):null,
+    status:(pokemon?.status&&pokemon.status!=="None")?String(pokemon.status):null,
+    storage_location:pokemon?.storageLocation==="pc"?"pc":"party",
+    moves:Array.isArray(pokemon?.moves)?pokemon.moves:[],
+    move_pp:(pokemon?.movePP&&typeof pokemon.movePP==="object"&&!Array.isArray(pokemon.movePP))?pokemon.movePP:{},
+    ivs:(pokemon?.ivs&&typeof pokemon.ivs==="object"&&!Array.isArray(pokemon.ivs))?pokemon.ivs:{},
+    evs:(pokemon?.evs&&typeof pokemon.evs==="object"&&!Array.isArray(pokemon.evs))?pokemon.evs:{},
+    stats:(pokemon?.stats&&typeof pokemon.stats==="object"&&!Array.isArray(pokemon.stats))?pokemon.stats:{},
+    extra_data:Object.assign({},existingExtra||{},cloudSafeExtraData(pokemon),{
+      local_id:pokemon.id,
+      local_trainer_id:pokemon.trainerId??null
+    }),
+    updated_at:new Date().toISOString()
+  };
+}
+
+async function cloudSyncPcPokemonStateNow(){
+  if(cloudPcPokemonStateSyncBusy||!cloudSupabaseClient||cloudCurrentMembership?.role!=="dm"||!cloudCurrentCampaign||!Array.isArray(ownedPokemon)||!Array.isArray(trainers))return;
+  cloudPcPokemonStateSyncBusy=true;
+  try{
+    // Resolve/persist trainer bindings first. This makes players added after the
+    // original migration behave exactly like the original PCs.
+    await cloudSyncPcTrainerStateNow();
+
+    const pcTrainers=trainers.filter(t=>t&&String(t.trainerType||"").toUpperCase()==="PC");
+    const trainerCloudMap=new Map();
+    pcTrainers.forEach(t=>{
+      const id=t.cloudTrainerId||t.cloud_trainer_id||t.supabaseTrainerId||t.supabase_trainer_id;
+      if(id)trainerCloudMap.set(String(t.id),String(id));
+      else if(String(t.id||"").startsWith("cloud-trainer-"))trainerCloudMap.set(String(t.id),String(t.id).slice("cloud-trainer-".length));
+    });
+
+    const {data:cloudRows,error}=await cloudSupabaseClient.from("owned_pokemon")
+      .select("id,trainer_id,extra_data")
+      .eq("campaign_id",cloudCurrentCampaign.id);
+    if(error)throw error;
+
+    const byCloudId=new Map(),byLocalId=new Map();
+    (cloudRows||[]).forEach(row=>{
+      byCloudId.set(String(row.id),row);
+      const localId=row?.extra_data?.local_id;
+      if(localId!==undefined&&localId!==null&&String(localId)!=="")byLocalId.set(String(localId),row);
+    });
+
+    let bindingChanged=false;
+    const localPcPokemon=[];
+    for(const pokemon of ownedPokemon){
+      if(!pokemon||pokemon.temporaryWild)continue;
+      const owner=trainers.find(t=>String(t?.id)===String(pokemon.trainerId));
+      if(!owner||String(owner.trainerType||"").toUpperCase()!=="PC")continue;
+      const cloudTrainerId=trainerCloudMap.get(String(owner.id));
+      if(!cloudTrainerId){
+        console.warn("No cloud trainer binding for Pokémon owner",owner.name,owner.id);
+        continue;
+      }
+      localPcPokemon.push(pokemon);
+      const explicitCloudId=pokemon.cloudPokemonId||pokemon.cloud_pokemon_id||pokemon.supabasePokemonId||pokemon.supabase_pokemon_id;
+      let row=explicitCloudId?byCloudId.get(String(explicitCloudId))||null:null;
+      if(!row){
+        const localKey=String(pokemon.id??"");
+        if(localKey.startsWith("cloud-pokemon-"))row=byCloudId.get(localKey.slice("cloud-pokemon-".length))||null;
+      }
+      if(!row)row=byLocalId.get(String(pokemon.id))||null;
+
+      const payload=cloudLocalPokemonPayload(pokemon,cloudTrainerId,row?.extra_data||{});
+      let cloudId=row?.id||null;
+      if(cloudId){
+        const {error:updateError}=await cloudSupabaseClient.from("owned_pokemon").update(payload).eq("id",cloudId);
+        if(updateError)throw updateError;
+      }else{
+        const {data:created,error:createError}=await cloudSupabaseClient.from("owned_pokemon").insert(payload).select("id").single();
+        if(createError)throw createError;
+        cloudId=created.id;
+      }
+      if(String(pokemon.cloudPokemonId||"")!==String(cloudId)){
+        pokemon.cloudPokemonId=cloudId;
+        bindingChanged=true;
+      }
+    }
+
+    // If the DM deletes a PC Pokémon, remove its cloud counterpart too. Only
+    // rows with an established local_id binding are eligible, so unrelated or
+    // legacy cloud rows are never deleted accidentally.
+    const localIds=new Set(localPcPokemon.map(p=>String(p.id)));
+    const pcCloudTrainerIds=new Set(Array.from(trainerCloudMap.values()).map(String));
+    for(const row of cloudRows||[]){
+      const localId=row?.extra_data?.local_id;
+      if(localId===undefined||localId===null||String(localId)==="")continue;
+      if(!pcCloudTrainerIds.has(String(row.trainer_id||"")))continue;
+      if(localIds.has(String(localId)))continue;
+      const {error:deleteError}=await cloudSupabaseClient.from("owned_pokemon").delete().eq("id",row.id);
+      if(deleteError)throw deleteError;
+    }
+
+    if(bindingChanged)localStorage.setItem("ownedPokemon",JSON.stringify(ownedPokemon));
+  }finally{
+    cloudPcPokemonStateSyncBusy=false;
+  }
+}
+
+async function cloudRefreshPlayerPokemonState(){
+  if(cloudPlayerPokemonStateRefreshBusy||!cloudSupabaseClient||cloudCurrentMembership?.role!=="player"||!cloudCurrentMembership?.trainer_id)return;
+  cloudPlayerPokemonStateRefreshBusy=true;
+  try{
+    const {data,error}=await cloudSupabaseClient.from("owned_pokemon")
+      .select("id,pokedex_number,species,nickname,level,current_hp,status,storage_location,moves,move_pp,stats")
+      .eq("trainer_id",cloudCurrentMembership.trainer_id)
+      .order("created_at",{ascending:true});
+    if(error)throw error;
+    const rows=data||[];
+    const signature=JSON.stringify(rows);
+    if(signature===cloudPlayerPokemonStateSignature)return;
+    cloudPlayerPokemonStateSignature=signature;
+    cloudPlayerPokemonCache=rows;
+    const party=rows.filter(p=>String(p.storage_location||"party")==="party");
+    const stored=rows.filter(p=>String(p.storage_location)==="pc");
+    const listEl=document.getElementById("playerCloudPokemonList");
+    if(listEl)listEl.innerHTML=party.length?party.map(cloudPlayerPokemonCardHTML).join(""):'<div class="player-cloud-empty">No Pokémon in the active party.</div>';
+    cloudRenderPlayerPartyStrip(party);
+    cloudRenderPlayerStorage(stored,cloudPlayerStateCache||{});
+  }finally{
+    cloudPlayerPokemonStateRefreshBusy=false;
+  }
+}
+
 function cloudRenderPlayerInventoryFromTrainer(trainer){
   const inventory=Array.isArray(trainer?.inventory)?trainer.inventory.filter(item=>Number(item?.quantity||0)>0):[];
   const inventorySummary=document.getElementById("playerCloudInventorySummary");
@@ -25015,6 +25170,19 @@ async function cloudSyncTrainerIdentity(localTrainer){
 
 async function cloudFindTrainerByLocalId(localId){
   if(localId===null||localId===undefined||!cloudCurrentCampaign)return null;
+  const localTrainer=Array.isArray(trainers)?trainers.find(t=>String(t?.id)===String(localId)):null;
+  const explicitCloudId=localTrainer&&(localTrainer.cloudTrainerId||localTrainer.cloud_trainer_id||localTrainer.supabaseTrainerId||localTrainer.supabase_trainer_id);
+  if(explicitCloudId){
+    const {data,error}=await cloudSupabaseClient.from("trainers").select("id,name,extra_data").eq("id",explicitCloudId).maybeSingle();
+    if(error)throw error;
+    if(data)return data;
+  }
+  const localKey=String(localId);
+  if(localKey.startsWith("cloud-trainer-")){
+    const {data,error}=await cloudSupabaseClient.from("trainers").select("id,name,extra_data").eq("id",localKey.slice("cloud-trainer-".length)).maybeSingle();
+    if(error)throw error;
+    if(data)return data;
+  }
   const {data,error}=await cloudSupabaseClient
     .from("trainers")
     .select("id,name,extra_data")
@@ -25027,6 +25195,19 @@ async function cloudFindTrainerByLocalId(localId){
 
 async function cloudFindPokemonByLocalId(localId){
   if(localId===null||localId===undefined||!cloudCurrentCampaign)return null;
+  const localPokemon=Array.isArray(ownedPokemon)?ownedPokemon.find(p=>String(p?.id)===String(localId)):null;
+  const explicitCloudId=localPokemon&&(localPokemon.cloudPokemonId||localPokemon.cloud_pokemon_id||localPokemon.supabasePokemonId||localPokemon.supabase_pokemon_id);
+  if(explicitCloudId){
+    const {data,error}=await cloudSupabaseClient.from("owned_pokemon").select("id,trainer_id,extra_data").eq("id",explicitCloudId).maybeSingle();
+    if(error)throw error;
+    if(data)return data;
+  }
+  const localKey=String(localId);
+  if(localKey.startsWith("cloud-pokemon-")){
+    const {data,error}=await cloudSupabaseClient.from("owned_pokemon").select("id,trainer_id,extra_data").eq("id",localKey.slice("cloud-pokemon-".length)).maybeSingle();
+    if(error)throw error;
+    if(data)return data;
+  }
   const {data,error}=await cloudSupabaseClient
     .from("owned_pokemon")
     .select("id,trainer_id,extra_data")
@@ -25280,6 +25461,7 @@ function cloudStartPlayerBattlePolling(){
   cloudPlayerMapAccessPollTimer=setInterval(()=>{
     cloudRefreshPlayerKantoMapAccess().catch(e=>console.warn("Player map access sync warning",e));
     cloudRefreshPlayerTrainerState().catch(e=>console.warn("Player trainer inventory sync warning",e));
+    cloudRefreshPlayerPokemonState().catch(e=>console.warn("Player Pokémon sync warning",e));
     cloudLoadPlayerPokedex().catch(e=>console.warn("Player Pokédex sync warning",e));
     cloudLoadPlayerPartyOverview().catch(e=>console.warn("Player party overview sync warning",e));
     cloudLoadPlayerMessages().catch(()=>{});
