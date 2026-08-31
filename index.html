@@ -24820,36 +24820,66 @@ async function cloudSyncPcTrainerStateNow(){
   if(error)throw error;
 
   const normalize=value=>String(value??"").trim().toLowerCase();
+  const byCloudId=new Map();
   const byLocalId=new Map();
-  const unlinkedByName=new Map();
+  const byIdentity=new Map();
   (rows||[]).forEach(row=>{
+    byCloudId.set(String(row.id),row);
     const localId=row?.extra_data?.local_id;
-    if(localId!==undefined&&localId!==null&&String(localId)!==""){
-      byLocalId.set(String(localId),row);
-      return;
-    }
-    // Cloud-created players (for example a newly added Auth user/trainer) may
-    // not yet have a local_id. Fall back to the stored player name so the DM's
-    // existing local trainer can be linked automatically on first save.
-    const keys=[row?.name,row?.extra_data?.player_name].map(normalize).filter(Boolean);
+    if(localId!==undefined&&localId!==null&&String(localId)!=="")byLocalId.set(String(localId),row);
+    // Index every stable identity we may have. This is important for players
+    // created after the original campaign migration, whose cloud trainer row
+    // did not exist when the DM device first downloaded the campaign.
+    const keys=[row?.name,row?.extra_data?.player_name,row?.extra_data?.trainerName,row?.extra_data?.trainer_name]
+      .map(normalize).filter(Boolean);
     keys.forEach(key=>{
-      if(!unlinkedByName.has(key))unlinkedByName.set(key,[]);
-      unlinkedByName.get(key).push(row);
+      if(!byIdentity.has(key))byIdentity.set(key,[]);
+      if(!byIdentity.get(key).some(existing=>String(existing.id)===String(row.id)))byIdentity.get(key).push(row);
     });
   });
 
+  let localBindingChanged=false;
   for(const trainer of trainers.filter(t=>t&&String(t.trainerType||"").toUpperCase()==="PC")){
-    let row=byLocalId.get(String(trainer.id));
+    let row=null;
+
+    // 1) A persisted explicit cloud binding is the strongest match.
+    const explicitCloudId=trainer.cloudTrainerId||trainer.cloud_trainer_id||trainer.supabaseTrainerId||trainer.supabase_trainer_id;
+    if(explicitCloudId)row=byCloudId.get(String(explicitCloudId))||null;
+
+    // 2) Trainers downloaded from Supabase before they had local_id use the
+    //    deterministic local id "cloud-trainer-<uuid>". Resolve it directly.
     if(!row){
-      const nameKey=normalize(trainer.name);
-      const candidates=unlinkedByName.get(nameKey)||[];
-      if(candidates.length===1){
-        row=candidates[0];
-        byLocalId.set(String(trainer.id),row);
-        unlinkedByName.delete(nameKey);
+      const localKey=String(trainer.id??"");
+      if(localKey.startsWith("cloud-trainer-")){
+        const encodedCloudId=localKey.slice("cloud-trainer-".length);
+        row=byCloudId.get(encodedCloudId)||null;
       }
     }
-    if(!row)continue;
+
+    // 3) Normal migrated trainers are linked by extra_data.local_id.
+    if(!row)row=byLocalId.get(String(trainer.id))||null;
+
+    // 4) Newly-created players can still be linked by either their player
+    //    name or their in-game trainer name. Only accept an unambiguous match.
+    if(!row){
+      const identityKeys=[trainer.name,trainer.playerName,trainer.trainerName].map(normalize).filter(Boolean);
+      const candidates=[];
+      identityKeys.forEach(key=>(byIdentity.get(key)||[]).forEach(candidate=>{
+        if(!candidates.some(existing=>String(existing.id)===String(candidate.id)))candidates.push(candidate);
+      }));
+      if(candidates.length===1)row=candidates[0];
+    }
+    if(!row){
+      console.warn("No cloud trainer match found for PC trainer",trainer?.name,trainer?.id);
+      continue;
+    }
+
+    // Persist the resolved cloud UUID locally so future edits never depend on
+    // name matching. This specifically fixes post-migration players like Ryan.
+    if(String(trainer.cloudTrainerId||"")!==String(row.id)){
+      trainer.cloudTrainerId=row.id;
+      localBindingChanged=true;
+    }
 
     const extra=Object.assign({},row.extra_data||{}, {
       local_id:trainer.id,
@@ -24865,6 +24895,12 @@ async function cloudSyncPcTrainerStateNow(){
       updated_at:new Date().toISOString()
     }).eq("id",row.id);
     if(updateError)throw updateError;
+  }
+
+  if(localBindingChanged){
+    // Save only the newly-discovered cloud bindings. Do not call saveTrainers()
+    // here because that would recursively schedule another cloud upload.
+    localStorage.setItem("trainers",JSON.stringify(trainers));
   }
 }
 
