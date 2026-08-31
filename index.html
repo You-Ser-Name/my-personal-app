@@ -2583,6 +2583,8 @@ select {
 .story-map-entry-hook{font-size:10.5px;line-height:1.4;color:#665b4d;margin-top:4px}
 .story-map-entry-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .story-map-hotspot-marker::after{content:"!";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:#c28b25;color:white;border:2px solid rgba(255,255,255,.95);box-shadow:0 2px 6px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:950;pointer-events:none}
+.story-map-hotspot-marker.story-available-marker::after{content:"?";background:#2d6cdf}
+.story-map-hotspot-marker.story-active-marker::after{content:"!";background:#c28b25}
 .story-map-hotspot-marker.story-completed-marker::after{content:"✓";background:#5e855b}
 
 .story-map-marker-button{
@@ -9525,6 +9527,85 @@ function renderDmStoryLandmarkPanel(location){
   if(panel)panel.innerHTML="";
 }
 
+
+function getDmStoryMarkerStatus(events){
+  if(!Array.isArray(events)||!events.length)return"";
+  const statuses=events.map(event=>getDmStoryStatus(event.id));
+  if(statuses.includes("active"))return"active";
+  if(statuses.includes("available"))return"available";
+  if(statuses.every(status=>status==="completed"))return"completed";
+  if(statuses.includes("completed"))return"completed";
+  return"";
+}
+
+function applyDmStoryMarkerStatusClass(button,events){
+  if(!button)return;
+  button.classList.remove("story-available-marker","story-active-marker","story-completed-marker");
+  const status=getDmStoryMarkerStatus(events);
+  if(status==="available")button.classList.add("story-available-marker");
+  else if(status==="active")button.classList.add("story-active-marker");
+  else if(status==="completed")button.classList.add("story-completed-marker");
+}
+
+function openDmStoryQuestPopup(eventId){
+  const storyEvent=getDmStoryEvent(eventId);
+  if(!storyEvent)return;
+
+  selectedKantoLocationId=null;
+  selectedKantoDetailTrainerKey=null;
+
+  const panel=document.getElementById("kantoDetailLocationPanel");
+  const name=document.getElementById("kantoDetailLocationName");
+  const type=document.getElementById("kantoDetailLocationType");
+  const description=document.getElementById("kantoDetailLocationDescription");
+  const openButton=document.getElementById("kantoDetailLocationOpenButton");
+  const centerActions=document.getElementById("kantoDetailPokemonCenterActions");
+  const martActions=document.getElementById("kantoDetailPokeMartActions");
+  const pcPanel=document.getElementById("kantoDetailPokemonCenterPC");
+  const martShop=document.getElementById("kantoDetailPokeMartShop");
+  const trainerPanel=document.getElementById("kantoDetailTrainerPanel");
+  const storyPanel=document.getElementById("dmStoryLandmarkPanel");
+
+  if(!panel||!name||!type||!description||!openButton)return;
+
+  if(trainerPanel){trainerPanel.style.display="none";trainerPanel.innerHTML="";}
+  if(centerActions)centerActions.style.display="none";
+  if(martActions)martActions.style.display="none";
+  if(pcPanel)pcPanel.style.display="none";
+  if(martShop)martShop.style.display="none";
+  openButton.style.display="none";
+
+  const status=getDmStoryStatus(storyEvent.id);
+  const arcShort={
+    "The Kanto Resonance":"Main Story",
+    "Always One Step Ahead":"Rival",
+    "The Business of Pokémon":"Team Rocket",
+    "Side Stories":"Side Story"
+  };
+
+  type.textContent=(arcShort[storyEvent.arc]||storyEvent.arc)+" • "+dmStoryStatusLabel(status);
+  name.textContent=storyEvent.title;
+  description.textContent=storyEvent.hook;
+
+  if(storyPanel){
+    storyPanel.innerHTML=
+      '<div class="story-landmark-panel">'+
+        '<div class="story-landmark-title">'+dmStoryEscape(storyEvent.title)+'</div>'+
+        '<div class="story-landmark-status">'+dmStoryEscape(dmStoryStatusLabel(status))+'</div>'+
+        '<div class="story-landmark-hook">'+dmStoryEscape(storyEvent.objective||storyEvent.hook)+'</div>'+
+        '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;">'+
+          '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(storyEvent.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">Open Full Quest</button>'+
+          (status==="available"
+            ? '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(storyEvent.id)+'" data-story-start="active" onclick="setDmStoryStatus(this.dataset.storyId,this.dataset.storyStart);openDmStoryQuestPopup(this.dataset.storyId)">Start Quest</button>'
+            : '')+
+        '</div>'+
+      '</div>';
+  }
+
+  panel.style.display="block";
+  panel.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
 const KANTO_MAP_PROGRESS_KEY =
   "pokemonCampaignKantoMapProgress";
 
@@ -10532,10 +10613,11 @@ function renderKantoDetailTrainerHotspots(locationId) {
     const hotspotStoryEvents=hotspotStoryIds.map(getDmStoryEvent).filter(Boolean);
     const visibleStoryEvents=hotspotStoryEvents.filter(dmStoryVisibleOnMap);
     const usesSavedStoryMarker=location.storyMarkerX!=null && location.storyMarkerY!=null;
+    const palletQuestIconOnly=locationId==="pallet-town" && usesSavedStoryMarker && visibleStoryEvents.length;
 
     if(visibleStoryEvents.length && !usesSavedStoryMarker){
       button.classList.add("story-map-hotspot-marker");
-      if(visibleStoryEvents.every(event=>getDmStoryStatus(event.id)==="completed"))button.classList.add("story-completed-marker");
+      applyDmStoryMarkerStatusClass(button,visibleStoryEvents);
       button.title=location.name+" — Campaign Story: "+visibleStoryEvents.map(event=>event.title).join(" / ");
     }
 
@@ -10555,7 +10637,10 @@ function renderKantoDetailTrainerHotspots(locationId) {
         openKantoDetailLocationHotspot(location.target);
       }
     };
-    layer.appendChild(button);
+
+    // In Pallet Town the three quest buildings are intentionally not clickable.
+    // The saved quest marker is the only interactive control for those locations.
+    if(!palletQuestIconOnly)layer.appendChild(button);
 
     if(visibleStoryEvents.length && usesSavedStoryMarker){
       const markerButton=document.createElement("button");
@@ -10563,12 +10648,13 @@ function renderKantoDetailTrainerHotspots(locationId) {
       markerButton.className="story-map-marker-button story-map-hotspot-marker";
       markerButton.style.left=location.storyMarkerX+"%";
       markerButton.style.top=location.storyMarkerY+"%";
-      markerButton.setAttribute("aria-label","Open campaign story at "+location.name);
-      markerButton.title=location.name+" — Campaign Story: "+visibleStoryEvents.map(event=>event.title).join(" / ");
-      if(visibleStoryEvents.every(event=>getDmStoryStatus(event.id)==="completed"))markerButton.classList.add("story-completed-marker");
+      markerButton.setAttribute("aria-label","Open quest "+visibleStoryEvents[0].title);
+      markerButton.title=visibleStoryEvents.map(event=>event.title).join(" / ");
+      applyDmStoryMarkerStatusClass(markerButton,visibleStoryEvents);
       markerButton.onclick=function(event){
         event.stopPropagation();
-        button.click();
+        closeKantoDetailLocationPanel();
+        openDmStoryQuestPopup(visibleStoryEvents[0].id);
       };
       layer.appendChild(markerButton);
     }
