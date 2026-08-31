@@ -23931,17 +23931,24 @@ function cloudEscape(value){
 }
 
 function cloudPokemonArtworkURL(pokemon){
-  const number=Number(pokemon?.pokedex_number ?? pokemon?.number);
-  if(!Number.isInteger(number))return "";
-  const dbPokemon=(typeof pokemonDatabase!=="undefined" && Array.isArray(pokemonDatabase))
-    ? pokemonDatabase.find(entry=>Number(entry.number)===number)
-    : null;
-  const species=String(pokemon?.species ?? pokemon?.name ?? dbPokemon?.name ?? "").trim();
   if(typeof getPokemonFandomArtworkURL!=="function")return "";
-  // The player portal can render before pokemonDatabase finishes initializing
-  // after a hard refresh. Fall back to the cloud species/number immediately so
-  // artwork does not wait for a later state change to appear.
-  const artworkPokemon=dbPokemon || (species ? {number:number,name:species} : null);
+  let number=Number(pokemon?.pokedex_number ?? pokemon?.speciesNumber ?? pokemon?.pokedexNumber ?? pokemon?.number);
+  const species=String(pokemon?.species ?? pokemon?.speciesName ?? pokemon?.name ?? "").trim();
+  let dbPokemon=null;
+  if(typeof pokemonDatabase!=="undefined" && Array.isArray(pokemonDatabase)){
+    if(Number.isInteger(number) && number>0){
+      dbPokemon=pokemonDatabase.find(entry=>Number(entry.number)===number)||null;
+    }
+    // Some post-migration cloud Pokémon (notably newer players such as Ryan)
+    // can briefly have pokedex_number=0 even though species is valid. Resolve
+    // the Pokédex number by species so artwork survives a hard refresh.
+    if(!dbPokemon && species){
+      const wanted=species.toLowerCase();
+      dbPokemon=pokemonDatabase.find(entry=>String(entry.name||"").trim().toLowerCase()===wanted)||null;
+      if(dbPokemon)number=Number(dbPokemon.number);
+    }
+  }
+  const artworkPokemon=dbPokemon || ((Number.isInteger(number) && number>0 && species)?{number:number,name:species}:null);
   return artworkPokemon ? getPokemonFandomArtworkURL(artworkPokemon) : "";
 }
 
@@ -24426,13 +24433,13 @@ function cloudBattleSnapshotArtworkURL(snapshot){
   const species=String(snapshot.species||snapshot.display_name||"").trim();
   let dbPokemon=null;
   if(typeof pokemonDatabase!=="undefined" && Array.isArray(pokemonDatabase)){
-    dbPokemon=Number.isInteger(number)?pokemonDatabase.find(function(entry){return Number(entry.number)===number;}):null;
+    dbPokemon=(Number.isInteger(number)&&number>0)?pokemonDatabase.find(function(entry){return Number(entry.number)===number;}):null;
     if(!dbPokemon && species){
       const wanted=species.toLowerCase();
       dbPokemon=pokemonDatabase.find(function(entry){return String(entry.name||"").trim().toLowerCase()===wanted;});
     }
   }
-  const artworkPokemon=dbPokemon || (Number.isInteger(number) && species ? {number:number,name:species} : null);
+  const artworkPokemon=dbPokemon || (Number.isInteger(number) && number>0 && species ? {number:number,name:species} : null);
   return artworkPokemon?getPokemonFandomArtworkURL(artworkPokemon):"";
 }
 
@@ -25001,11 +25008,17 @@ function scheduleCloudPcPokemonStateSync(){
 }
 
 function cloudLocalPokemonPayload(pokemon,cloudTrainerId,existingExtra){
-  const species=String(pokemon?.speciesName||pokemon?.species||"Unknown");
+  const species=String(pokemon?.speciesName||pokemon?.species||pokemon?.name||"Unknown");
+  let resolvedPokedexNumber=Number(pokemon?.speciesNumber ?? pokemon?.pokedex_number ?? pokemon?.pokedexNumber ?? pokemon?.number);
+  if((!Number.isFinite(resolvedPokedexNumber) || resolvedPokedexNumber<=0) && typeof pokemonDatabase!=="undefined" && Array.isArray(pokemonDatabase)){
+    const wanted=species.trim().toLowerCase();
+    const match=pokemonDatabase.find(entry=>String(entry.name||"").trim().toLowerCase()===wanted);
+    if(match)resolvedPokedexNumber=Number(match.number);
+  }
   return {
     campaign_id:cloudCurrentCampaign.id,
     trainer_id:cloudTrainerId||null,
-    pokedex_number:Number.isFinite(Number(pokemon?.speciesNumber))?Math.round(Number(pokemon.speciesNumber)):0,
+    pokedex_number:Number.isFinite(resolvedPokedexNumber)&&resolvedPokedexNumber>0?Math.round(resolvedPokedexNumber):0,
     species,
     nickname:pokemon?.nickname?String(pokemon.nickname):null,
     level:Number.isFinite(Number(pokemon?.level))?Math.max(1,Math.round(Number(pokemon.level))):1,
