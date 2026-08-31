@@ -24322,6 +24322,7 @@ let cloudLastNotifiedCompletedBattleId = null;
 function cloudStopBattlePolling(){
   if(cloudBattlePollTimer){ clearInterval(cloudBattlePollTimer); cloudBattlePollTimer=null; }
   if(cloudPlayerMapAccessPollTimer){ clearInterval(cloudPlayerMapAccessPollTimer); cloudPlayerMapAccessPollTimer=null; }
+  if(cloudDmSyncWatchdogTimer){ clearInterval(cloudDmSyncWatchdogTimer); cloudDmSyncWatchdogTimer=null; }
 }
 
 function cloudLocalPokemonSnapshot(pokemon){
@@ -24918,9 +24919,14 @@ let cloudDmTrainerStatePullBusy=false;
 let cloudPlayerTrainerStateRefreshBusy=false;
 let cloudPcPokemonStateSyncTimer=null;
 let cloudPcPokemonStateSyncBusy=false;
+let cloudPcPokemonStateSyncPending=false;
+let cloudDmPokemonStatePullBusy=false;
 let cloudPlayerPokemonStateRefreshBusy=false;
 let cloudPlayerPokemonStateSignature="";
 let cloudLastLocalPokemonSaveAt=0;
+let cloudDmSyncWatchdogTimer=null;
+let cloudLastObservedTrainerSignature="";
+let cloudLastObservedPokemonSignature="";
 
 function cloudTrainerInventoryForCloud(trainer){
   return Array.isArray(trainer?.inventory)
@@ -24931,6 +24937,43 @@ function cloudTrainerInventoryForCloud(trainer){
         quantity:Math.max(0,Math.floor(Number(item.quantity)||0))
       }))
     : [];
+}
+
+function cloudDmTrainerSignature(){
+  if(!Array.isArray(trainers))return "";
+  return JSON.stringify(trainers.filter(t=>t&&String(t.trainerType||"").toUpperCase()==="PC").map(t=>({
+    id:t.id,cloudTrainerId:t.cloudTrainerId||null,name:t.name||"",trainerName:t.trainerName||"",
+    money:Number(t.money)||0,inventory:cloudTrainerInventoryForCloud(t)
+  })));
+}
+
+function cloudDmPokemonSignature(){
+  if(!Array.isArray(ownedPokemon)||!Array.isArray(trainers))return "";
+  const pcIds=new Set(trainers.filter(t=>t&&String(t.trainerType||"").toUpperCase()==="PC").map(t=>String(t.id)));
+  return JSON.stringify(ownedPokemon.filter(p=>p&&!p.temporaryWild&&pcIds.has(String(p.trainerId))).map(p=>({
+    id:p.id,cloudPokemonId:p.cloudPokemonId||null,trainerId:p.trainerId??null,speciesNumber:p.speciesNumber??null,
+    speciesName:p.speciesName||p.species||"",nickname:p.nickname||"",level:p.level,currentHP:p.currentHP,status:p.status||"None",
+    storageLocation:p.storageLocation||"party",moves:Array.isArray(p.moves)?p.moves:[],movePP:p.movePP||{},ivs:p.ivs||{},evs:p.evs||{},stats:p.stats||{}
+  })));
+}
+
+function cloudStartDmStateWatchdog(){
+  if(cloudDmSyncWatchdogTimer)clearInterval(cloudDmSyncWatchdogTimer);
+  cloudLastObservedTrainerSignature=cloudDmTrainerSignature();
+  cloudLastObservedPokemonSignature=cloudDmPokemonSignature();
+  cloudDmSyncWatchdogTimer=setInterval(()=>{
+    if(cloudCurrentMembership?.role!=="dm")return;
+    const trainerSig=cloudDmTrainerSignature();
+    const pokemonSig=cloudDmPokemonSignature();
+    if(trainerSig!==cloudLastObservedTrainerSignature){
+      cloudLastObservedTrainerSignature=trainerSig;
+      scheduleCloudPcTrainerStateSync();
+    }
+    if(pokemonSig!==cloudLastObservedPokemonSignature){
+      cloudLastObservedPokemonSignature=pokemonSig;
+      scheduleCloudPcPokemonStateSync();
+    }
+  },900);
 }
 
 function scheduleCloudPcTrainerStateSync(){
@@ -25034,16 +25077,18 @@ async function cloudSyncPcTrainerStateNow(){
     // here because that would recursively schedule another cloud upload.
     localStorage.setItem("trainers",JSON.stringify(trainers));
   }
+  cloudLastObservedTrainerSignature=cloudDmTrainerSignature();
 }
 
 
 function scheduleCloudPcPokemonStateSync(){
   if(cloudCurrentMembership?.role!=="dm"||!cloudCurrentCampaign||!cloudSupabaseClient)return;
+  cloudPcPokemonStateSyncPending=true;
   if(cloudPcPokemonStateSyncTimer)clearTimeout(cloudPcPokemonStateSyncTimer);
   cloudPcPokemonStateSyncTimer=setTimeout(()=>{
     cloudPcPokemonStateSyncTimer=null;
     cloudSyncPcPokemonStateNow().catch(error=>console.warn("Pokémon cloud sync warning",error));
-  },300);
+  },250);
 }
 
 function cloudLocalPokemonPayload(pokemon,cloudTrainerId,existingExtra){
@@ -25078,8 +25123,10 @@ function cloudLocalPokemonPayload(pokemon,cloudTrainerId,existingExtra){
 }
 
 async function cloudSyncPcPokemonStateNow(){
-  if(cloudPcPokemonStateSyncBusy||!cloudSupabaseClient||cloudCurrentMembership?.role!=="dm"||!cloudCurrentCampaign||!Array.isArray(ownedPokemon)||!Array.isArray(trainers))return;
+  if(!cloudSupabaseClient||cloudCurrentMembership?.role!=="dm"||!cloudCurrentCampaign||!Array.isArray(ownedPokemon)||!Array.isArray(trainers))return;
+  if(cloudPcPokemonStateSyncBusy){cloudPcPokemonStateSyncPending=true;return;}
   cloudPcPokemonStateSyncBusy=true;
+  cloudPcPokemonStateSyncPending=false;
   try{
     // Resolve/persist trainer bindings first. This makes players added after the
     // original migration behave exactly like the original PCs.
@@ -25156,8 +25203,75 @@ async function cloudSyncPcPokemonStateNow(){
     }
 
     if(bindingChanged)localStorage.setItem("ownedPokemon",JSON.stringify(ownedPokemon));
+    cloudLastObservedPokemonSignature=cloudDmPokemonSignature();
   }finally{
     cloudPcPokemonStateSyncBusy=false;
+    if(cloudPcPokemonStateSyncPending){
+      cloudPcPokemonStateSyncPending=false;
+      setTimeout(()=>cloudSyncPcPokemonStateNow().catch(error=>console.warn("Pokémon cloud resync warning",error)),50);
+    }
+  }
+}
+
+async function cloudPullPcPokemonStateToDm(){
+  if(cloudDmPokemonStatePullBusy||cloudPcPokemonStateSyncBusy||!cloudSupabaseClient||cloudCurrentMembership?.role!=="dm"||!cloudCurrentCampaign||!Array.isArray(ownedPokemon)||!Array.isArray(trainers))return;
+  // Never pull over a DM edit that is still on its way to Supabase.
+  if(Date.now()-cloudLastLocalPokemonSaveAt<1800||cloudPcPokemonStateSyncPending)return;
+  cloudDmPokemonStatePullBusy=true;
+  try{
+    const pcTrainers=trainers.filter(t=>t&&String(t.trainerType||"").toUpperCase()==="PC");
+    const cloudToLocalTrainer=new Map();
+    for(const t of pcTrainers){
+      const cloudId=t.cloudTrainerId||t.cloud_trainer_id||t.supabaseTrainerId||t.supabase_trainer_id||(String(t.id||"").startsWith("cloud-trainer-")?String(t.id).slice("cloud-trainer-".length):null);
+      if(cloudId)cloudToLocalTrainer.set(String(cloudId),t.id);
+    }
+    const {data:rows,error}=await cloudSupabaseClient.from("owned_pokemon")
+      .select("id,trainer_id,pokedex_number,species,nickname,level,current_hp,status,storage_location,moves,move_pp,ivs,evs,stats,extra_data")
+      .eq("campaign_id",cloudCurrentCampaign.id);
+    if(error)throw error;
+    let changed=false;
+    const cloudPcIds=new Set();
+    for(const row of rows||[]){
+      const localTrainerId=cloudToLocalTrainer.get(String(row.trainer_id||""));
+      if(localTrainerId===undefined)continue;
+      cloudPcIds.add(String(row.id));
+      const localId=row?.extra_data?.local_id;
+      let local=ownedPokemon.find(p=>localId!==undefined&&localId!==null&&String(p?.id)===String(localId));
+      if(!local)local=ownedPokemon.find(p=>String(p?.cloudPokemonId||"")===String(row.id));
+      if(!local && String(row.id)){
+        local=ownedPokemon.find(p=>String(p?.id||"")===String("cloud-pokemon-"+row.id));
+      }
+      const next={
+        trainerId:localTrainerId,speciesNumber:Number(row.pokedex_number)||0,speciesName:row.species,species:row.species,
+        nickname:row.nickname||"",level:Math.max(1,Number(row.level)||1),currentHP:row.current_hp===null||row.current_hp===undefined?null:Number(row.current_hp),
+        status:row.status||"None",storageLocation:row.storage_location==="pc"?"pc":"party",moves:Array.isArray(row.moves)?row.moves:[],
+        movePP:(row.move_pp&&typeof row.move_pp==="object"&&!Array.isArray(row.move_pp))?row.move_pp:{},
+        ivs:(row.ivs&&typeof row.ivs==="object"&&!Array.isArray(row.ivs))?row.ivs:{},evs:(row.evs&&typeof row.evs==="object"&&!Array.isArray(row.evs))?row.evs:{},
+        stats:(row.stats&&typeof row.stats==="object"&&!Array.isArray(row.stats))?row.stats:{},cloudPokemonId:row.id
+      };
+      if(!local){
+        const extra=(row.extra_data&&typeof row.extra_data==="object"&&!Array.isArray(row.extra_data))?cloudSafeExtraData(row.extra_data):{};
+        delete extra.local_id; delete extra.local_trainer_id;
+        ownedPokemon.push(Object.assign(extra,{id:localId!==undefined&&localId!==null?localId:("cloud-pokemon-"+row.id)},next));
+        changed=true;
+        continue;
+      }
+      for(const [key,value] of Object.entries(next)){
+        if(JSON.stringify(local[key])!==JSON.stringify(value)){local[key]=value;changed=true;}
+      }
+    }
+    // A player is not currently allowed to delete Pokémon, so do not infer cloud
+    // deletion here. DM deletion remains authoritative through the normal upload.
+    if(changed){
+      localStorage.setItem("ownedPokemon",JSON.stringify(ownedPokemon));
+      cloudLastObservedPokemonSignature=cloudDmPokemonSignature();
+      if(typeof refreshPokemonManagementPages==="function")refreshPokemonManagementPages();
+      const trainerManagerPage=document.getElementById("trainerPokemonManagePage");
+      if(trainerManagerPage&&trainerManagerPage.style.display!=="none"&&typeof displayTrainerPokemonManager==="function")displayTrainerPokemonManager();
+      if(document.getElementById("pokemonCenterPage")?.style.display!=="none"&&typeof displayPokemonCenterStorage==="function")displayPokemonCenterStorage();
+    }
+  }finally{
+    cloudDmPokemonStatePullBusy=false;
   }
 }
 
@@ -25262,6 +25376,7 @@ async function cloudPullPcTrainerStateToDm(){
       // cloud-originated change back and create a sync loop.
       localStorage.setItem("trainers",JSON.stringify(trainers));
       if(document.getElementById("inventoryPage")?.style.display!=="none" && typeof displayInventoryTrainerList==="function")displayInventoryTrainerList();
+      cloudLastObservedTrainerSignature=cloudDmTrainerSignature();
       if(document.getElementById("trainerInventoryPage")?.style.display!=="none" && activeInventoryTrainerId!==null){
         const active=getActiveInventoryTrainer();
         if(active){
@@ -25568,12 +25683,14 @@ function cloudStartDmBattlePolling(){
   if(!cloudDmMessageTimer) cloudDmMessageTimer=setInterval(()=>cloudRefreshDmUnread().catch(()=>{}),2000);
   cloudRefreshDmUnread().catch(()=>{});
   cloudStopBattlePolling();
+  cloudStartDmStateWatchdog();
   cloudBattlePollTimer=setInterval(()=>{
     // Keep the active participant snapshots current even when a fainted Pokémon
     // is replaced through a UI path that does not save the roster itself.
     cloudSyncActiveBattleNow().catch(e=>console.warn("Cloud battle state sync warning",e));
     cloudPullPlayerBattleAction().catch(e=>console.warn("Player action poll warning",e));
     cloudPullPcTrainerStateToDm().catch(e=>console.warn("Trainer inventory pull warning",e));
+    cloudPullPcPokemonStateToDm().catch(e=>console.warn("Pokémon state pull warning",e));
   },1200);
 }
 
@@ -25688,6 +25805,8 @@ function cloudBattleSupportedInventory(battleType){
 let cloudSharedPartyPokemonCache=[];
 let cloudSharedPartyPokemonLoadedAt=0;
 let cloudPlayerBattleSelectFocused=false;
+let cloudPlayerBattleItemDraft='';
+let cloudPlayerBattleSwapDraft='';
 function cloudPlayerBattleSelectFocus(active){
   if(active){cloudPlayerBattleSelectFocused=true;return;}
   setTimeout(()=>{cloudPlayerBattleSelectFocused=false;},180);
@@ -25710,27 +25829,30 @@ function cloudPlayerCatchPreviewHTML(battle,opponentState,itemId){
   if(String(battle?.battle_type||'').toLowerCase()!=='wild' || !isBattlePokeBall(itemId))return '';
   const data=calculateCatchCheck(opponentState,itemId);
   if(!data)return '';
-  const itemName=itemDatabase?.find(i=>i.id===itemId)?.name||'Poké Ball';
-  const target=data.automatic?'Automatic':(data.possible?(data.requiredRoll+'+'):(data.requiredRoll+'+ • Improve catch conditions'));
-  return '<div class="player-battle-action-note" style="margin-top:7px"><strong>'+cloudEscape(itemName)+' catch target:</strong> '+cloudEscape(target)+' <span style="color:#777">• HP +'+data.hpBonus+' • Status +'+data.statusBonus+' • Ball +'+data.ballBonus+'</span></div>';
+  const target=data.automatic?'Automatic':(data.requiredRoll+'+');
+  return '<div class="player-battle-action-note" style="margin-top:7px"><strong>Roll required for catch:</strong> '+cloudEscape(target)+'</div>';
 }
 function cloudUpdatePlayerCatchPreview(select,battleType){
+  cloudPlayerBattleItemDraft=select?.value||'';
   const preview=document.getElementById('playerBattleCatchPreview');
   if(!preview)return;
   if(String(battleType||'').toLowerCase()!=='wild'){preview.innerHTML='';return;}
   const opponent=cloudCurrentBattleOpponentState||{};
-  preview.innerHTML=cloudPlayerCatchPreviewHTML({battle_type:battleType},opponent,select?.value||'');
+  preview.innerHTML=cloudPlayerCatchPreviewHTML({battle_type:battleType},opponent,cloudPlayerBattleItemDraft);
 }
 let cloudCurrentBattleOpponentState={};
 
 function cloudBattleSecondaryPanelHTML(battle,mine,action){
   if(cloudPlayerBattlePanel==='pokemon'){
     const options=(cloudSharedPartyPokemonCache||[]).filter(p=>String(p.pokemon_id)!==String(mine.pokemon_id)&&Number(p.current_hp)>0);
-    return '<div class="player-battle-action-panel"><p class="player-battle-action-note">Choose any healthy Pokémon in the shared active party. PC Storage Pokémon are not available.</p><div class="player-battle-action-panel-row"><select id="playerBattleSwapSelect" onfocus="cloudPlayerBattleSelectFocus(true)" onblur="cloudPlayerBattleSelectFocus(false)">'+(options.length?options.map(p=>'<option value="'+cloudEscape(p.pokemon_id)+'">'+cloudEscape(p.nickname||p.species)+' • Lv. '+cloudEscape(p.level)+' • '+cloudEscape(p.trainer_name||'Trainer')+'</option>').join(''):'<option value="">No other healthy active-party Pokémon</option>')+'</select><button class="small-button" type="button" '+(options.length?'':'disabled')+' data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerSwapFromButton(this)">Select</button></div></div>';
+    if(options.length&&!options.some(p=>String(p.pokemon_id)===String(cloudPlayerBattleSwapDraft)))cloudPlayerBattleSwapDraft=String(options[0].pokemon_id);
+    return '<div class="player-battle-action-panel"><p class="player-battle-action-note">Choose any healthy Pokémon in the shared active party. PC Storage Pokémon are not available.</p><div class="player-battle-action-panel-row"><select id="playerBattleSwapSelect" onfocus="cloudPlayerBattleSelectFocus(true)" onblur="cloudPlayerBattleSelectFocus(false)" onchange="cloudPlayerBattleSwapDraft=this.value">'+(options.length?options.map(p=>'<option value="'+cloudEscape(p.pokemon_id)+'" '+(String(p.pokemon_id)===String(cloudPlayerBattleSwapDraft)?'selected':'')+'>'+cloudEscape(p.nickname||p.species)+' • Lv. '+cloudEscape(p.level)+' • '+cloudEscape(p.trainer_name||'Trainer')+'</option>').join(''):'<option value="">No other healthy active-party Pokémon</option>')+'</select><button class="small-button" type="button" '+(options.length?'':'disabled')+' data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerSwapFromButton(this)">Select</button></div></div>';
   }
   if(cloudPlayerBattlePanel==='inventory'){
     const items=cloudBattleSupportedInventory(battle.battle_type);
-    return '<div class="player-battle-action-panel"><p class="player-battle-action-note">Select a battle item from your inventory.'+(String(battle.battle_type).toLowerCase()==='wild'?' Poké Balls are available in wild battles.':' Poké Balls cannot be used in trainer battles.')+'</p><div class="player-battle-action-panel-row"><select id="playerBattleItemSelect" onfocus="cloudPlayerBattleSelectFocus(true)" onblur="cloudPlayerBattleSelectFocus(false)" onchange="cloudUpdatePlayerCatchPreview(this,\''+cloudEscape(battle.battle_type||'')+'\')">'+(items.length?items.map(x=>'<option value="'+cloudEscape(x.itemId)+'">'+cloudEscape(x.name||itemDatabase?.find(i=>i.id===x.itemId)?.name||x.itemId)+' ×'+Number(x.quantity)+'</option>').join(''):'<option value="">No battle items available</option>')+'</select><button class="small-button" type="button" '+(items.length?'':'disabled')+' data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" data-battle-type="'+cloudEscape(battle.battle_type||'')+'" onclick="cloudSubmitPlayerItemFromButton(this)">Select</button></div><div id="playerBattleCatchPreview">'+(items.length?cloudPlayerCatchPreviewHTML(battle,cloudCurrentBattleOpponentState,items[0].itemId):'')+'</div></div>';
+    if(items.length&&!items.some(x=>x.itemId===cloudPlayerBattleItemDraft))cloudPlayerBattleItemDraft=items[0].itemId;
+    const selectedItemId=items.length?cloudPlayerBattleItemDraft:'';
+    return '<div class="player-battle-action-panel"><p class="player-battle-action-note">Select a battle item from your inventory.'+(String(battle.battle_type).toLowerCase()==='wild'?' Poké Balls are available in wild battles.':' Poké Balls cannot be used in trainer battles.')+'</p><div class="player-battle-action-panel-row"><select id="playerBattleItemSelect" onfocus="cloudPlayerBattleSelectFocus(true)" onblur="cloudPlayerBattleSelectFocus(false)" onchange="cloudUpdatePlayerCatchPreview(this,\''+cloudEscape(battle.battle_type||'')+'\')">'+(items.length?items.map(x=>'<option value="'+cloudEscape(x.itemId)+'" '+(x.itemId===selectedItemId?'selected':'')+'>'+cloudEscape(x.name||itemDatabase?.find(i=>i.id===x.itemId)?.name||x.itemId)+' ×'+Number(x.quantity)+'</option>').join(''):'<option value="">No battle items available</option>')+'</select><button class="small-button" type="button" '+(items.length?'':'disabled')+' data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" data-battle-type="'+cloudEscape(battle.battle_type||'')+'" onclick="cloudSubmitPlayerItemFromButton(this)">Select</button></div><div id="playerBattleCatchPreview">'+(selectedItemId?cloudPlayerCatchPreviewHTML(battle,cloudCurrentBattleOpponentState,selectedItemId):'')+'</div></div>';
   }
   if(cloudPlayerBattlePanel==='run'){
     return '<div class="player-battle-action-panel"><p class="player-battle-action-note">Attempt to run from the battle. The DM will resolve the attempt.</p><button class="primary-button" style="width:100%;margin:0" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerRunFromButton(this)">Run</button></div>';
@@ -25760,6 +25882,8 @@ async function cloudLoadPlayerBattle(){
     cloudPlayerBattleWasActive=false;
     cloudPlayerBattlePanel='fight';
     cloudPlayerBattlePanelBattleId=null;
+    cloudPlayerBattleItemDraft='';
+    cloudPlayerBattleSwapDraft='';
     cloudPlayerDamageDraft="";
     cloudPlayerDamageDraftRound=null;
     area.innerHTML="";
@@ -25767,7 +25891,7 @@ async function cloudLoadPlayerBattle(){
     await cloudCheckPlayerBattleCompletion();
     return;
   }
-  if(cloudPlayerBattlePanelBattleId!==battle.id){cloudPlayerBattlePanelBattleId=battle.id;cloudPlayerBattlePanel='fight';}
+  if(cloudPlayerBattlePanelBattleId!==battle.id){cloudPlayerBattlePanelBattleId=battle.id;cloudPlayerBattlePanel='fight';cloudPlayerBattleItemDraft='';cloudPlayerBattleSwapDraft='';}
   if(battleCard)battleCard.style.display="block";
   cloudSetPlayerBattleMode(true,battle);
   if(!cloudPlayerBattleWasActive){
@@ -25777,6 +25901,8 @@ async function cloudLoadPlayerBattle(){
   if(cloudPlayerDamageDraftRound!==Number(battle.round_number)){
     cloudPlayerDamageDraft="";
     cloudPlayerDamageDraftRound=Number(battle.round_number);
+    cloudPlayerBattleItemDraft='';
+    cloudPlayerBattleSwapDraft='';
     cloudPlayerBattlePanel='fight';
   }
   const {data:parts,error:partError}=await cloudSupabaseClient.from("battle_participants").select("id,side,trainer_id,pokemon_id,participant_state").eq("battle_id",battle.id);
@@ -25891,6 +26017,7 @@ async function cloudSubmitPlayerSwapFromButton(button){
   const select=document.getElementById('playerBattleSwapSelect');
   const pokemonId=select?.value||'';
   if(!pokemonId)return;
+  cloudPlayerBattleSwapDraft=pokemonId;
   const p=(cloudSharedPartyPokemonCache||[]).find(x=>String(x.pokemon_id)===String(pokemonId));
   await cloudSubmitPlayerGenericAction(button.dataset.battleId,button.dataset.participantId,Number(button.dataset.roundNumber)||1,'swap',{pokemon_id:pokemonId,display_name:p?.nickname||p?.species||'Pokémon',trainer_name:p?.trainer_name||''}).catch(e=>alert('Unable to select Pokémon: '+e.message));
 }
@@ -25898,6 +26025,7 @@ async function cloudSubmitPlayerItemFromButton(button){
   const select=document.getElementById('playerBattleItemSelect');
   const itemId=select?.value||'';
   if(!itemId)return;
+  cloudPlayerBattleItemDraft=itemId;
   const battleType=button?.dataset?.battleType||'';
   const entry=cloudBattleSupportedInventory(battleType).find(x=>x.itemId===itemId);
   if(!entry){alert('That item is not available for this type of battle.');await cloudLoadPlayerBattle();return;}
