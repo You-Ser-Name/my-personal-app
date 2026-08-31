@@ -2553,8 +2553,19 @@ select {
 .story-event-actions select{margin-top:3px}
 .story-event-notes{width:100%;min-height:75px;resize:vertical;font-size:11px}
 .story-unlock-next{width:100%;margin-top:8px}
+
+.story-map-master-details{padding:0!important;overflow:hidden}
+.story-map-master-details>summary{list-style:none;cursor:pointer;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;user-select:none}
+.story-map-master-details>summary::-webkit-details-marker{display:none}
+.story-map-master-details[open]>summary{border-bottom:1px solid rgba(138,100,30,.18)}
+.story-map-master-summary-text{font-size:12px;font-weight:900;line-height:1.25;color:#4f473d;margin-top:2px}
+.story-map-master-chevron{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;font-size:18px;font-weight:900;color:#8a641e;transition:transform .18s ease}
+.story-map-master-details[open] .story-map-master-chevron{transform:rotate(180deg)}
+.story-map-master-body{padding:10px 12px 12px}
+
 .story-map-banner{display:none;margin:8px 0 0;padding:11px 12px;border:1px solid #d8b873;border-radius:12px;background:linear-gradient(180deg,#fffaf0,#fff5dc);text-align:left}
 .story-map-banner.show{display:block}
+.story-map-banner:not(.show){display:none!important}
 .story-map-banner-eyebrow{font-size:9px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;color:#8a641e}
 .story-map-banner-title{font-size:14px;font-weight:950;margin-top:2px}
 .story-map-banner-text{font-size:10.5px;line-height:1.4;color:#665b4d;margin-top:4px}
@@ -3564,7 +3575,16 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
         <div id="kantoDetailHotspotLayer" class="kanto-detail-hotspot-layer"></div>
       </div>
       <div id="kantoDetailMapCaption" class="kanto-detail-map-caption"></div>
-      <div id="dmStoryMapBanner" class="story-map-banner"></div>
+      <details id="dmStoryMapBanner" class="story-map-banner story-map-master-details">
+  <summary class="story-map-master-summary">
+    <div>
+      <div class="story-map-banner-eyebrow">Campaign Stories</div>
+      <div id="dmStoryMapSummaryText" class="story-map-master-summary-text">Story details</div>
+    </div>
+    <span class="story-map-master-chevron" aria-hidden="true">⌄</span>
+  </summary>
+  <div id="dmStoryMapBannerContent" class="story-map-master-body"></div>
+</details>
       <button id="kantoDetailWildEncounterButton" class="primary-button small-button" type="button" style="display:none;width:100%;margin:8px 0 0;" onclick="startWildEncounterFromKantoLocation(activeKantoDetailMapId, true)">Start Wild Pokémon Encounter</button>
 
       <div id="kantoDetailLocationPanel" class="kanto-location-panel" style="display:none;margin-top:8px;">
@@ -9287,9 +9307,20 @@ function getDmStoryEventsForLocation(locationId){
   return dmCampaignStoryEvents.filter(event=>event.locationId===locationId);
 }
 function renderDmStoryMapBanner(locationId){
-  const box=document.getElementById("dmStoryMapBanner");if(!box)return;
+  const box=document.getElementById("dmStoryMapBanner");
+  const content=document.getElementById("dmStoryMapBannerContent");
+  const summary=document.getElementById("dmStoryMapSummaryText");
+  if(!box||!content)return;
+
   const events=getDmStoryEventsForLocation(locationId).filter(dmStoryVisibleOnMap);
-  if(!events.length){box.className="story-map-banner";box.innerHTML="";return;}
+  if(!events.length){
+    box.className="story-map-banner story-map-master-details";
+    box.open=false;
+    content.innerHTML="";
+    if(summary)summary.textContent="Story details";
+    return;
+  }
+
   const arcShort={"The Kanto Resonance":"Kanto Resonance","Always One Step Ahead":"Rival","The Business of Pokémon":"Team Rocket","Side Stories":"Side Story"};
   const statusLabelMap={available:"Available",active:"Active",completed:"Completed"};
   const ordered=[...events].sort((a,b)=>{
@@ -9297,9 +9328,14 @@ function renderDmStoryMapBanner(locationId){
     return (statusRank[getDmStoryStatus(a.id)]??9)-(statusRank[getDmStoryStatus(b.id)]??9);
   });
 
-  box.className="story-map-banner show";
-  box.innerHTML=
-    '<div class="story-map-banner-eyebrow">'+(ordered.length===1?'Campaign Story':'Campaign Stories')+' • '+ordered.length+' total</div>'+
+  box.className="story-map-banner story-map-master-details show";
+  box.open=false;
+  if(summary){
+    const activeCount=ordered.filter(event=>["available","active"].includes(getDmStoryStatus(event.id))).length;
+    summary.textContent=ordered.length+" stor"+(ordered.length===1?"y":"ies")+(activeCount?" • "+activeCount+" available":"");
+  }
+
+  content.innerHTML=
     '<div class="story-map-banner-list">'+
       ordered.map(event=>{
         const status=getDmStoryStatus(event.id);
@@ -9308,9 +9344,9 @@ function renderDmStoryMapBanner(locationId){
           '<div class="story-map-entry-title">'+dmStoryEscape(event.title)+'</div>'+
           '<div class="story-map-entry-hook">'+dmStoryEscape(event.hook)+'</div>'+
           '<div class="story-map-entry-actions">'+
-            '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">Open Story Details</button>'+
+            '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="event.stopPropagation();focusDmStoryEvent(this.dataset.storyId)">Open Story Details</button>'+
             (status==="available"
-              ? '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" data-story-start="active" onclick="setDmStoryStatus(this.dataset.storyId,this.dataset.storyStart)">Start Event</button>'
+              ? '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" data-story-start="active" onclick="event.stopPropagation();setDmStoryStatus(this.dataset.storyId,this.dataset.storyStart)">Start Event</button>'
               : '')+
           '</div>'+
         '</div>';
@@ -9878,9 +9914,9 @@ const kantoDetailLocationHotspots = {
     {name:"Indigo Plateau",target:"indigo-plateau",x:76,y:0,w:16,h:17}
   ],
   "pallet-town": [
-    {name:"Rival's House",action:"landmark",landmarkType:"Home",storyEventId:"rival-01",markerOffsetX:-6,markerOffsetY:6,description:"The rival family's home in Pallet Town.",x:31,y:13,w:21,h:17},
-    {name:"Professor Oak's Lab",action:"landmark",landmarkType:"Laboratory",storyEventId:"resonance-01",markerOffsetX:15,markerOffsetY:0,description:"Professor Oak's Pokémon research laboratory and the starting point for many trainers.",x:57,y:10,w:29,h:20},
-    {name:"Mom's House",action:"landmark",landmarkType:"Home",storyEventId:"side-01",markerOffsetX:0,markerOffsetY:25,description:"The player's family home in Pallet Town.",x:68,y:31,w:19,h:16},
+    {name:"Rival's House",action:"landmark",landmarkType:"Home",storyEventId:"rival-01",markerOffsetX:-6,markerOffsetY:10,description:"The rival family's home in Pallet Town.",x:31,y:13,w:21,h:17},
+    {name:"Professor Oak's Lab",action:"landmark",landmarkType:"Laboratory",storyEventId:"resonance-01",markerOffsetX:20,markerOffsetY:0,description:"Professor Oak's Pokémon research laboratory and the starting point for many trainers.",x:57,y:10,w:29,h:20},
+    {name:"Mom's House",action:"landmark",landmarkType:"Home",storyEventId:"side-01",markerOffsetX:0,markerOffsetY:30,description:"The player's family home in Pallet Town.",x:68,y:31,w:19,h:16},
     {name:"Route 1",target:"route-1",x:46,y:92,w:16,h:8}
   ],
   "route-1": [
