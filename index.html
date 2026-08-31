@@ -2458,10 +2458,17 @@ select {
 
 
 
+
+@media (min-width: 700px){
+  #kantoDetailMapPage .map-card{
+    padding:10px;
+  }
+}
+
 /* Restore compact detailed-map sizing after the story-system update. */
 #kantoDetailMapPage .kanto-detail-map-stage{
   width:100%;
-  max-width:680px;
+  max-width:560px;
   margin-left:auto;
   margin-right:auto;
 }
@@ -2471,7 +2478,7 @@ select {
 #kantoDetailMapPage #kantoDetailLocationPanel,
 #kantoDetailMapPage #kantoDetailTrainerPanel{
   width:100%;
-  max-width:680px;
+  max-width:560px;
   margin-left:auto;
   margin-right:auto;
 }
@@ -9088,11 +9095,8 @@ function renderDmStoryMapBanner(locationId){
     (leadStatus==="available"?'<button class="small-button" type="button" data-story-id="'+dmStoryEscape(lead.id)+'" onclick="setDmStoryStatus(this.dataset.storyId,\'active\')">Start Event</button>':'')+'</div>';
 }
 function renderDmStoryLandmarkPanel(location){
-  const panel=document.getElementById("dmStoryLandmarkPanel");if(!panel)return;
-  const event=location?.storyEventId?getDmStoryEvent(location.storyEventId):null;
-  if(!event||!dmStoryVisibleOnMap(event)){panel.innerHTML="";return;}
-  const status=getDmStoryStatus(event.id);
-  panel.innerHTML='<div class="story-landmark-panel"><div class="story-landmark-title">Campaign Story: '+dmStoryEscape(event.title)+'</div><div class="story-landmark-status">'+dmStoryStatusLabel(status)+'</div><div class="story-landmark-hook">'+dmStoryEscape(event.hook)+'</div><button class="small-button story-landmark-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">Open DM Story Guide</button></div>';
+  const panel=document.getElementById("dmStoryLandmarkPanel");
+  if(panel)panel.innerHTML="";
 }
 
 const KANTO_MAP_PROGRESS_KEY =
