@@ -20768,6 +20768,14 @@ function evolvePokemon(
 
   if(option.method==="stone"){const owner=getPokemonOwnerForEvolution(pokemon);const stone=getEvolutionStoneInventoryEntry(pokemon,option);if(!owner||!stone){alert("The required "+option.label+" is no longer available.");return;}stone.quantity-=1;if(stone.quantity<=0)owner.inventory=owner.inventory.filter(entry=>entry!==stone);saveTrainers();}
 
+  // Evolution changes the species only. It must never change whether the
+  // Pokémon is in the active shared party or PC Storage. Preserve the exact
+  // pre-evolution location before any recalculation/sync work runs.
+  const evolutionStorageLocation =
+    pokemon.storageLocation === "pc"
+      ? "pc"
+      : "party";
+
   pokemon.speciesNumber =
     newSpecies.number;
 
@@ -20783,6 +20791,10 @@ function evolvePokemon(
     pokemon,
     pokemon.level
   );
+
+  // Re-assert the original location after evolution so neither local refreshes
+  // nor the DM → Supabase sync can interpret the evolved Pokémon as stored.
+  pokemon.storageLocation = evolutionStorageLocation;
 
   savePokemon();
 
