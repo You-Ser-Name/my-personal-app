@@ -4179,43 +4179,6 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
     <div class="compact-top-actions">
       <button class="small-button" onclick="showPage('homePage')">← Back</button>
     </div>
-    <details class="form-card story-arc-card story-master-details" id="dmStoryArcCard">
-      <summary class="story-master-summary">
-        <div class="story-arc-header">
-          <div>
-            <div class="story-arc-eyebrow">DM Only</div>
-            <div class="story-arc-title">Campaign Stories</div>
-          </div>
-          <div class="story-master-summary-right">
-            <span id="dmStoryArcStatus" class="story-status-pill active">4 Story Layers</span>
-            <span class="story-master-chevron" aria-hidden="true">⌄</span>
-          </div>
-        </div>
-      </summary>
-      <div class="story-master-body">
-<div class="story-arc-summary">Run the Kanto Resonance main story alongside a recurring Rival arc, Team Rocket's criminal operation, and optional one-off adventures. Story events are visible only to the DM.</div>
-      <div class="story-progress-track"><div id="dmStoryProgressFill" class="story-progress-fill"></div></div>
-      <div class="story-progress-meta"><span id="dmStoryProgressText">0 completed</span><span id="dmStoryNextLocation">Next story event</span></div>
-
-      <div class="story-field-label" style="margin-top:11px;">Arc Quick Filter</div>
-      <div class="story-filter-row" id="dmStoryArcFilters">
-        <button class="small-button story-filter-button active" type="button" data-story-arc="all" onclick="setDmStoryArcFilter('all',this)">All Arcs</button>
-        <button class="small-button story-filter-button" type="button" data-story-arc="The Kanto Resonance" onclick="setDmStoryArcFilter('The Kanto Resonance',this)">Kanto Resonance</button>
-        <button class="small-button story-filter-button" type="button" data-story-arc="Always One Step Ahead" onclick="setDmStoryArcFilter('Always One Step Ahead',this)">Rival</button>
-        <button class="small-button story-filter-button" type="button" data-story-arc="The Business of Pokémon" onclick="setDmStoryArcFilter('The Business of Pokémon',this)">Team Rocket</button>
-        <button class="small-button story-filter-button" type="button" data-story-arc="Side Stories" onclick="setDmStoryArcFilter('Side Stories',this)">Side Stories</button>
-      </div>
-
-      <div class="story-field-label" style="margin-top:8px;">Status</div>
-      <div class="story-filter-row" id="dmStoryFilters">
-        <button class="small-button story-filter-button active" type="button" data-story-filter="all" onclick="setDmStoryFilter('all',this)">All</button>
-        <button class="small-button story-filter-button" type="button" data-story-filter="available" onclick="setDmStoryFilter('available',this)">Available</button>
-        <button class="small-button story-filter-button" type="button" data-story-filter="active" onclick="setDmStoryFilter('active',this)">Active</button>
-        <button class="small-button story-filter-button" type="button" data-story-filter="completed" onclick="setDmStoryFilter('completed',this)">Completed</button>
-      </div>
-      <div id="dmStoryEventList" class="story-arc-sections"></div>
-      </div>
-    </details>
 
     <div class="form-card campaign-progress-card">
       <h2 style="text-align:center;margin-top:0;">Campaign Progress</h2>
@@ -4271,6 +4234,44 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
       </button>
 
     </div>
+
+    <details class="form-card story-arc-card story-master-details" id="dmStoryArcCard">
+      <summary class="story-master-summary">
+        <div class="story-arc-header">
+          <div>
+            <div class="story-arc-eyebrow">DM Only</div>
+            <div class="story-arc-title">Campaign Stories</div>
+          </div>
+          <div class="story-master-summary-right">
+            <span id="dmStoryArcStatus" class="story-status-pill active">4 Story Layers</span>
+            <span class="story-master-chevron" aria-hidden="true">⌄</span>
+          </div>
+        </div>
+      </summary>
+      <div class="story-master-body">
+<div class="story-arc-summary">Run the Kanto Resonance main story alongside a recurring Rival arc, Team Rocket's criminal operation, and optional one-off adventures. Story events are visible only to the DM.</div>
+      <div class="story-progress-track"><div id="dmStoryProgressFill" class="story-progress-fill"></div></div>
+      <div class="story-progress-meta"><span id="dmStoryProgressText">0 completed</span><span id="dmStoryNextLocation">Next story event</span></div>
+
+      <div class="story-field-label" style="margin-top:11px;">Arc Quick Filter</div>
+      <div class="story-filter-row" id="dmStoryArcFilters">
+        <button class="small-button story-filter-button active" type="button" data-story-arc="all" onclick="setDmStoryArcFilter('all',this)">All Arcs</button>
+        <button class="small-button story-filter-button active" type="button" data-story-arc="The Kanto Resonance" onclick="setDmStoryArcFilter('The Kanto Resonance',this)">Kanto Resonance</button>
+        <button class="small-button story-filter-button active" type="button" data-story-arc="Always One Step Ahead" onclick="setDmStoryArcFilter('Always One Step Ahead',this)">Rival</button>
+        <button class="small-button story-filter-button active" type="button" data-story-arc="The Business of Pokémon" onclick="setDmStoryArcFilter('The Business of Pokémon',this)">Team Rocket</button>
+        <button class="small-button story-filter-button active" type="button" data-story-arc="Side Stories" onclick="setDmStoryArcFilter('Side Stories',this)">Side Stories</button>
+      </div>
+
+      <div class="story-field-label" style="margin-top:8px;">Status</div>
+      <div class="story-filter-row" id="dmStoryFilters">
+        <button class="small-button story-filter-button" type="button" data-story-filter="all" onclick="setDmStoryFilter('all',this)">All</button>
+        <button class="small-button story-filter-button active" type="button" data-story-filter="available" onclick="setDmStoryFilter('available',this)">Available</button>
+        <button class="small-button story-filter-button active" type="button" data-story-filter="active" onclick="setDmStoryFilter('active',this)">Active</button>
+        <button class="small-button story-filter-button" type="button" data-story-filter="completed" onclick="setDmStoryFilter('completed',this)">Completed</button>
+      </div>
+      <div id="dmStoryEventList" class="story-arc-sections"></div>
+      </div>
+    </details>
 
   </div>
 </div>
@@ -9098,8 +9099,15 @@ upgradeSavedData();
 
 
 const DM_STORY_STATE_KEY="pokemonCampaignDmStoryStateV1";
-let dmStoryFilter="all";
-let dmStoryArcFilter="all";
+const DM_STORY_ALL_ARCS=[
+  "The Kanto Resonance",
+  "Always One Step Ahead",
+  "The Business of Pokémon",
+  "Side Stories"
+];
+const DM_STORY_ALL_STATUSES=["locked","available","active","completed"];
+let dmStoryArcFilters=new Set(DM_STORY_ALL_ARCS);
+let dmStoryFilters=new Set(["available","active"]);
 
 const dmResonanceStoryEvents=[
 {id:"resonance-01",order:1,arc:"The Kanto Resonance",type:"Main Story",locationId:"pallet-town",location:"Pallet Town",building:"Professor Oak's Lab",title:"Oak's Forgotten Field Journal",hook:"Oak asks the party to retrieve an old research case from storage. Inside is a decades-old field journal filled with unexplained energy readings and several Kanto locations circled in red.",playerInfo:"Oak describes the journal as abandoned research from early in his career. Most of the notes concern unusual Pokémon behavior near specific locations.",dmSecret:"The journal records early measurements from the Kanto Resonance Project. Oak was never part of the control experiments and does not yet realize what the readings ultimately became.",objective:"Retrieve the case, notice the repeated locations, and give the party its first reason to pay attention to unusual behavior across Kanto.",npcs:"Professor Oak",encounter:"No required battle. Optional lab mishap involving a startled starter or research Pokémon.",clues:"A faded project insignia; references to 'passive resonance monitoring'; Viridian City is the next circled location.",reward:"Oak's trust and a copy/photo of the relevant journal pages.",unlocks:"Viridian Trainer School."},
@@ -9232,18 +9240,40 @@ function unlockNextDmStoryEvent(eventId){
   if(next)alert(next.title+" is now available in "+next.location+".");
   else alert(event.arc+" is complete.");
 }
-function setDmStoryArcFilter(arc,button){
-  dmStoryArcFilter=arc||"all";
+function syncDmStoryArcFilterButtons(){
+  const allSelected=DM_STORY_ALL_ARCS.every(arc=>dmStoryArcFilters.has(arc));
   document.querySelectorAll("#dmStoryArcFilters .story-filter-button").forEach(el=>{
-    el.classList.toggle("active",el.dataset.storyArc===dmStoryArcFilter);
+    const value=el.dataset.storyArc;
+    el.classList.toggle("active",value==="all"?allSelected:dmStoryArcFilters.has(value));
   });
+}
+function setDmStoryArcFilter(arc,button){
+  if(arc==="all"){
+    const allSelected=DM_STORY_ALL_ARCS.every(value=>dmStoryArcFilters.has(value));
+    dmStoryArcFilters=allSelected?new Set():new Set(DM_STORY_ALL_ARCS);
+  }else{
+    if(dmStoryArcFilters.has(arc))dmStoryArcFilters.delete(arc);
+    else dmStoryArcFilters.add(arc);
+  }
+  syncDmStoryArcFilterButtons();
   renderDmStoryDashboard();
 }
-function setDmStoryFilter(filter,button){
-  dmStoryFilter=filter||"all";
+function syncDmStoryStatusFilterButtons(){
+  const allSelected=DM_STORY_ALL_STATUSES.every(status=>dmStoryFilters.has(status));
   document.querySelectorAll("#dmStoryFilters .story-filter-button").forEach(el=>{
-    el.classList.toggle("active",el.dataset.storyFilter===dmStoryFilter);
+    const value=el.dataset.storyFilter;
+    el.classList.toggle("active",value==="all"?allSelected:dmStoryFilters.has(value));
   });
+}
+function setDmStoryFilter(filter,button){
+  if(filter==="all"){
+    const allSelected=DM_STORY_ALL_STATUSES.every(value=>dmStoryFilters.has(value));
+    dmStoryFilters=allSelected?new Set():new Set(DM_STORY_ALL_STATUSES);
+  }else{
+    if(dmStoryFilters.has(filter))dmStoryFilters.delete(filter);
+    else dmStoryFilters.add(filter);
+  }
+  syncDmStoryStatusFilterButtons();
   renderDmStoryDashboard();
 }
 function storyFieldHTML(label,value){
@@ -9253,9 +9283,9 @@ function storyFieldHTML(label,value){
 
 const DM_STORY_ARC_META={
   "The Kanto Resonance":{short:"Main Story",subtitle:"Primary campaign arc following the Resonance mystery.",defaultOpen:true},
-  "Always One Step Ahead":{short:"Rival Arc",subtitle:"Recurring beats for the party rival across the journey.",defaultOpen:false},
-  "The Business of Pokémon":{short:"Team Rocket",subtitle:"Criminal subplot focused on poaching, theft, and black-market trade.",defaultOpen:false},
-  "Side Stories":{short:"Side Stories",subtitle:"Optional one-off adventures tied to specific locations.",defaultOpen:false}
+  "Always One Step Ahead":{short:"Rival Arc",subtitle:"Recurring beats for the party rival across the journey.",defaultOpen:true},
+  "The Business of Pokémon":{short:"Team Rocket",subtitle:"Criminal subplot focused on poaching, theft, and black-market trade.",defaultOpen:true},
+  "Side Stories":{short:"Side Stories",subtitle:"Optional one-off adventures tied to specific locations.",defaultOpen:true}
 };
 
 function renderDmStoryArcSection(arcName,events,state){
@@ -9289,27 +9319,11 @@ function renderDmStoryDashboard(){
   if(!list)return;
 
   const state=getDmStoryState();
+  const selectedArcs=DM_STORY_ALL_ARCS.filter(arc=>dmStoryArcFilters.has(arc));
+  const selectedStatuses=DM_STORY_ALL_STATUSES.filter(status=>dmStoryFilters.has(status));
 
-  const orderedArcs=[
-    "The Kanto Resonance",
-    "Always One Step Ahead",
-    "The Business of Pokémon",
-    "Side Stories"
-  ];
-
-  const filteredArcs=dmStoryArcFilter==="all"
-    ? orderedArcs
-    : orderedArcs.filter(arc=>arc===dmStoryArcFilter);
-
-  const filteredEvents=dmCampaignStoryEvents.filter(event=>
-    (dmStoryArcFilter==="all" || event.arc===dmStoryArcFilter) &&
-    (dmStoryFilter==="all" || state.events[event.id]===dmStoryFilter)
-  );
-
-  const totalScopeEvents=dmCampaignStoryEvents.filter(event=>
-    dmStoryArcFilter==="all" || event.arc===dmStoryArcFilter
-  );
-
+  const totalScopeEvents=dmCampaignStoryEvents.filter(event=>dmStoryArcFilters.has(event.arc));
+  const visibleScopeEvents=totalScopeEvents.filter(event=>dmStoryFilters.has(state.events[event.id]));
   const completed=totalScopeEvents.filter(event=>state.events[event.id]==="completed").length;
 
   const progress=document.getElementById("dmStoryProgressFill");
@@ -9319,28 +9333,37 @@ function renderDmStoryDashboard(){
   if(progress){
     progress.style.width=(totalScopeEvents.length?((completed/totalScopeEvents.length)*100):0)+"%";
   }
-
   if(progressText){
-    progressText.textContent=completed+" / "+totalScopeEvents.length+" completed";
+    progressText.textContent=completed+" / "+totalScopeEvents.length+" completed • "+visibleScopeEvents.length+" shown";
   }
 
-  const next=totalScopeEvents.find(event=>["available","active"].includes(state.events[event.id]));
+  const next=totalScopeEvents.find(event=>
+    ["available","active"].includes(state.events[event.id]) &&
+    dmStoryFilters.has(state.events[event.id])
+  );
   if(nextText){
     nextText.textContent=next
       ? "Next: "+next.location+" • "+((DM_STORY_ARC_META[next.arc]?.short)||next.arc)
-      : (totalScopeEvents.length ? "No active event" : "No events");
+      : (totalScopeEvents.length ? "No matching active/available event" : "No arcs selected");
   }
 
-  const sections=filteredArcs.map(arcName=>{
+  if(!selectedArcs.length){
+    list.innerHTML='<div class="empty-message">Select at least one story arc.</div>';
+    return;
+  }
+  if(!selectedStatuses.length){
+    list.innerHTML='<div class="empty-message">Select at least one status.</div>';
+    return;
+  }
+
+  const sections=selectedArcs.map(arcName=>{
     const allArcEvents=dmCampaignStoryEvents.filter(event=>event.arc===arcName);
-    const visibleArcEvents=allArcEvents.filter(event=>
-      dmStoryFilter==="all" || state.events[event.id]===dmStoryFilter
-    );
+    const visibleArcEvents=allArcEvents.filter(event=>dmStoryFilters.has(state.events[event.id]));
 
     const meta=DM_STORY_ARC_META[arcName]||{
       short:arcName,
       subtitle:"",
-      defaultOpen:false
+      defaultOpen:true
     };
 
     const arcCompleted=allArcEvents.filter(event=>state.events[event.id]==="completed").length;
@@ -9394,9 +9417,9 @@ function renderDmStoryDashboard(){
       '</details>';
     }).join("");
 
-    const emptyMessage='<div class="story-arc-empty">No events in this arc match the selected status filter.</div>';
+    const emptyMessage='<div class="story-arc-empty">No events in this arc match the selected status filters.</div>';
 
-    return '<details class="story-arc-section" '+(meta.defaultOpen?'open':'')+'>'+
+    return '<details class="story-arc-section" open>'+
       '<summary>'+
         '<div class="story-arc-section-titlewrap">'+
           '<div class="story-arc-section-title">'+dmStoryEscape(meta.short)+'</div>'+
@@ -9415,7 +9438,9 @@ function renderDmStoryDashboard(){
     '</details>';
   });
 
-  list.innerHTML=sections.join("") || '<div class="empty-message">No story arcs match these filters.</div>';
+  list.innerHTML=sections.join("");
+  syncDmStoryArcFilterButtons();
+  syncDmStoryStatusFilterButtons();
 }
 function openDmStoryLocation(eventId){
   const event=getDmStoryEvent(eventId);if(!event)return;
@@ -9423,17 +9448,25 @@ function openDmStoryLocation(eventId){
   alert(event.location+" does not have its own detailed map yet. The complete story entry remains available in the Campaign tab.");
 }
 function focusDmStoryEvent(eventId){
+  const storyEvent=getDmStoryEvent(eventId);
+  if(storyEvent){
+    dmStoryArcFilters.add(storyEvent.arc);
+    dmStoryFilters.add(getDmStoryStatus(eventId));
+  }
   showPage("campaignPage");
   const storyMaster=document.getElementById("dmStoryArcCard");
   if(storyMaster)storyMaster.open=true;
-  dmStoryFilter="all";
-  dmStoryArcFilter="all";
-  document.querySelectorAll("#dmStoryFilters .story-filter-button").forEach(el=>el.classList.toggle("active",el.dataset.storyFilter==="all"));
-  document.querySelectorAll("#dmStoryArcFilters .story-filter-button").forEach(el=>el.classList.toggle("active",el.dataset.storyArc==="all"));
+  syncDmStoryArcFilterButtons();
+  syncDmStoryStatusFilterButtons();
   renderDmStoryDashboard();
   setTimeout(()=>{
     const card=document.getElementById("story-card-"+eventId);
-    if(card){card.open=true;card.classList.add("story-focus-flash");card.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>card.classList.remove("story-focus-flash"),1500);}
+    if(card){
+      card.open=true;
+      card.classList.add("story-focus-flash");
+      card.scrollIntoView({behavior:"smooth",block:"center"});
+      setTimeout(()=>card.classList.remove("story-focus-flash"),1500);
+    }
   },50);
 }
 function getDmStoryEventsForLocation(locationId){
