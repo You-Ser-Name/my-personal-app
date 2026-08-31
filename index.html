@@ -10312,8 +10312,8 @@ function renderKantoDetailTrainerHotspots(locationId) {
       if(visibleStoryEvents.length){
         button.classList.add("story-map-hotspot-marker");
         if(locationId==="pallet-town"){
-          button.style.setProperty("--story-marker-offset-x","400px");
-          button.style.setProperty("--story-marker-offset-y","400px");
+          button.style.setProperty("--story-marker-offset-x","50px");
+          button.style.setProperty("--story-marker-offset-y","50px");
         }
         if(visibleStoryEvents.every(event=>getDmStoryStatus(event.id)==="completed"))button.classList.add("story-completed-marker");
         button.title=location.name+" — Campaign Story: "+visibleStoryEvents.map(event=>event.title).join(" / ");
