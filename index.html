@@ -2486,6 +2486,24 @@ select {
 
 .story-event-location{display:flex;flex-wrap:wrap;gap:3px 0}
 #dmStoryArcFilters .story-filter-button{font-size:9.5px!important}
+
+.story-arc-sections{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+.story-arc-section{border:1px solid #e6dccb;border-radius:18px;background:#fffefb;overflow:hidden;box-shadow:0 2px 7px rgba(80,60,30,.05)}
+.story-arc-section>summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(180deg,#fffdf8,#fffaf0)}
+.story-arc-section>summary::-webkit-details-marker{display:none}
+.story-arc-section[open]>summary{border-bottom:1px solid #efe6d8}
+.story-arc-section-titlewrap{display:flex;flex-direction:column;gap:3px;min-width:0}
+.story-arc-section-title{font-size:20px;font-weight:800;line-height:1.1}
+.story-arc-section-subtitle{font-size:12px;color:#7a6e5e}
+.story-arc-section-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.story-arc-count-pill{display:inline-flex;align-items:center;justify-content:center;padding:6px 11px;border-radius:999px;background:#f3eee4;color:#5b5142;font-size:12px;font-weight:700}
+.story-arc-next-pill{display:inline-flex;align-items:center;justify-content:center;padding:6px 11px;border-radius:999px;background:#fff;color:#7a6e5e;font-size:11px;font-weight:700;border:1px solid #e0d6c7;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.story-arc-section-body{padding:14px 14px 16px}
+.story-arc-mini-progress{height:8px;border-radius:999px;background:#efe8dc;overflow:hidden;margin-bottom:10px}
+.story-arc-mini-progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#d62d0f,#f06d4d)}
+.story-arc-mini-meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;color:#7a6e5e;margin-bottom:12px}
+.story-arc-empty{padding:12px 14px;border:1px dashed #ddd2c0;border-radius:14px;background:#fff;color:#7a6e5e;font-size:13px}
+
 .story-map-banner-actions .small-button{white-space:normal;text-align:left}
 
 /* DM-only Campaign Story system */
@@ -4072,7 +4090,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
       <div class="story-progress-track"><div id="dmStoryProgressFill" class="story-progress-fill"></div></div>
       <div class="story-progress-meta"><span id="dmStoryProgressText">0 completed</span><span id="dmStoryNextLocation">Next story event</span></div>
 
-      <div class="story-field-label" style="margin-top:11px;">Story Arc</div>
+      <div class="story-field-label" style="margin-top:11px;">Arc Quick Filter</div>
       <div class="story-filter-row" id="dmStoryArcFilters">
         <button class="small-button story-filter-button active" type="button" data-story-arc="all" onclick="setDmStoryArcFilter('all',this)">All Arcs</button>
         <button class="small-button story-filter-button" type="button" data-story-arc="The Kanto Resonance" onclick="setDmStoryArcFilter('The Kanto Resonance',this)">Kanto Resonance</button>
@@ -4088,7 +4106,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
         <button class="small-button story-filter-button" type="button" data-story-filter="active" onclick="setDmStoryFilter('active',this)">Active</button>
         <button class="small-button story-filter-button" type="button" data-story-filter="completed" onclick="setDmStoryFilter('completed',this)">Completed</button>
       </div>
-      <div id="dmStoryEventList" class="story-event-list"></div>
+      <div id="dmStoryEventList" class="story-arc-sections"></div>
     </div>
 
     <div class="form-card campaign-progress-card">
@@ -9120,6 +9138,40 @@ function storyFieldHTML(label,value){
   if(!value)return"";
   return '<div class="story-field"><div class="story-field-label">'+dmStoryEscape(label)+'</div><div class="story-field-text">'+dmStoryEscape(value)+'</div></div>';
 }
+
+const DM_STORY_ARC_META={
+  "The Kanto Resonance":{short:"Main Story",subtitle:"Primary campaign arc following the Resonance mystery.",defaultOpen:true},
+  "Always One Step Ahead":{short:"Rival Arc",subtitle:"Recurring beats for the party rival across the journey.",defaultOpen:false},
+  "The Business of Pokémon":{short:"Team Rocket",subtitle:"Criminal subplot focused on poaching, theft, and black-market trade.",defaultOpen:false},
+  "Side Stories":{short:"Side Stories",subtitle:"Optional one-off adventures tied to specific locations.",defaultOpen:false}
+};
+
+function renderDmStoryArcSection(arcName,events,state){
+  const meta=DM_STORY_ARC_META[arcName]||{short:arcName,subtitle:"",defaultOpen:false};
+  const visibleEvents=events.filter(event=>dmStoryFilter==="all"||state.events[event.id]===dmStoryFilter);
+  const completed=events.filter(event=>state.events[event.id]==="completed").length;
+  const nextEvent=events.find(event=>["available","active"].includes(state.events[event.id]));
+  const progressPct=events.length?((completed/events.length)*100):0;
+
+  const eventCards=visibleEvents.map(event=>{
+    const status=state.events[event.id];
+    const hasNext=event.arc!=="Side Stories" && !!dmCampaignStoryEvents.find(item=>item.arc===event.arc && item.order===event.order+1);
+    return '<details class="story-event-card story-'+status+'" id="story-card-'+event.id+'">'+
+      '<summary class="story-event-summary"><span class="story-order-badge">'+event.order+'</span><span><div class="story-event-name">'+dmStoryEscape(event.title)+'</div><div class="story-event-location">'+dmStoryEscape((DM_STORY_ARC_META[event.arc]?.short)||event.arc)+' • '+dmStoryEscape(event.location)+' • '+dmStoryEscape(event.building)+'</div></span><span class="story-status-pill '+status+'">'+dmStoryStatusLabel(status)+'</span></summary>'+
+      '<div class="story-event-body"><div class="story-event-hook">'+dmStoryEscape(event.hook)+'</div>'+
+      storyFieldHTML("Story Arc",event.arc)+storyFieldHTML("Player Information",event.playerInfo)+storyFieldHTML("DM Secret",event.dmSecret)+storyFieldHTML("Objective",event.objective)+storyFieldHTML("NPCs",event.npcs)+storyFieldHTML("Encounter / Challenge",event.encounter)+storyFieldHTML("Clues",event.clues)+storyFieldHTML("Reward",event.reward)+storyFieldHTML("Unlocks",event.unlocks)+
+      '<div class="story-field"><div class="story-field-label">DM Notes</div><textarea class="story-event-notes" placeholder="Session notes, changes, NPC names, outcomes…" data-story-id="'+dmStoryEscape(event.id)+'" oninput="saveDmStoryNote(this.dataset.storyId,this.value)">'+dmStoryEscape(state.notes[event.id]||"")+'</textarea></div>'+
+      '<div class="story-event-actions"><label>Status<select data-story-id="'+dmStoryEscape(event.id)+'" onchange="setDmStoryStatus(this.dataset.storyId,this.value)"><option value="locked" '+(status==="locked"?"selected":"")+'>Locked</option><option value="available" '+(status==="available"?"selected":"")+'>Available</option><option value="active" '+(status==="active"?"selected":"")+'>Active</option><option value="completed" '+(status==="completed"?"selected":"")+'>Completed</option></label><button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="event.preventDefault();openDmStoryLocation(this.dataset.storyId)">Open Map</button></div>'+
+      (hasNext?'<button class="small-button story-unlock-next" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="unlockNextDmStoryEvent(this.dataset.storyId)">Complete & Unlock Next '+dmStoryEscape((DM_STORY_ARC_META[event.arc]?.short)||"Story")+' Event</button>':'')+
+      '</div></details>';
+  }).join("") || '<div class="story-arc-empty">No '+dmStoryEscape(dmStoryStatusLabel(dmStoryFilter).toLowerCase())+' events in this arc.</div>';
+
+  return '<details class="story-arc-section" '+(meta.defaultOpen?'open':'')+' id="dm-story-arc-'+dmStoryEscape(arcName).replace(/[^a-z0-9]+/gi,"-").toLowerCase()+'">'+
+    '<summary><div class="story-arc-section-titlewrap"><div class="story-arc-section-title">'+dmStoryEscape(meta.short)+'</div><div class="story-arc-section-subtitle">'+dmStoryEscape(meta.subtitle)+'</div></div>'+
+    '<div class="story-arc-section-meta"><span class="story-arc-count-pill">'+completed+' / '+events.length+' complete</span>'+(nextEvent?'<span class="story-arc-next-pill">Next: '+dmStoryEscape(nextEvent.location)+'</span>':'<span class="story-arc-next-pill">Arc complete</span>')+'</div></summary>'+
+    '<div class="story-arc-section-body"><div class="story-arc-mini-progress"><div class="story-arc-mini-progress-fill" style="width:'+progressPct+'%"></div></div><div class="story-arc-mini-meta"><span>'+visibleEvents.length+' visible event'+(visibleEvents.length===1?'':'s')+'</span><span>'+dmStoryEscape(meta.short)+'</span></div>'+eventCards+'</div></details>';
+}
+
 function renderDmStoryDashboard(){
   const list=document.getElementById("dmStoryEventList"); if(!list)return;
   const state=getDmStoryState();
@@ -9134,32 +9186,15 @@ function renderDmStoryDashboard(){
   if(progress)progress.style.width=(arcEvents.length?((completed/arcEvents.length)*100):0)+"%";
   if(progressText)progressText.textContent=completed+" / "+arcEvents.length+" completed";
   const next=arcEvents.find(e=>["available","active"].includes(state.events[e.id]));
-  if(nextText)nextText.textContent=next?"Next: "+next.location:(arcEvents.length?"No active event":"No events");
+  if(nextText)nextText.textContent=next?"Next: "+next.location+" • "+((DM_STORY_ARC_META[next.arc]?.short)||next.arc):(arcEvents.length?"No active event":"No events");
 
-  const visible=dmCampaignStoryEvents.filter(event=>
-    (dmStoryArcFilter==="all"||event.arc===dmStoryArcFilter) &&
-    (dmStoryFilter==="all"||state.events[event.id]===dmStoryFilter)
-  );
+  const orderedArcs=["The Kanto Resonance","Always One Step Ahead","The Business of Pokémon","Side Stories"];
+  const arcsToRender=dmStoryArcFilter==="all" ? orderedArcs : orderedArcs.filter(name=>name===dmStoryArcFilter);
 
-  const arcLabels={
-    "The Kanto Resonance":"Main Story",
-    "Always One Step Ahead":"Rival Arc",
-    "The Business of Pokémon":"Team Rocket",
-    "Side Stories":"One-Off"
-  };
-
-  list.innerHTML=visible.map(event=>{
-    const status=state.events[event.id];
-    const hasNext=event.arc!=="Side Stories" && !!dmCampaignStoryEvents.find(item=>item.arc===event.arc && item.order===event.order+1);
-    return '<details class="story-event-card story-'+status+'" id="story-card-'+event.id+'">'+
-      '<summary class="story-event-summary"><span class="story-order-badge">'+event.order+'</span><span><div class="story-event-name">'+dmStoryEscape(event.title)+'</div><div class="story-event-location">'+dmStoryEscape(arcLabels[event.arc]||event.arc)+' • '+dmStoryEscape(event.location)+' • '+dmStoryEscape(event.building)+'</div></span><span class="story-status-pill '+status+'">'+dmStoryStatusLabel(status)+'</span></summary>'+
-      '<div class="story-event-body"><div class="story-event-hook">'+dmStoryEscape(event.hook)+'</div>'+
-      storyFieldHTML("Story Arc",event.arc)+storyFieldHTML("Player Information",event.playerInfo)+storyFieldHTML("DM Secret",event.dmSecret)+storyFieldHTML("Objective",event.objective)+storyFieldHTML("NPCs",event.npcs)+storyFieldHTML("Encounter / Challenge",event.encounter)+storyFieldHTML("Clues",event.clues)+storyFieldHTML("Reward",event.reward)+storyFieldHTML("Unlocks",event.unlocks)+
-      '<div class="story-field"><div class="story-field-label">DM Notes</div><textarea class="story-event-notes" placeholder="Session notes, changes, NPC names, outcomes…" data-story-id="'+dmStoryEscape(event.id)+'" oninput="saveDmStoryNote(this.dataset.storyId,this.value)">'+dmStoryEscape(state.notes[event.id]||"")+'</textarea></div>'+
-      '<div class="story-event-actions"><label>Status<select data-story-id="'+dmStoryEscape(event.id)+'" onchange="setDmStoryStatus(this.dataset.storyId,this.value)"><option value="locked" '+(status==="locked"?"selected":"")+'>Locked</option><option value="available" '+(status==="available"?"selected":"")+'>Available</option><option value="active" '+(status==="active"?"selected":"")+'>Active</option><option value="completed" '+(status==="completed"?"selected":"")+'>Completed</option></select></label><button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="event.preventDefault();openDmStoryLocation(this.dataset.storyId)">Open Map</button></div>'+
-      (hasNext?'<button class="small-button story-unlock-next" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="unlockNextDmStoryEvent(this.dataset.storyId)">Complete & Unlock Next '+dmStoryEscape(arcLabels[event.arc]||"Story")+' Event</button>':'')+
-      '</div></details>';
-  }).join("")||'<div class="empty-message">No story events match these filters.</div>';
+  list.innerHTML=arcsToRender.map(arcName=>{
+    const events=dmCampaignStoryEvents.filter(event=>event.arc===arcName);
+    return renderDmStoryArcSection(arcName,events,state);
+  }).join("") || '<div class="empty-message">No story arcs match these filters.</div>';
 }
 function openDmStoryLocation(eventId){
   const event=getDmStoryEvent(eventId);if(!event)return;
