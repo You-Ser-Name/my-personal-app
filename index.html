@@ -9234,12 +9234,16 @@ function unlockNextDmStoryEvent(eventId){
 }
 function setDmStoryArcFilter(arc,button){
   dmStoryArcFilter=arc||"all";
-  document.querySelectorAll("#dmStoryArcFilters .story-filter-button").forEach(el=>el.classList.toggle("active",el===button));
+  document.querySelectorAll("#dmStoryArcFilters .story-filter-button").forEach(el=>{
+    el.classList.toggle("active",el.dataset.storyArc===dmStoryArcFilter);
+  });
   renderDmStoryDashboard();
 }
 function setDmStoryFilter(filter,button){
   dmStoryFilter=filter||"all";
-  document.querySelectorAll("#dmStoryFilters .story-filter-button").forEach(el=>el.classList.toggle("active",el===button));
+  document.querySelectorAll("#dmStoryFilters .story-filter-button").forEach(el=>{
+    el.classList.toggle("active",el.dataset.storyFilter===dmStoryFilter);
+  });
   renderDmStoryDashboard();
 }
 function storyFieldHTML(label,value){
@@ -9281,28 +9285,137 @@ function renderDmStoryArcSection(arcName,events,state){
 }
 
 function renderDmStoryDashboard(){
-  const list=document.getElementById("dmStoryEventList"); if(!list)return;
+  const list=document.getElementById("dmStoryEventList");
+  if(!list)return;
+
   const state=getDmStoryState();
 
-  const arcEvents=dmStoryArcFilter==="all"
-    ? dmCampaignStoryEvents
-    : dmCampaignStoryEvents.filter(event=>event.arc===dmStoryArcFilter);
-  const completed=arcEvents.filter(e=>state.events[e.id]==="completed").length;
+  const orderedArcs=[
+    "The Kanto Resonance",
+    "Always One Step Ahead",
+    "The Business of Pokémon",
+    "Side Stories"
+  ];
+
+  const filteredArcs=dmStoryArcFilter==="all"
+    ? orderedArcs
+    : orderedArcs.filter(arc=>arc===dmStoryArcFilter);
+
+  const filteredEvents=dmCampaignStoryEvents.filter(event=>
+    (dmStoryArcFilter==="all" || event.arc===dmStoryArcFilter) &&
+    (dmStoryFilter==="all" || state.events[event.id]===dmStoryFilter)
+  );
+
+  const totalScopeEvents=dmCampaignStoryEvents.filter(event=>
+    dmStoryArcFilter==="all" || event.arc===dmStoryArcFilter
+  );
+
+  const completed=totalScopeEvents.filter(event=>state.events[event.id]==="completed").length;
+
   const progress=document.getElementById("dmStoryProgressFill");
   const progressText=document.getElementById("dmStoryProgressText");
   const nextText=document.getElementById("dmStoryNextLocation");
-  if(progress)progress.style.width=(arcEvents.length?((completed/arcEvents.length)*100):0)+"%";
-  if(progressText)progressText.textContent=completed+" / "+arcEvents.length+" completed";
-  const next=arcEvents.find(e=>["available","active"].includes(state.events[e.id]));
-  if(nextText)nextText.textContent=next?"Next: "+next.location+" • "+((DM_STORY_ARC_META[next.arc]?.short)||next.arc):(arcEvents.length?"No active event":"No events");
 
-  const orderedArcs=["The Kanto Resonance","Always One Step Ahead","The Business of Pokémon","Side Stories"];
-  const arcsToRender=dmStoryArcFilter==="all" ? orderedArcs : orderedArcs.filter(name=>name===dmStoryArcFilter);
+  if(progress){
+    progress.style.width=(totalScopeEvents.length?((completed/totalScopeEvents.length)*100):0)+"%";
+  }
 
-  list.innerHTML=arcsToRender.map(arcName=>{
-    const events=dmCampaignStoryEvents.filter(event=>event.arc===arcName);
-    return renderDmStoryArcSection(arcName,events,state);
-  }).join("") || '<div class="empty-message">No story arcs match these filters.</div>';
+  if(progressText){
+    progressText.textContent=completed+" / "+totalScopeEvents.length+" completed";
+  }
+
+  const next=totalScopeEvents.find(event=>["available","active"].includes(state.events[event.id]));
+  if(nextText){
+    nextText.textContent=next
+      ? "Next: "+next.location+" • "+((DM_STORY_ARC_META[next.arc]?.short)||next.arc)
+      : (totalScopeEvents.length ? "No active event" : "No events");
+  }
+
+  const sections=filteredArcs.map(arcName=>{
+    const allArcEvents=dmCampaignStoryEvents.filter(event=>event.arc===arcName);
+    const visibleArcEvents=allArcEvents.filter(event=>
+      dmStoryFilter==="all" || state.events[event.id]===dmStoryFilter
+    );
+
+    const meta=DM_STORY_ARC_META[arcName]||{
+      short:arcName,
+      subtitle:"",
+      defaultOpen:false
+    };
+
+    const arcCompleted=allArcEvents.filter(event=>state.events[event.id]==="completed").length;
+    const arcNext=allArcEvents.find(event=>["available","active"].includes(state.events[event.id]));
+    const progressPct=allArcEvents.length?((arcCompleted/allArcEvents.length)*100):0;
+
+    const cards=visibleArcEvents.map(event=>{
+      const status=state.events[event.id];
+      const hasNext=event.arc!=="Side Stories" &&
+        !!dmCampaignStoryEvents.find(item=>item.arc===event.arc && item.order===event.order+1);
+
+      return '<details class="story-event-card story-'+status+'" id="story-card-'+event.id+'">'+
+        '<summary class="story-event-summary">'+
+          '<span class="story-order-badge">'+event.order+'</span>'+
+          '<span>'+
+            '<div class="story-event-name">'+dmStoryEscape(event.title)+'</div>'+
+            '<div class="story-event-location">'+dmStoryEscape(meta.short)+' • '+dmStoryEscape(event.location)+' • '+dmStoryEscape(event.building)+'</div>'+
+          '</span>'+
+          '<span class="story-status-pill '+status+'">'+dmStoryStatusLabel(status)+'</span>'+
+        '</summary>'+
+        '<div class="story-event-body">'+
+          '<div class="story-event-hook">'+dmStoryEscape(event.hook)+'</div>'+
+          storyFieldHTML("Story Arc",event.arc)+
+          storyFieldHTML("Player Information",event.playerInfo)+
+          storyFieldHTML("DM Secret",event.dmSecret)+
+          storyFieldHTML("Objective",event.objective)+
+          storyFieldHTML("NPCs",event.npcs)+
+          storyFieldHTML("Encounter / Challenge",event.encounter)+
+          storyFieldHTML("Clues",event.clues)+
+          storyFieldHTML("Reward",event.reward)+
+          storyFieldHTML("Unlocks",event.unlocks)+
+          '<div class="story-field">'+
+            '<div class="story-field-label">DM Notes</div>'+
+            '<textarea class="story-event-notes" placeholder="Session notes, changes, NPC names, outcomes…" data-story-id="'+dmStoryEscape(event.id)+'" oninput="saveDmStoryNote(this.dataset.storyId,this.value)">'+dmStoryEscape(state.notes[event.id]||"")+'</textarea>'+
+          '</div>'+
+          '<div class="story-event-actions">'+
+            '<label>Status'+
+              '<select data-story-id="'+dmStoryEscape(event.id)+'" onchange="setDmStoryStatus(this.dataset.storyId,this.value)">'+
+                '<option value="locked" '+(status==="locked"?"selected":"")+'>Locked</option>'+
+                '<option value="available" '+(status==="available"?"selected":"")+'>Available</option>'+
+                '<option value="active" '+(status==="active"?"selected":"")+'>Active</option>'+
+                '<option value="completed" '+(status==="completed"?"selected":"")+'>Completed</option>'+
+              '</select>'+
+            '</label>'+
+            '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="event.preventDefault();openDmStoryLocation(this.dataset.storyId)">Open Map</button>'+
+          '</div>'+
+          (hasNext
+            ? '<button class="small-button story-unlock-next" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="unlockNextDmStoryEvent(this.dataset.storyId)">Complete & Unlock Next '+dmStoryEscape(meta.short)+' Event</button>'
+            : '')+
+        '</div>'+
+      '</details>';
+    }).join("");
+
+    const emptyMessage='<div class="story-arc-empty">No events in this arc match the selected status filter.</div>';
+
+    return '<details class="story-arc-section" '+(meta.defaultOpen?'open':'')+'>'+
+      '<summary>'+
+        '<div class="story-arc-section-titlewrap">'+
+          '<div class="story-arc-section-title">'+dmStoryEscape(meta.short)+'</div>'+
+          '<div class="story-arc-section-subtitle">'+dmStoryEscape(meta.subtitle)+'</div>'+
+        '</div>'+
+        '<div class="story-arc-section-meta">'+
+          '<span class="story-arc-count-pill">'+arcCompleted+' / '+allArcEvents.length+' complete</span>'+
+          '<span class="story-arc-next-pill">'+(arcNext?'Next: '+dmStoryEscape(arcNext.location):'Arc complete')+'</span>'+
+        '</div>'+
+      '</summary>'+
+      '<div class="story-arc-section-body">'+
+        '<div class="story-arc-mini-progress"><div class="story-arc-mini-progress-fill" style="width:'+progressPct+'%"></div></div>'+
+        '<div class="story-arc-mini-meta"><span>'+visibleArcEvents.length+' visible event'+(visibleArcEvents.length===1?'':'s')+'</span><span>'+dmStoryEscape(meta.short)+'</span></div>'+
+        (cards||emptyMessage)+
+      '</div>'+
+    '</details>';
+  });
+
+  list.innerHTML=sections.join("") || '<div class="empty-message">No story arcs match these filters.</div>';
 }
 function openDmStoryLocation(eventId){
   const event=getDmStoryEvent(eventId);if(!event)return;
