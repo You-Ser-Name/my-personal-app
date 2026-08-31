@@ -2483,6 +2483,11 @@ select {
   margin-right:auto;
 }
 
+
+.story-event-location{display:flex;flex-wrap:wrap;gap:3px 0}
+#dmStoryArcFilters .story-filter-button{font-size:9.5px!important}
+.story-map-banner-actions .small-button{white-space:normal;text-align:left}
+
 /* DM-only Campaign Story system */
 .story-arc-card{border:1px solid #dfd4c3;background:linear-gradient(180deg,#fffdf8,#fff9ee);box-shadow:0 2px 8px rgba(84,60,20,.08)}
 .story-arc-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
@@ -4058,14 +4063,25 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
     <div class="form-card story-arc-card" id="dmStoryArcCard">
       <div class="story-arc-header">
         <div>
-          <div class="story-arc-eyebrow">DM Story Arc</div>
-          <div class="story-arc-title">The Kanto Resonance</div>
+          <div class="story-arc-eyebrow">DM Only</div>
+          <div class="story-arc-title">Campaign Stories</div>
         </div>
-        <span id="dmStoryArcStatus" class="story-status-pill active">Active</span>
+        <span id="dmStoryArcStatus" class="story-status-pill active">4 Story Layers</span>
       </div>
-      <div class="story-arc-summary">A forgotten network built to monitor Pokémon energy is waking back up. As the party crosses Kanto, isolated mysteries reveal a larger question: should humans ever be able to guide—or control—Pokémon behavior at a regional scale?</div>
+      <div class="story-arc-summary">Run the Kanto Resonance main story alongside a recurring Rival arc, Team Rocket's criminal operation, and optional one-off adventures. Story events are visible only to the DM.</div>
       <div class="story-progress-track"><div id="dmStoryProgressFill" class="story-progress-fill"></div></div>
-      <div class="story-progress-meta"><span id="dmStoryProgressText">0 / 19 completed</span><span id="dmStoryNextLocation">Next: Pallet Town</span></div>
+      <div class="story-progress-meta"><span id="dmStoryProgressText">0 completed</span><span id="dmStoryNextLocation">Next story event</span></div>
+
+      <div class="story-field-label" style="margin-top:11px;">Story Arc</div>
+      <div class="story-filter-row" id="dmStoryArcFilters">
+        <button class="small-button story-filter-button active" type="button" data-story-arc="all" onclick="setDmStoryArcFilter('all',this)">All Arcs</button>
+        <button class="small-button story-filter-button" type="button" data-story-arc="The Kanto Resonance" onclick="setDmStoryArcFilter('The Kanto Resonance',this)">Kanto Resonance</button>
+        <button class="small-button story-filter-button" type="button" data-story-arc="Always One Step Ahead" onclick="setDmStoryArcFilter('Always One Step Ahead',this)">Rival</button>
+        <button class="small-button story-filter-button" type="button" data-story-arc="The Business of Pokémon" onclick="setDmStoryArcFilter('The Business of Pokémon',this)">Team Rocket</button>
+        <button class="small-button story-filter-button" type="button" data-story-arc="Side Stories" onclick="setDmStoryArcFilter('Side Stories',this)">Side Stories</button>
+      </div>
+
+      <div class="story-field-label" style="margin-top:8px;">Status</div>
       <div class="story-filter-row" id="dmStoryFilters">
         <button class="small-button story-filter-button active" type="button" data-story-filter="all" onclick="setDmStoryFilter('all',this)">All</button>
         <button class="small-button story-filter-button" type="button" data-story-filter="available" onclick="setDmStoryFilter('available',this)">Available</button>
@@ -8957,8 +8973,9 @@ upgradeSavedData();
 
 const DM_STORY_STATE_KEY="pokemonCampaignDmStoryStateV1";
 let dmStoryFilter="all";
+let dmStoryArcFilter="all";
 
-const dmCampaignStoryEvents=[
+const dmResonanceStoryEvents=[
 {id:"resonance-01",order:1,arc:"The Kanto Resonance",type:"Main Story",locationId:"pallet-town",location:"Pallet Town",building:"Professor Oak's Lab",title:"Oak's Forgotten Field Journal",hook:"Oak asks the party to retrieve an old research case from storage. Inside is a decades-old field journal filled with unexplained energy readings and several Kanto locations circled in red.",playerInfo:"Oak describes the journal as abandoned research from early in his career. Most of the notes concern unusual Pokémon behavior near specific locations.",dmSecret:"The journal records early measurements from the Kanto Resonance Project. Oak was never part of the control experiments and does not yet realize what the readings ultimately became.",objective:"Retrieve the case, notice the repeated locations, and give the party its first reason to pay attention to unusual behavior across Kanto.",npcs:"Professor Oak",encounter:"No required battle. Optional lab mishap involving a startled starter or research Pokémon.",clues:"A faded project insignia; references to 'passive resonance monitoring'; Viridian City is the next circled location.",reward:"Oak's trust and a copy/photo of the relevant journal pages.",unlocks:"Viridian Trainer School."},
 {id:"resonance-02",order:2,arc:"The Kanto Resonance",type:"Main Story",locationId:"viridian-city",location:"Viridian City",building:"Trainer School",title:"The Pokémon That Won't Listen",hook:"Normally docile training Pokémon suddenly ignore commands and become aggressive during lessons.",playerInfo:"Students and instructors insist the affected Pokémon were behaving normally until very recently.",dmSecret:"An old Resonance Project transmitter beneath the school has reactivated. The equipment was supposed to monitor Pokémon, not influence them.",objective:"Protect the students, calm the affected Pokémon, and trace the disturbance beneath the school.",npcs:"Trainer School instructor; frightened students",encounter:"2–3 agitated low-level Pokémon. Defeating them is optional if the party finds a way to calm them.",clues:"The transmitter carries the same insignia found in Oak's journal. Its power feed should have been disconnected decades ago.",reward:"School gratitude and access to the hidden transmitter room.",unlocks:"The Man Who Remembers."},
 {id:"resonance-03",order:3,arc:"The Kanto Resonance",type:"Main Story",locationId:"viridian-city",location:"Viridian City",building:"Old Man's Corner",title:"The Man Who Remembers",hook:"Viridian's elderly resident recognizes the insignia on the equipment but becomes immediately uncomfortable when questioned.",playerInfo:"He admits he once worked on regional monitoring equipment but claims the project ended long ago.",dmSecret:"He was a technician on the original Resonance Project. He quit when passive receivers were converted into transmitters capable of changing Pokémon behavior.",objective:"Earn his trust and learn what the machines were originally designed to do.",npcs:"Retired Resonance technician",encounter:"Social encounter; optional errand or favor to persuade him to speak openly.",clues:"“Those machines were supposed to listen to Pokémon, not tell them what to do.” He remembers similar hardware at Pewter Museum.",reward:"Historical context and a hand-drawn schematic of an early resonance node.",unlocks:"Pewter Museum."},
@@ -8978,8 +8995,56 @@ const dmCampaignStoryEvents=[
 {id:"resonance-17",order:17,arc:"The Kanto Resonance",type:"Main Story",locationId:"cinnabar-island",location:"Cinnabar Island",building:"Pokémon Mansion",title:"The Experiment That Went Too Far",hook:"Abandoned research notes in the Pokémon Mansion connect resonance studies with experiments on Pokémon development and artificial creation.",playerInfo:"Cinnabar researchers pushed far beyond habitat monitoring, experimenting with how Pokémon energy responds during growth and transformation.",dmSecret:"Resonance research became one of several technologies feeding into experiments surrounding Mew and ultimately Mewtwo. Mewtwo is not simply an unrelated secret—it is tied to the same history the party has followed across Kanto.",objective:"Recover the surviving research, learn how the project crossed its final ethical boundary, and determine what the modern network operators know about Mewtwo.",npcs:"Former Cinnabar researcher; surviving lab systems",encounter:"Pokémon Mansion dungeon material, escaped experiments, or unstable lab hazards.",clues:"Mew genetic references; resonance response data; files marked with a later Mewtwo designation.",reward:"The link between the regional mystery and the campaign's eventual endgame.",unlocks:"Legendary Network Consequences."},
 {id:"resonance-18",order:18,arc:"The Kanto Resonance",type:"Legendary",locationId:"indigo-plateau",location:"Late Game / Kanto",building:"Regional Network",title:"The Legendary Network Consequences",hook:"Storms, unusual heat, electrical disturbances, and reports of legendary Pokémon activity intensify as the rebuilt network approaches full power.",playerInfo:"The legendary birds are reacting to the same system that disturbed Articuno.",dmSecret:"Zapdos and Moltres are additional natural resonance anchors. The antagonist needs enough legendary-scale data to make the network stable across all of Kanto.",objective:"Deal with the remaining legendary consequences and prevent the final calibration from becoming permanent.",npcs:"Zapdos; Moltres; network researchers",encounter:"Late-game legendary encounters placed where best fits the campaign's remaining maps and pacing.",clues:"Final control references point toward the Mewtwo research and the network's ultimate activation plan.",reward:"Disable major portions of the network and open the final confrontation.",unlocks:"Mewtwo / Truth of the Project."},
 {id:"resonance-19",order:19,arc:"The Kanto Resonance",type:"Endgame",locationId:"indigo-plateau",location:"Endgame",building:"Final Resonance Site",title:"Mewtwo and the Truth of the Project",hook:"The final phase of the Resonance Project collides with the existence of Mewtwo—the clearest possible consequence of treating Pokémon power as something humans can engineer and control.",playerInfo:"The party finally understands that the campaign's scattered mysteries were pieces of one decades-long argument about the relationship between people, Pokémon, and control.",dmSecret:"The antagonist's plan should force a genuine choice: destroy the technology, preserve only passive monitoring, attempt strict safeguards, or find another solution. Mewtwo's own perspective can challenge both sides.",objective:"Resolve the network crisis, confront its architect, survive or negotiate the Mewtwo encounter, and decide the future of the Resonance technology.",npcs:"Mewtwo; modern Resonance architect; surviving researchers; allies gathered through the campaign",encounter:"Final multi-stage story encounter combining technology, Pokémon conflict, and a meaningful decision.",clues:"All prior clues converge here; no new mystery is required—the payoff is understanding and choice.",reward:"Campaign-defining resolution and the long-term fate of Kanto's Resonance network.",unlocks:"Epilogue."}
+];;
+
+const dmRivalStoryEvents=[
+{id:"rival-01",order:1,arc:"Always One Step Ahead",type:"Rival Arc",locationId:"pallet-town",location:"Pallet Town",building:"Rival's House",title:"The First Challenge",hook:"Before the journey truly begins, the rival needles the party about traveling as a group and insists a great trainer should be able to stand on their own.",playerInfo:"The rival is competitive, funny, and genuinely excited to prove himself. His confidence is annoying, but not yet cruel.",dmSecret:"His deepest fear is being ordinary. Every joke about being 'better' is partly a defense against the possibility that someone else may surpass him.",objective:"Introduce the rival's personality and establish the campaign-long competition.",npcs:"The Rival; optional family member",encounter:"Friendly opening rival battle or challenge.",clues:"He immediately begins keeping score—badges, wins, catches, and who reaches each city first.",reward:"A memorable recurring foil and the first entry in the rivalry.",unlocks:"Already Been Here in Viridian City."},
+{id:"rival-02",order:2,arc:"Always One Step Ahead",type:"Rival Arc",locationId:"viridian-city",location:"Viridian City",building:"City Streets",title:"Already Been Here",hook:"The party arrives to discover their rival has already passed through Viridian, solved a small local problem, and moved on.",playerInfo:"Several NPCs speak positively about him, establishing that he is not merely boastful—he is genuinely capable.",dmSecret:"This should sting just enough to make the rivalry feel real without forcing another battle.",objective:"Build the sense that the rival is progressing independently through Kanto.",npcs:"Viridian residents; shopkeeper or Trainer School student",encounter:"Optional brief encounter if the party catches up with him.",clues:"He left a teasing message or bragging note for the party.",reward:"Rival progression and a reason to keep moving.",unlocks:"Badge Race in Pewter City."},
+{id:"rival-03",order:3,arc:"Always One Step Ahead",type:"Rival Arc",locationId:"pewter-city",location:"Pewter City",building:"Pewter Gym Area",title:"Badge Race",hook:"The rival turns the gym challenge into a race: whoever earns the next badge first gets bragging rights.",playerInfo:"He is still playful, but his need to quantify who is 'winning' is becoming obvious.",dmSecret:"Do not force an outcome. Whether he wins or loses the race, he will remember it and reference it later.",objective:"Make badges part of the personal rivalry rather than only campaign progression.",npcs:"The Rival; gym spectators",encounter:"Optional rival battle before or after the gym.",clues:"He keeps a physical or mental tally of every competition.",reward:"A recurring scoreboard and character banter.",unlocks:"The Wrong Lesson in Cerulean City."},
+{id:"rival-04",order:4,arc:"Always One Step Ahead",type:"Rival Arc",locationId:"cerulean-city",location:"Cerulean City",building:"City Battle Area",title:"The Wrong Lesson",hook:"The rival wins a difficult battle by pushing one of his Pokémon well past the point where it clearly wants to stop.",playerInfo:"He is proud of the victory and initially dismisses concern as softness.",dmSecret:"This is the first real crack in his philosophy: he is beginning to value winning over partnership.",objective:"Let the players notice the cost of his obsession without turning him into a villain.",npcs:"The Rival; exhausted partner Pokémon; opposing trainer",encounter:"Observed battle or immediate rival challenge.",clues:"His Pokémon hesitates before obeying a final risky command.",reward:"Character tension that can pay off in Lavender.",unlocks:"Public Humiliation in Vermilion City."},
+{id:"rival-05",order:5,arc:"Always One Step Ahead",type:"Rival Arc",locationId:"vermilion-city",location:"Vermilion City",building:"Harbor Plaza",title:"Public Humiliation",hook:"A respected trainer defeats the rival decisively in front of a crowd.",playerInfo:"For the first time, the rival has no joke ready. He is embarrassed and angry with himself.",dmSecret:"His immediate instinct is to blame strategy, levels, and training—not his relationship with his Pokémon.",objective:"Break his confidence enough to start genuine character growth.",npcs:"The Rival; respected local trainer; spectators",encounter:"The party may battle the same trainer or speak with the rival afterward.",clues:"His Pokémon tries to comfort him and he initially pulls away.",reward:"A turning point in the rivalry.",unlocks:"A Quiet Moment in Lavender Town."},
+{id:"rival-06",order:6,arc:"Always One Step Ahead",type:"Rival Arc",locationId:"lavender-town",location:"Lavender Town",building:"Pokémon Tower",title:"A Quiet Moment",hook:"The party finds the rival alone at Pokémon Tower after one of his Pokémon was badly hurt—or after confronting the possibility of losing one.",playerInfo:"He does not want a battle. He is quieter than the party has ever seen him.",dmSecret:"This is where he finally admits, perhaps indirectly, that he has been afraid of falling behind more than he has been focused on what his Pokémon need.",objective:"Humanize the rival and create an opportunity for sincere conversation.",npcs:"The Rival; Mr. Fuji if useful",encounter:"No required combat.",clues:"He stops referring to his Pokémon only by strategic role and uses a nickname or affectionate habit instead.",reward:"A deeper relationship with the rival.",unlocks:"Competition Becomes Cooperation in the Safari Zone."},
+{id:"rival-07",order:7,arc:"Always One Step Ahead",type:"Rival Arc",locationId:"safari-zone",location:"Safari Zone",building:"Safari Preserve",title:"Competition Becomes Cooperation",hook:"The Safari crisis traps the rival in the same dangerous situation as the party, forcing everyone to cooperate.",playerInfo:"He is still competitive, but instinctively puts Pokémon and people ahead of the scoreboard.",dmSecret:"This is the first time his growth should be demonstrated rather than discussed.",objective:"Give the rival and party a shared success where teamwork matters more than victory.",npcs:"The Rival; rangers; stranded visitors",encounter:"Joint rescue encounter during the Safari Zone crisis.",clues:"He voluntarily gives up an opportunity to catch or defeat a rare Pokémon to help someone else.",reward:"Mutual respect.",unlocks:"The Shortcut in Fuchsia City."},
+{id:"rival-08",order:8,arc:"Always One Step Ahead",type:"Rival Arc",locationId:"fuchsia-city",location:"Fuchsia City",building:"Fuchsia Streets",title:"The Shortcut",hook:"Someone offers the rival access to an illicit method for making his Pokémon stronger quickly.",playerInfo:"He is visibly tempted. Old habits and his fear of being surpassed have not disappeared overnight.",dmSecret:"The offer can come from a Rocket intermediary, creating a clean crossover between arcs.",objective:"Let the rival choose what kind of trainer he wants to become.",npcs:"The Rival; shady recruiter",encounter:"Social scene or short confrontation with the recruiter.",clues:"The rival ultimately refuses—but only after seriously considering it.",reward:"Proof that his growth is a choice, not a personality replacement.",unlocks:"The Rival Chooses a Side in Saffron City."},
+{id:"rival-09",order:9,arc:"Always One Step Ahead",type:"Rival Arc",locationId:"saffron-city",location:"Saffron City",building:"Silph District",title:"The Rival Chooses a Side",hook:"When Saffron becomes dangerous, the rival abandons his own plans to help civilians and Pokémon caught in the conflict.",playerInfo:"He acts before anyone asks him to.",dmSecret:"This is the clearest reversal of his early belief that a real trainer only needs to worry about their own progress.",objective:"Show his maturation through decisive action.",npcs:"The Rival; civilians; Silph employees",encounter:"Parallel rescue encounter or cooperative battle.",clues:"He brushes off praise and tells the party there were more important things than a badge.",reward:"The rival becomes a genuine ally without ceasing to be competitive.",unlocks:"The Rematch He Doesn't Demand in Celadon City."},
+{id:"rival-10",order:10,arc:"Always One Step Ahead",type:"Rival Arc",locationId:"celadon-city",location:"Celadon City",building:"Celadon Hotel",title:"The Rematch He Doesn't Demand",hook:"The party runs into the rival in Celadon. For once, he does not immediately challenge them.",playerInfo:"He asks how the party is doing and talks about his own Pokémon before eventually joking about a rematch.",dmSecret:"The absence of a demanded battle is the point. Competition has stopped defining the entire relationship.",objective:"Give the campaign a low-key payoff to the rival's growth.",npcs:"The Rival",encounter:"Optional consensual rematch if the party wants one.",clues:"He keeps one Pokémon on his team because he loves training with it, even though another option would be statistically stronger.",reward:"Friendlier rivalry and character payoff.",unlocks:"What Makes a Great Trainer? on Cinnabar."},
+{id:"rival-11",order:11,arc:"Always One Step Ahead",type:"Rival Arc",locationId:"cinnabar-island",location:"Cinnabar Island",building:"Pokémon Mansion / Lab",title:"What Makes a Great Trainer?",hook:"Cinnabar's research records show Pokémon treated as tools, experiments, and sources of power.",playerInfo:"The rival is disturbed by how familiar some of the researchers' language sounds compared with his own early obsession with optimization.",dmSecret:"He should connect the lesson himself rather than having the party lecture him.",objective:"Bring his personal story into direct thematic contact with the Resonance campaign.",npcs:"The Rival; former researcher if present",encounter:"No required rival battle.",clues:"He openly admits that winning cannot be the only measure of a trainer.",reward:"Final emotional setup for the late-game rival battle.",unlocks:"The Real Rival Battle."},
+{id:"rival-12",order:12,arc:"Always One Step Ahead",type:"Rival Arc",locationId:"indigo-plateau",location:"Late Game",building:"Championship Approach",title:"The Real Rival Battle",hook:"The rival asks for one final battle—not because he hates losing, but because both sides have grown and he genuinely wants to know who has become the better trainer.",playerInfo:"This is a respectful full-strength battle between people who know one another's history.",dmSecret:"His final team should reflect bonds formed throughout the campaign, not simply six mathematically optimal choices.",objective:"Pay off the rivalry as a celebration of both trainers' journeys.",npcs:"The Rival",encounter:"Full late-game rival battle.",clues:"He thanks his Pokémon regardless of the outcome.",reward:"Resolution of the rivalry and a lasting friend/competitor.",unlocks:"Rival epilogue."}
 ];
 
+const dmRocketStoryEvents=[
+{id:"rocket-01",order:1,arc:"The Business of Pokémon",type:"Team Rocket",locationId:"route-3",location:"Route 3 / Pewter",building:"Roadside Buyers",title:"The Fossil Buyers",hook:"Hikers around Pewter and Route 3 are being offered suspiciously high prices for fossils and unusual Pokémon specimens.",playerInfo:"Nobody knows the buyer; payment is handled through runners using false names.",dmSecret:"Team Rocket is testing a procurement network before committing people to Mt. Moon.",objective:"Notice the pattern and trace the buyers toward Mt. Moon.",npcs:"Hikers; anonymous Rocket runner",encounter:"Optional confrontation with a courier.",clues:"Bulk orders, coded collection lists, and repeated references to Mt. Moon.",reward:"First hint of an organized Pokémon black market.",unlocks:"Rocket Excavation Crew."},
+{id:"rocket-02",order:2,arc:"The Business of Pokémon",type:"Team Rocket",locationId:"mt-moon",location:"Mt. Moon",building:"Excavation Site",title:"Rocket Excavation Crew",hook:"Inside Mt. Moon, an organized crew is digging for fossils and capturing rare cave Pokémon.",playerInfo:"This is the party's first clear encounter with Team Rocket as an organization.",dmSecret:"The crew cares about profit and specimen value, not the Resonance Project.",objective:"Disrupt the excavation and learn where the recovered goods are going.",npcs:"Rocket grunts; field supervisor",encounter:"Multi-grunt battle and cave hazards.",clues:"Shipping paperwork routes valuable specimens through Vermilion and Celadon intermediaries.",reward:"Recovered fossils or rescued Pokémon.",unlocks:"The Burglar Who Wasn't Alone."},
+{id:"rocket-03",order:3,arc:"The Business of Pokémon",type:"Team Rocket",locationId:"cerulean-city",location:"Cerulean City",building:"Burglarized House",title:"The Burglar Who Wasn't Alone",hook:"Evidence at Cerulean's burglarized house suggests Team Rocket was also interested in the property—but not necessarily in the same object taken for the Resonance plot.",playerInfo:"Multiple parties may have entered the house for different reasons.",dmSecret:"Rocket wanted valuable technical parts and information; the Resonance component was removed by someone else.",objective:"Keep the two conspiracies distinct while showing that Rocket exploits the same chaos.",npcs:"Rocket burglar; homeowner; optional Resonance operative",encounter:"Short pursuit or interrogation.",clues:"Rocket inventory list does not mention the resonance device.",reward:"Proof that Team Rocket and the Resonance antagonist are separate factions.",unlocks:"Smuggling Route in Vermilion."},
+{id:"rocket-04",order:4,arc:"The Business of Pokémon",type:"Team Rocket",locationId:"vermilion-city",location:"Vermilion City",building:"S.S. Anne Harbor",title:"Smuggling Route",hook:"Cargo inspections uncover forged manifests, sedated rare Pokémon, and shipping containers modified into hidden cages.",playerInfo:"Someone is moving captured Pokémon through legitimate commercial shipping.",dmSecret:"Vermilion is a major Rocket distribution point, connecting poachers and thieves to wealthy buyers.",objective:"Free the Pokémon, identify the shipping chain, and decide whether to follow the cargo or shut it down immediately.",npcs:"Dockworkers; Rocket smugglers; customs official",encounter:"Harbor battle among cargo stacks or aboard a freighter.",clues:"Several invoices point toward private collectors and a Celadon intermediary.",reward:"Rescued Pokémon and evidence of Rocket's regional scale.",unlocks:"Ghost Market in Lavender."},
+{id:"rocket-05",order:5,arc:"The Business of Pokémon",type:"Team Rocket",locationId:"lavender-town",location:"Lavender Town",building:"Pokémon Tower",title:"Ghost Market",hook:"Rocket agents are trying to capture rare Ghost Pokémon around Lavender for collectors who pay enormous prices.",playerInfo:"Their trapping methods are disturbing the Pokémon Tower and local memorial sites.",dmSecret:"This should make Rocket personally despicable without turning the arc into a world-ending plot.",objective:"Protect the Ghost Pokémon and identify the buyer network.",npcs:"Rocket trappers; Mr. Fuji; frightened Ghost Pokémon",encounter:"Rocket battle complicated by angry or frightened Ghost Pokémon.",clues:"Safari species appear on the same collector wish lists.",reward:"Lavender's gratitude and a lead toward Safari poaching.",unlocks:"Poachers in the Safari Zone."},
+{id:"rocket-06",order:6,arc:"The Business of Pokémon",type:"Team Rocket",locationId:"safari-zone",location:"Safari Zone",building:"Preserve Interior",title:"Poachers in the Chaos",hook:"While the Safari Zone is destabilized by the Resonance experiment, Rocket teams use the confusion to capture rare Pokémon.",playerInfo:"The poachers did not cause the main crisis—they simply arrived frighteningly prepared to exploit it.",dmSecret:"Rocket has informants watching for ecological disasters, migrations, and other opportunities.",objective:"Stop the poachers without neglecting the larger Safari emergency.",npcs:"Rocket poachers; rangers",encounter:"Mobile pursuit through the preserve.",clues:"Capture orders are tied to specific wealthy clients.",reward:"Rescued rare Pokémon and stronger ranger alliance.",unlocks:"The Buyer in Fuchsia."},
+{id:"rocket-07",order:7,arc:"The Business of Pokémon",type:"Team Rocket",locationId:"fuchsia-city",location:"Fuchsia City",building:"Private Buyer Meeting",title:"The Buyer",hook:"The party learns that respectable collectors and businesses quietly purchase rare Pokémon through intermediaries who never mention Team Rocket by name.",playerInfo:"Rocket's success depends on customers who prefer not to ask where rare Pokémon come from.",dmSecret:"The organization is less a gang than a supply chain.",objective:"Expose or infiltrate a buyer meeting and learn who coordinates the regional network.",npcs:"Wealthy buyer; broker; Rocket intermediary",encounter:"Social infiltration with optional battle if identities are exposed.",clues:"Major technology theft planned in Saffron.",reward:"Lead to the Silph operation.",unlocks:"The Silph Job."},
+{id:"rocket-08",order:8,arc:"The Business of Pokémon",type:"Team Rocket",locationId:"saffron-city",location:"Saffron City",building:"Silph Co.",title:"The Silph Job",hook:"Team Rocket launches its largest operation yet: a coordinated theft of Poké Ball, storage, and advanced Pokémon technology from Silph.",playerInfo:"Rocket wants commercially valuable technology and anything that can improve capture, transport, or control of Pokémon.",dmSecret:"During the raid, Rocket discovers fragments of Resonance research and realizes a much bigger opportunity exists.",objective:"Defend or retake Silph while preventing Rocket from stealing the most dangerous research.",npcs:"Rocket admins; Silph staff; Giovanni may appear indirectly",encounter:"Multi-floor Rocket operation.",clues:"An executive-level message orders all Resonance files diverted directly to Giovanni.",reward:"Major Rocket setback and first clear Giovanni connection.",unlocks:"Rocket Headquarters in Celadon."},
+{id:"rocket-09",order:9,arc:"The Business of Pokémon",type:"Team Rocket",locationId:"celadon-city",location:"Celadon City",building:"Game Corner",title:"Rocket Headquarters",hook:"The party discovers the regional nerve center hidden beneath Celadon's entertainment district.",playerInfo:"This is where the thefts, poaching, smuggling, and buyers are coordinated.",dmSecret:"Giovanni should finally articulate Rocket's philosophy: Pokémon are power, and Rocket is simply honest about wanting that power.",objective:"Infiltrate the headquarters, dismantle the regional operation, and confront its leadership.",npcs:"Giovanni; Rocket admins; grunts",encounter:"Major Team Rocket dungeon and boss confrontation.",clues:"Giovanni now understands enough about Resonance technology to pursue it independently.",reward:"Collapse of much of Rocket's ordinary criminal network.",unlocks:"Enemy of My Enemy."},
+{id:"rocket-10",order:10,arc:"The Business of Pokémon",type:"Team Rocket",locationId:"cinnabar-island",location:"Late Game / Cinnabar",building:"Research Trail",title:"Enemy of My Enemy",hook:"With the Resonance network nearing completion, Rocket resurfaces—not to help Kanto, but because the technology could make rare Pokémon easier to locate and control.",playerInfo:"Rocket and the Resonance faction now want incompatible outcomes for the same technology.",dmSecret:"Giovanni may temporarily oppose the main antagonist without ever becoming trustworthy.",objective:"Navigate a three-way conflict and prevent Rocket from stealing the final control data.",npcs:"Giovanni or senior Rocket admin; Resonance operatives",encounter:"Three-faction battle or uneasy temporary alliance.",clues:"Rocket intends to seize the network after the Resonance faction activates it.",reward:"Set up the endgame conflict.",unlocks:"Three-Way Conflict."},
+{id:"rocket-11",order:11,arc:"The Business of Pokémon",type:"Team Rocket",locationId:"indigo-plateau",location:"Endgame",building:"Final Resonance Site",title:"Three-Way Conflict",hook:"At the final Resonance confrontation, Team Rocket makes one last attempt to claim the network for profit and power.",playerInfo:"The party, the Resonance architect, and Rocket each want radically different futures for the technology.",dmSecret:"Giovanni's argument is brutally simple: someone will use this power eventually, so it might as well be him.",objective:"Resolve Rocket's involvement while preserving the players' freedom to choose the final fate of the Resonance technology.",npcs:"Giovanni; Rocket survivors; Resonance architect",encounter:"Optional final Rocket phase woven into the main endgame.",clues:"No further mystery—this is the payoff to Rocket's opportunism.",reward:"Final resolution of Team Rocket's campaign role.",unlocks:"Rocket epilogue."}
+];
+
+const dmSideStoryEvents=[
+{id:"side-01",order:1,arc:"Side Stories",type:"One-Off",locationId:"pallet-town",location:"Pallet Town",building:"Mom's House",title:"The Runaway Starter",hook:"A brand-new trainer has lost their first Pokémon only hours after receiving it.",playerInfo:"The embarrassed trainer is convinced the Pokémon ran away because it dislikes them.",dmSecret:"The Pokémon actually left to retrieve something important its trainer accidentally abandoned.",objective:"Track the Pokémon through Pallet and the edge of Route 1, then reunite the pair.",npcs:"Nervous new trainer; family member",encounter:"Lighthearted tracking and optional wild encounter.",clues:"The Pokémon repeatedly doubles back toward places the trainer visited earlier.",reward:"Small item, friendship, and a warm early-campaign story.",unlocks:"Independent side story; no required follow-up."},
+{id:"side-02",order:2,arc:"Side Stories",type:"One-Off",locationId:"mt-moon",location:"Mt. Moon",building:"Hidden Moon Chamber",title:"Clefairy Festival",hook:"At night, faint music and moving lights lead deeper into Mt. Moon.",playerInfo:"The party can discover a hidden Clefairy gathering that few humans ever witness.",dmSecret:"The challenge is restraint. The Clefairy will flee if the party treats the gathering like a resource to exploit.",objective:"Observe or participate without disrupting the festival.",npcs:"Clefairy group",encounter:"Social/environmental scene rather than combat.",clues:"Moon Stones are being used ceremonially rather than randomly scattered treasure.",reward:"Moon Stone, Clefairy trust, or a future rare encounter.",unlocks:"Independent side story."},
+{id:"side-03",order:3,arc:"Side Stories",type:"One-Off",locationId:"cerulean-city",location:"Cerulean City",building:"Bike Shop",title:"The Missing Bicycle",hook:"Bicycles keep disappearing from outside Cerulean buildings and mysteriously returning several hours later.",playerInfo:"No locks are broken and nothing else is ever stolen.",dmSecret:"A clever Pokémon has learned how to move or ride the bicycles and uses them for its own daily mission.",objective:"Catch the 'thief' in the act and discover what it is actually doing.",npcs:"Bike Shop owner; frustrated residents",encounter:"Comedic city chase.",clues:"Tiny tracks or Pokémon-sized marks appear near every returned bicycle.",reward:"Bike Shop discount/favor and a memorable city story.",unlocks:"Independent side story."},
+{id:"side-04",order:4,arc:"Side Stories",type:"One-Off",locationId:"vermilion-city",location:"Vermilion City",building:"S.S. Anne Harbor",title:"The Sailor's Lucky Pokémon",hook:"A sailor refuses to depart because the Pokémon that has accompanied him for years has vanished.",playerInfo:"The sailor believes something terrible happened near the docks.",dmSecret:"The Pokémon has been sneaking onto another ship because it befriended a Pokémon belonging to that crew.",objective:"Search the harbor and reunite everyone without forcing the Pokémon to abandon its new friendship.",npcs:"Veteran sailor; second ship's crew",encounter:"Mostly investigation and roleplay.",clues:"Dockworkers saw the Pokémon willingly boarding the same vessel multiple times.",reward:"Harbor contacts and a sentimental keepsake.",unlocks:"Independent side story."},
+{id:"side-05",order:5,arc:"Side Stories",type:"One-Off",locationId:"lavender-town",location:"Lavender Town",building:"Mr. Fuji's House",title:"The Ghost Who Isn't Dead",hook:"Residents report a mysterious 'ghost' appearing at night around abandoned Pokémon.",playerInfo:"Everyone assumes Lavender has another haunting.",dmSecret:"The culprit is a living Pokémon using illusion, mimicry, or darkness to protect vulnerable abandoned Pokémon from people.",objective:"Discover the truth without frightening the Pokémon away.",npcs:"Mr. Fuji; local residents; protective Pokémon",encounter:"Investigation with an avoidable confrontation.",clues:"The 'ghost' leaves ordinary footprints and steals food rather than offerings.",reward:"Trust of Mr. Fuji and the protective Pokémon.",unlocks:"Independent side story."},
+{id:"side-06",order:6,arc:"Side Stories",type:"One-Off",locationId:"safari-zone",location:"Safari Zone",building:"Ranger Station",title:"The Ranger Challenge",hook:"Before entering a sensitive section of the preserve, the party must demonstrate that they can travel without harming the habitat.",playerInfo:"The rangers treat this as a serious field test, not a battle challenge.",dmSecret:"This is an opportunity to reward Pokémon knowledge and creative noncombat skills.",objective:"Identify tracks, treat an injured Pokémon, navigate around nests, and respond correctly to a wildlife hazard.",npcs:"Safari rangers",encounter:"Skill challenge with no required combat.",clues:"Good ranger behavior can foreshadow the later Safari crisis.",reward:"Ranger trust, access to a restricted area, or improved Safari encounter opportunity.",unlocks:"Independent side story."},
+{id:"side-07",order:7,arc:"Side Stories",type:"One-Off",locationId:"fuchsia-city",location:"Fuchsia City",building:"Fuchsia Zoo",title:"The Pokémon Talent Show",hook:"Fuchsia hosts a local Pokémon showcase focused on tricks, creativity, speed, costumes, and teamwork instead of battling.",playerInfo:"Any party Pokémon can enter, regardless of combat strength.",dmSecret:"Judge imaginative use of moves generously. This should be a cooldown episode after heavier Safari events.",objective:"Compete in one or more categories and interact with local trainers.",npcs:"Show host; judges; enthusiastic trainers",encounter:"Contest scenes using moves creatively.",clues:"None required—the point is character and Pokémon personality.",reward:"Ribbon/trophy, prize money, local fame, or a fun cosmetic reward.",unlocks:"Independent side story."},
+{id:"side-08",order:8,arc:"Side Stories",type:"One-Off",locationId:"saffron-city",location:"Saffron City",building:"Silph Co.",title:"The Teleporter Accident",hook:"A prototype teleportation system malfunctions and swaps several Pokémon between buildings around Saffron.",playerInfo:"The Pokémon are frightened, confused, and sometimes in locations where their abilities create new hazards.",dmSecret:"The malfunction is unrelated to Team Rocket and Resonance; it is simply experimental technology going wrong.",objective:"Identify which Pokémon belongs where and return them safely while technicians repair the system.",npcs:"Silph engineer; confused owners",encounter:"Puzzle-like city search with optional hazardous Pokémon situations.",clues:"Each Pokémon carries contextual clues about where it came from.",reward:"Silph favor and a useful technical item.",unlocks:"Independent side story."},
+{id:"side-09",order:9,arc:"Side Stories",type:"One-Off",locationId:"celadon-city",location:"Celadon City",building:"Celadon Department Store",title:"The Department Store Mystery",hook:"A manager quietly hires the party to determine why food, toys, and small items disappear from inventory every night.",playerInfo:"The losses are too small and strange to look like ordinary theft.",dmSecret:"A group of small Pokémon lives inside maintenance spaces and has learned the store's overnight routines.",objective:"Find the hidden residents and solve the problem without automatically turning them over to security.",npcs:"Department Store manager; night staff; hidden Pokémon",encounter:"Investigation and choice-driven resolution.",clues:"Missing items are almost entirely food, bedding materials, and toys.",reward:"Department Store discount, item voucher, or manager's favor.",unlocks:"Independent side story."},
+{id:"side-10",order:10,arc:"Side Stories",type:"One-Off",locationId:"cinnabar-island",location:"Cinnabar Island",building:"Pokémon Lab",title:"The Wrong Fossil",hook:"A revived fossil Pokémon does not match the fossil that was submitted to the lab.",playerInfo:"The lab insists the revival process cannot spontaneously create a different species.",dmSecret:"Two samples were accidentally mislabeled during a hectic research day; another trainer has received the party's expected revival.",objective:"Trace the paperwork and reunite each revived Pokémon with the correct claimant—or decide what happens if bonds have already formed.",npcs:"Pokémon Lab researcher; second fossil owner",encounter:"Mystery and roleplay; no required battle.",clues:"Sample numbers were transposed on two nearly identical containers.",reward:"Lab favor, fossil-related item, or future revival access.",unlocks:"Independent side story."}
+];
+
+const dmCampaignStoryEvents=[
+  ...dmResonanceStoryEvents,
+  ...dmRivalStoryEvents,
+  ...dmRocketStoryEvents,
+  ...dmSideStoryEvents
+]
 function dmStoryEscape(value){
   return String(value==null?"":value)
     .replace(/&/g,"&amp;")
@@ -8992,8 +9057,13 @@ function getDmStoryState(){
   let stored={};
   try{stored=JSON.parse(localStorage.getItem(DM_STORY_STATE_KEY)||"{}")||{};}catch(e){stored={};}
   const state={events:{},notes:{}};
-  dmCampaignStoryEvents.forEach((event,index)=>{
-    state.events[event.id]=stored.events?.[event.id]|| (index===0?"available":"locked");
+  const firstByArc={};
+  dmCampaignStoryEvents.forEach(event=>{
+    if(event.arc!=="Side Stories" && (!firstByArc[event.arc] || event.order<firstByArc[event.arc].order))firstByArc[event.arc]=event;
+  });
+  dmCampaignStoryEvents.forEach(event=>{
+    const defaultStatus=event.arc==="Side Stories"?"available":(firstByArc[event.arc]?.id===event.id?"available":"locked");
+    state.events[event.id]=stored.events?.[event.id]||defaultStatus;
     state.notes[event.id]=stored.notes?.[event.id]||"";
   });
   return state;
@@ -9020,14 +9090,26 @@ function saveDmStoryNote(eventId,value){
 }
 function unlockNextDmStoryEvent(eventId){
   const event=getDmStoryEvent(eventId); if(!event)return;
-  const next=dmCampaignStoryEvents.find(item=>item.order===event.order+1);
-  if(!next){alert("This is the final story event.");return;}
   const state=getDmStoryState();
   state.events[eventId]="completed";
-  if(state.events[next.id]==="locked")state.events[next.id]="available";
+  if(event.arc==="Side Stories"){
+    saveDmStoryState(state);
+    renderDmStoryDashboard();
+    if(activeKantoDetailMapId){renderDmStoryMapBanner(activeKantoDetailMapId);renderKantoDetailTrainerHotspots(activeKantoDetailMapId);}
+    return;
+  }
+  const next=dmCampaignStoryEvents.find(item=>item.arc===event.arc && item.order===event.order+1);
+  if(next && state.events[next.id]==="locked")state.events[next.id]="available";
   saveDmStoryState(state);
   renderDmStoryDashboard();
-  alert(next.title+" is now available in "+next.location+".");
+  if(activeKantoDetailMapId){renderDmStoryMapBanner(activeKantoDetailMapId);renderKantoDetailTrainerHotspots(activeKantoDetailMapId);}
+  if(next)alert(next.title+" is now available in "+next.location+".");
+  else alert(event.arc+" is complete.");
+}
+function setDmStoryArcFilter(arc,button){
+  dmStoryArcFilter=arc||"all";
+  document.querySelectorAll("#dmStoryArcFilters .story-filter-button").forEach(el=>el.classList.toggle("active",el===button));
+  renderDmStoryDashboard();
 }
 function setDmStoryFilter(filter,button){
   dmStoryFilter=filter||"all";
@@ -9041,26 +9123,43 @@ function storyFieldHTML(label,value){
 function renderDmStoryDashboard(){
   const list=document.getElementById("dmStoryEventList"); if(!list)return;
   const state=getDmStoryState();
-  const completed=dmCampaignStoryEvents.filter(e=>state.events[e.id]==="completed").length;
+
+  const arcEvents=dmStoryArcFilter==="all"
+    ? dmCampaignStoryEvents
+    : dmCampaignStoryEvents.filter(event=>event.arc===dmStoryArcFilter);
+  const completed=arcEvents.filter(e=>state.events[e.id]==="completed").length;
   const progress=document.getElementById("dmStoryProgressFill");
   const progressText=document.getElementById("dmStoryProgressText");
   const nextText=document.getElementById("dmStoryNextLocation");
-  if(progress)progress.style.width=((completed/dmCampaignStoryEvents.length)*100)+"%";
-  if(progressText)progressText.textContent=completed+" / "+dmCampaignStoryEvents.length+" completed";
-  const next=dmCampaignStoryEvents.find(e=>["available","active"].includes(state.events[e.id]));
-  if(nextText)nextText.textContent=next?"Next: "+next.location:"Arc complete";
-  const visible=dmCampaignStoryEvents.filter(event=>dmStoryFilter==="all"||state.events[event.id]===dmStoryFilter);
+  if(progress)progress.style.width=(arcEvents.length?((completed/arcEvents.length)*100):0)+"%";
+  if(progressText)progressText.textContent=completed+" / "+arcEvents.length+" completed";
+  const next=arcEvents.find(e=>["available","active"].includes(state.events[e.id]));
+  if(nextText)nextText.textContent=next?"Next: "+next.location:(arcEvents.length?"No active event":"No events");
+
+  const visible=dmCampaignStoryEvents.filter(event=>
+    (dmStoryArcFilter==="all"||event.arc===dmStoryArcFilter) &&
+    (dmStoryFilter==="all"||state.events[event.id]===dmStoryFilter)
+  );
+
+  const arcLabels={
+    "The Kanto Resonance":"Main Story",
+    "Always One Step Ahead":"Rival Arc",
+    "The Business of Pokémon":"Team Rocket",
+    "Side Stories":"One-Off"
+  };
+
   list.innerHTML=visible.map(event=>{
     const status=state.events[event.id];
+    const hasNext=event.arc!=="Side Stories" && !!dmCampaignStoryEvents.find(item=>item.arc===event.arc && item.order===event.order+1);
     return '<details class="story-event-card story-'+status+'" id="story-card-'+event.id+'">'+
-      '<summary class="story-event-summary"><span class="story-order-badge">'+event.order+'</span><span><div class="story-event-name">'+dmStoryEscape(event.title)+'</div><div class="story-event-location">'+dmStoryEscape(event.location)+' • '+dmStoryEscape(event.building)+' • '+dmStoryEscape(event.type)+'</div></span><span class="story-status-pill '+status+'">'+dmStoryStatusLabel(status)+'</span></summary>'+
+      '<summary class="story-event-summary"><span class="story-order-badge">'+event.order+'</span><span><div class="story-event-name">'+dmStoryEscape(event.title)+'</div><div class="story-event-location">'+dmStoryEscape(arcLabels[event.arc]||event.arc)+' • '+dmStoryEscape(event.location)+' • '+dmStoryEscape(event.building)+'</div></span><span class="story-status-pill '+status+'">'+dmStoryStatusLabel(status)+'</span></summary>'+
       '<div class="story-event-body"><div class="story-event-hook">'+dmStoryEscape(event.hook)+'</div>'+
-      storyFieldHTML("Player Information",event.playerInfo)+storyFieldHTML("DM Secret",event.dmSecret)+storyFieldHTML("Objective",event.objective)+storyFieldHTML("NPCs",event.npcs)+storyFieldHTML("Encounter / Challenge",event.encounter)+storyFieldHTML("Clues",event.clues)+storyFieldHTML("Reward",event.reward)+storyFieldHTML("Unlocks",event.unlocks)+
+      storyFieldHTML("Story Arc",event.arc)+storyFieldHTML("Player Information",event.playerInfo)+storyFieldHTML("DM Secret",event.dmSecret)+storyFieldHTML("Objective",event.objective)+storyFieldHTML("NPCs",event.npcs)+storyFieldHTML("Encounter / Challenge",event.encounter)+storyFieldHTML("Clues",event.clues)+storyFieldHTML("Reward",event.reward)+storyFieldHTML("Unlocks",event.unlocks)+
       '<div class="story-field"><div class="story-field-label">DM Notes</div><textarea class="story-event-notes" placeholder="Session notes, changes, NPC names, outcomes…" data-story-id="'+dmStoryEscape(event.id)+'" oninput="saveDmStoryNote(this.dataset.storyId,this.value)">'+dmStoryEscape(state.notes[event.id]||"")+'</textarea></div>'+
       '<div class="story-event-actions"><label>Status<select data-story-id="'+dmStoryEscape(event.id)+'" onchange="setDmStoryStatus(this.dataset.storyId,this.value)"><option value="locked" '+(status==="locked"?"selected":"")+'>Locked</option><option value="available" '+(status==="available"?"selected":"")+'>Available</option><option value="active" '+(status==="active"?"selected":"")+'>Active</option><option value="completed" '+(status==="completed"?"selected":"")+'>Completed</option></select></label><button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="event.preventDefault();openDmStoryLocation(this.dataset.storyId)">Open Map</button></div>'+
-      (event.order<dmCampaignStoryEvents.length?'<button class="small-button story-unlock-next" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="unlockNextDmStoryEvent(this.dataset.storyId)">Complete & Unlock Next Story Event</button>':'')+
+      (hasNext?'<button class="small-button story-unlock-next" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="unlockNextDmStoryEvent(this.dataset.storyId)">Complete & Unlock Next '+dmStoryEscape(arcLabels[event.arc]||"Story")+' Event</button>':'')+
       '</div></details>';
-  }).join("")||'<div class="empty-message">No story events match this filter.</div>';
+  }).join("")||'<div class="empty-message">No story events match these filters.</div>';
 }
 function openDmStoryLocation(eventId){
   const event=getDmStoryEvent(eventId);if(!event)return;
@@ -9070,7 +9169,9 @@ function openDmStoryLocation(eventId){
 function focusDmStoryEvent(eventId){
   showPage("campaignPage");
   dmStoryFilter="all";
+  dmStoryArcFilter="all";
   document.querySelectorAll("#dmStoryFilters .story-filter-button").forEach(el=>el.classList.toggle("active",el.dataset.storyFilter==="all"));
+  document.querySelectorAll("#dmStoryArcFilters .story-filter-button").forEach(el=>el.classList.toggle("active",el.dataset.storyArc==="all"));
   renderDmStoryDashboard();
   setTimeout(()=>{
     const card=document.getElementById("story-card-"+eventId);
@@ -9086,13 +9187,16 @@ function renderDmStoryMapBanner(locationId){
   const actionable=events.filter(e=>["available","active"].includes(getDmStoryStatus(e.id)));
   if(!events.length){box.className="story-map-banner";box.innerHTML="";return;}
   const lead=actionable[0]||events[events.length-1];
-  const leadStatus=getDmStoryStatus(lead.id);
+  const arcShort={"The Kanto Resonance":"Kanto Resonance","Always One Step Ahead":"Rival","The Business of Pokémon":"Team Rocket","Side Stories":"Side Story"};
   box.className="story-map-banner show";
-  box.innerHTML='<div class="story-map-banner-eyebrow">Campaign Arc'+(actionable.length>1?' • '+actionable.length+' events available':'')+'</div>'+
+  box.innerHTML='<div class="story-map-banner-eyebrow">Campaign Stories'+(actionable.length?' • '+actionable.length+' available':'')+'</div>'+
     '<div class="story-map-banner-title">'+dmStoryEscape(lead.title)+'</div>'+
-    '<div class="story-map-banner-text">'+dmStoryEscape(lead.hook)+'</div>'+
-    '<div class="story-map-banner-actions"><button class="small-button" type="button" data-story-id="'+dmStoryEscape(lead.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">View Story Details</button>'+
-    (leadStatus==="available"?'<button class="small-button" type="button" data-story-id="'+dmStoryEscape(lead.id)+'" onclick="setDmStoryStatus(this.dataset.storyId,\'active\')">Start Event</button>':'')+'</div>';
+    '<div class="story-map-banner-text">'+dmStoryEscape(arcShort[lead.arc]||lead.arc)+' — '+dmStoryEscape(lead.hook)+'</div>'+
+    '<div class="story-map-banner-actions">'+events.slice(0,5).map(event=>{
+      const status=getDmStoryStatus(event.id);
+      return '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">'+dmStoryEscape(arcShort[event.arc]||event.arc)+': '+dmStoryEscape(event.title)+'</button>'+
+        (status==="available"?'<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" data-story-start="active" onclick="setDmStoryStatus(this.dataset.storyId,this.dataset.storyStart)">Start</button>':'');
+    }).join("")+'</div>';
 }
 function renderDmStoryLandmarkPanel(location){
   const panel=document.getElementById("dmStoryLandmarkPanel");
@@ -9655,9 +9759,9 @@ const kantoDetailLocationHotspots = {
     {name:"Indigo Plateau",target:"indigo-plateau",x:76,y:0,w:16,h:17}
   ],
   "pallet-town": [
-    {name:"Mom's House",action:"landmark",landmarkType:"Home",description:"The player's family home in Pallet Town.",x:15,y:33,w:28,h:30},
+    {name:"Mom's House",action:"landmark",landmarkType:"Home",storyEventId:"side-01",description:"The player's family home in Pallet Town.",x:15,y:33,w:28,h:30},
     {name:"Professor Oak's Lab",action:"landmark",landmarkType:"Laboratory",storyEventId:"resonance-01",description:"Professor Oak's Pokémon research laboratory and the starting point for many trainers.",x:55,y:22,w:31,h:34},
-    {name:"Rival's House",action:"landmark",landmarkType:"Home",description:"The rival family's home in Pallet Town.",x:57,y:61,w:27,h:25},
+    {name:"Rival's House",action:"landmark",landmarkType:"Home",storyEventId:"rival-01",description:"The rival family's home in Pallet Town.",x:57,y:61,w:27,h:25},
     {name:"Route 1",target:"route-1",x:50,y:95,w:28,h:10}
   ],
   "route-1": [
@@ -9692,10 +9796,12 @@ const kantoDetailLocationHotspots = {
     {name:"Route 3",target:"route-3",x:96,y:35,w:12,h:24}
   ],
   "route-3": [
+    {name:"Roadside Fossil Buyers",action:"landmark",landmarkType:"Roadside Encounter",storyEventId:"rocket-01",description:"A roadside meeting point used by suspicious fossil buyers.",x:42,y:36,w:18,h:22},
     {name:"Pewter City",target:"pewter-city",x:1,y:20,w:20,h:52},
     {name:"Mt. Moon",target:"mt-moon",x:86,y:20,w:14,h:54}
   ],
   "mt-moon": [
+    {name:"Hidden Moon Chamber",action:"landmark",landmarkType:"Cavern",storyEventIds:["rocket-02","side-02"],description:"A deeper chamber hidden away from Mt. Moon's main passage.",x:38,y:25,w:25,h:24},
     {name:"Route 3",target:"route-3",x:0,y:34,w:16,h:36},
     {name:"Route 4",target:"route-4",x:85,y:36,w:15,h:34}
   ],
@@ -9708,8 +9814,8 @@ const kantoDetailLocationHotspots = {
     {name:"Cerulean Poké Center",action:"pokemon-center",cityName:"Cerulean City",x:59,y:5,w:27,h:29},
     {name:"Cerulean Poké Mart",action:"poke-mart",cityName:"Cerulean City",martId:"cerulean-city",x:73,y:31,w:24,h:25},
     {name:"Cerulean Gym",target:"cerulean-gym",x:30,y:18,w:38,h:30},
-    {name:"Bike Shop",action:"landmark",landmarkType:"Shop",storyEventId:"resonance-06",description:"Cerulean City's bicycle shop.",x:15,y:36,w:24,h:22},
-    {name:"Burglarized House",action:"landmark",landmarkType:"Home",storyEventId:"resonance-07",description:"The Cerulean home damaged during a suspicious burglary.",x:68,y:59,w:25,h:22},
+    {name:"Bike Shop",action:"landmark",landmarkType:"Shop",storyEventIds:["resonance-06","side-03"],description:"Cerulean City's bicycle shop.",x:15,y:36,w:24,h:22},
+    {name:"Burglarized House",action:"landmark",landmarkType:"Home",storyEventIds:["resonance-07","rocket-03"],description:"The Cerulean home damaged during a suspicious burglary.",x:68,y:59,w:25,h:22},
     {name:"Route 4",target:"route-4",x:5,y:43,w:20,h:24},
     {name:"Route 5",target:"route-5",x:50,y:84,w:24,h:23},
     {name:"Cerulean Crossroads",target:"cerulean-crossroads",x:42,y:0,w:16,h:13}
@@ -9725,7 +9831,7 @@ const kantoDetailLocationHotspots = {
     {name:"Vermilion Gym",target:"vermilion-gym",x:16,y:4,w:33,h:29},
     {name:"Pokémon Fan Club",action:"landmark",landmarkType:"Club",storyEventId:"resonance-08",description:"Vermilion City's Pokémon Fan Club, a gathering place for enthusiastic Pokémon owners.",x:14,y:28,w:24,h:22},
     {name:"Fishing Guru's House",action:"landmark",landmarkType:"Home",storyEventId:"resonance-09",description:"The Vermilion home of the Fishing Guru.",x:14,y:49,w:22,h:22},
-    {name:"S.S. Anne Harbor",action:"landmark",landmarkType:"Harbor",storyEventId:"resonance-10",description:"Vermilion City's harbor and docking area for the S.S. Anne.",x:66,y:54,w:20,h:34},
+    {name:"S.S. Anne Harbor",action:"landmark",landmarkType:"Harbor",storyEventIds:["resonance-10","rocket-04","side-04"],description:"Vermilion City's harbor and docking area for the S.S. Anne.",x:66,y:54,w:20,h:34},
     {name:"Route 5",target:"route-5",x:0,y:34,w:23,h:25},
     {name:"Route 6",target:"route-6",x:77,y:34,w:23,h:25}
   ],
@@ -9736,8 +9842,8 @@ const kantoDetailLocationHotspots = {
   "lavender-town": [
     {name:"Lavender Poké Center",action:"pokemon-center",cityName:"Lavender Town",x:54,y:7,w:27,h:27},
     {name:"Lavender Poké Mart",action:"poke-mart",cityName:"Lavender Town",martId:"lavender-town",x:58,y:31,w:25,h:24},
-    {name:"Pokémon Tower",action:"landmark",landmarkType:"Landmark",storyEventId:"resonance-11",description:"Lavender Town's towering memorial site for departed Pokémon.",x:20,y:8,w:25,h:32},
-    {name:"Mr. Fuji's House",action:"landmark",landmarkType:"Home",description:"Mr. Fuji's home and a place associated with the care of abandoned Pokémon.",x:13,y:53,w:24,h:23},
+    {name:"Pokémon Tower",action:"landmark",landmarkType:"Landmark",storyEventIds:["resonance-11","rival-06","rocket-05"],description:"Lavender Town's towering memorial site for departed Pokémon.",x:20,y:8,w:25,h:32},
+    {name:"Mr. Fuji's House",action:"landmark",landmarkType:"Home",storyEventId:"side-05",description:"Mr. Fuji's home and a place associated with the care of abandoned Pokémon.",x:13,y:53,w:24,h:23},
     {name:"Name Rater's House",action:"landmark",landmarkType:"Home",description:"The home of Lavender Town's Name Rater.",x:35,y:69,w:24,h:22},
     {name:"Route 6",target:"route-6",x:0,y:38,w:21,h:20},
     {name:"Route 7",target:"route-7",x:46,y:77,w:19,h:23},
@@ -9748,7 +9854,7 @@ const kantoDetailLocationHotspots = {
     {name:"Safari Zone",target:"safari-zone",x:50,y:91,w:28,h:18}
   ],
   "safari-zone": [
-    {name:"Safari Zone Preserve",action:"landmark",landmarkType:"Wildlife Preserve",storyEventId:"resonance-12",description:"The central preserve where unusual Pokémon migration behavior has been reported.",x:36,y:33,w:28,h:30},
+    {name:"Safari Zone Preserve",action:"landmark",landmarkType:"Wildlife Preserve",storyEventIds:["resonance-12","rival-07","rocket-06","side-06"],description:"The central preserve where unusual Pokémon migration behavior has been reported.",x:36,y:33,w:28,h:30},
     {name:"Route 7",target:"route-7",x:55,y:0,w:24,h:18},
     {name:"Route 8",target:"route-8",x:0,y:41,w:18,h:23}
   ],
@@ -9760,7 +9866,7 @@ const kantoDetailLocationHotspots = {
     {name:"Fuchsia Gym",target:"fuchsia-gym",x:25.5,y:21.5,w:29,h:28},
     {name:"Fuchsia Poké Center",action:"pokemon-center",cityName:"Fuchsia City",x:75.0,y:21.5,w:27,h:27},
     {name:"Fuchsia Poké Mart",action:"poke-mart",cityName:"Fuchsia City",martId:"fuchsia-city",x:75.0,y:43.5,w:25,h:24},
-    {name:"Fuchsia Zoo",action:"landmark",landmarkType:"Exhibit",description:"Fuchsia City's outdoor Pokémon exhibit and zoo area.",x:14,y:40,w:25,h:22},
+    {name:"Fuchsia Zoo",action:"landmark",landmarkType:"Exhibit",storyEventId:"side-07",description:"Fuchsia City's outdoor Pokémon exhibit and zoo area.",x:14,y:40,w:25,h:22},
     {name:"Warden's House",action:"landmark",landmarkType:"Home",storyEventId:"resonance-13",description:"The home of the Safari Zone Warden.",x:67,y:57,w:25,h:23},
     {name:"Route 9",target:"route-9",x:7.0,y:36.0,w:14,h:20},
     {name:"Route 8",target:"route-8",x:94.0,y:52.0,w:12,h:22},
@@ -9771,7 +9877,7 @@ const kantoDetailLocationHotspots = {
     {name:"Saffron Poké Center",action:"pokemon-center",cityName:"Saffron City",x:67.0,y:11.0,w:26.5,h:24.5},
     {name:"Saffron Poké Mart",action:"poke-mart",cityName:"Saffron City",martId:"saffron-city",x:76.0,y:42.0,w:21.0,h:21.0},
     {name:"Fighting Dojo",action:"landmark",landmarkType:"Dojo",description:"Saffron City's Fighting Dojo, the former rival Gym specializing in Fighting-type Pokémon.",x:44,y:11,w:20,h:23},
-    {name:"Silph Co.",action:"landmark",landmarkType:"Corporate Headquarters",storyEventId:"resonance-14",description:"The towering headquarters of Silph Co., one of Kanto's major technology companies.",x:38,y:30,w:25,h:32},
+    {name:"Silph Co.",action:"landmark",landmarkType:"Corporate Headquarters",storyEventIds:["resonance-14","rival-09","rocket-08","side-08"],description:"The towering headquarters of Silph Co., one of Kanto's major technology companies.",x:38,y:30,w:25,h:32},
     {name:"Copycat's House",action:"landmark",landmarkType:"Home",description:"The home of Saffron City's Copycat.",x:16,y:66,w:22,h:22},
     {name:"Mr. Psychic's House",action:"landmark",landmarkType:"Home",description:"The home of Mr. Psychic in Saffron City.",x:42,y:66,w:22,h:22},
     {name:"Route 10",target:"route-10",x:0.0,y:42.0,w:14.0,h:18.0},
@@ -9788,10 +9894,10 @@ const kantoDetailLocationHotspots = {
   "celadon-city": [
     {name:"Celadon Gym",target:"celadon-gym",x:12.0,y:8.0,w:24.0,h:27.0},
     {name:"Celadon Poké Center",action:"pokemon-center",cityName:"Celadon City",x:72.0,y:9.0,w:23.0,h:27.0},
-    {name:"Celadon Department Store",action:"poke-mart",cityName:"Celadon City",martId:"celadon-city",x:39.0,y:4.0,w:24.0,h:36.0},
-    {name:"Game Corner",action:"landmark",landmarkType:"Entertainment",description:"Celadon City's brightly lit Game Corner.",x:72,y:39,w:24,h:23},
+    {name:"Celadon Department Store",action:"poke-mart",cityName:"Celadon City",martId:"celadon-city",storyEventId:"side-09",x:39.0,y:4.0,w:24.0,h:36.0},
+    {name:"Game Corner",action:"landmark",landmarkType:"Entertainment",storyEventId:"rocket-09",description:"Celadon City's brightly lit Game Corner.",x:72,y:39,w:24,h:23},
     {name:"Celadon Mansion",action:"landmark",landmarkType:"Landmark",storyEventId:"resonance-15",description:"Celadon Mansion, one of the city's notable residential buildings.",x:11,y:62,w:23,h:24},
-    {name:"Celadon Hotel",action:"landmark",landmarkType:"Hotel",description:"A hotel serving visitors to Celadon City.",x:35,y:63,w:20,h:23},
+    {name:"Celadon Hotel",action:"landmark",landmarkType:"Hotel",storyEventId:"rival-10",description:"A hotel serving visitors to Celadon City.",x:35,y:63,w:20,h:23},
     {name:"Route 11",target:"route-11",x:27.0,y:86.0,w:15.0,h:14.0},
     {name:"Route 10",target:"route-10",x:64.0,y:86.0,w:15.0,h:14.0},
     {name:"Viridian-Celadon Path",target:"viridian-celadon-path",x:0.0,y:34.0,w:12.0,h:20.0},
@@ -9842,7 +9948,7 @@ const kantoDetailLocationHotspots = {
     {name:"Cinnabar Poké Center",action:"pokemon-center",cityName:"Cinnabar Island",x:45.0,y:12.0,w:20.0,h:22.0},
     {name:"Cinnabar Poké Mart",action:"poke-mart",cityName:"Cinnabar Island",martId:"cinnabar-island",x:65.0,y:21.0,w:20.0,h:22.0},
     {name:"Pokémon Mansion",action:"landmark",landmarkType:"Mansion",storyEventId:"resonance-17",description:"The abandoned Pokémon Mansion, filled with old research notes and mysteries tied to Cinnabar Island.",x:36,y:62,w:23,h:25},
-    {name:"Pokémon Lab",action:"landmark",landmarkType:"Laboratory",description:"Cinnabar Island's Pokémon Lab, known for fossil research and revival work.",x:59,y:62,w:22,h:24},
+    {name:"Pokémon Lab",action:"landmark",landmarkType:"Laboratory",storyEventIds:["rival-11","side-10"],description:"Cinnabar Island's Pokémon Lab, known for fossil research and revival work.",x:59,y:62,w:22,h:24},
     {name:"Route 13",target:"route-13",x:82.0,y:38.0,w:18.0,h:22.0}
   ],
   "seafoam-islands": [
@@ -10100,13 +10206,14 @@ function renderKantoDetailTrainerHotspots(locationId) {
     button.style.height = location.h + "%";
     button.setAttribute("aria-label", "Open " + location.name);
     button.title = location.name;
-    if(location.storyEventId){
-      const storyEvent=getDmStoryEvent(location.storyEventId);
-      const storyStatus=storyEvent?getDmStoryStatus(storyEvent.id):"locked";
-      if(storyEvent && dmStoryVisibleOnMap(storyEvent)){
+    const hotspotStoryIds=Array.isArray(location.storyEventIds)?location.storyEventIds:(location.storyEventId?[location.storyEventId]:[]);
+    if(hotspotStoryIds.length){
+      const hotspotStoryEvents=hotspotStoryIds.map(getDmStoryEvent).filter(Boolean);
+      const visibleStoryEvents=hotspotStoryEvents.filter(dmStoryVisibleOnMap);
+      if(visibleStoryEvents.length){
         button.classList.add("story-map-hotspot-marker");
-        if(storyStatus==="completed")button.classList.add("story-completed-marker");
-        button.title=location.name+" — Campaign Story: "+storyEvent.title;
+        if(visibleStoryEvents.every(event=>getDmStoryStatus(event.id)==="completed"))button.classList.add("story-completed-marker");
+        button.title=location.name+" — Campaign Story: "+visibleStoryEvents.map(event=>event.title).join(" / ");
       }
     }
     button.onclick = function(event) {
