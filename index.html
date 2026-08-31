@@ -2711,6 +2711,76 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
 .player-cloud-inventory-item { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:9px 2px; border-bottom:1px solid #eee; font-size:14px; }
 .player-cloud-inventory-item:last-child { border-bottom:0; }
 .player-cloud-inventory-qty { font-weight:900; white-space:nowrap; }
+
+.player-inventory-category { margin-top:10px; }
+.player-inventory-category:first-child { margin-top:2px; }
+.player-inventory-category-title {
+  background:#ddd;
+  border-radius:8px 8px 0 0;
+  padding:7px 10px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.02em;
+}
+.player-inventory-category-list {
+  border:1px solid #ddd;
+  border-top:0;
+  border-radius:0 0 8px 8px;
+  overflow:hidden;
+  background:#fff;
+}
+.player-inventory-row {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  padding:9px 10px;
+  border-bottom:1px solid #e7e7e7;
+}
+.player-inventory-row:last-child { border-bottom:0; }
+.player-inventory-row-name { font-size:14px; font-weight:900; }
+.player-inventory-row-description { margin-top:2px; color:#666; font-size:11px; line-height:1.25; }
+.player-inventory-row-qty { font-size:13px; font-weight:900; white-space:nowrap; }
+
+.player-battle-inventory-browser { display:grid; gap:9px; margin-top:7px; }
+.player-battle-inventory-category { overflow:hidden; border:1px solid #d8d4d1; border-radius:9px; background:#fff; }
+.player-battle-inventory-category-title {
+  background:#e2dfdc;
+  padding:6px 9px;
+  font-size:11px;
+  font-weight:900;
+}
+.player-battle-inventory-choice {
+  width:100%;
+  margin:0;
+  padding:9px 10px;
+  border:0;
+  border-top:1px solid #e9e5e2;
+  border-radius:0;
+  background:#fff;
+  color:#2f2b28;
+  text-align:left;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+  min-height:44px;
+  box-shadow:none;
+}
+.player-battle-inventory-choice:first-of-type { border-top:0; }
+.player-battle-inventory-choice:hover { background:#f7f5f3; }
+.player-battle-inventory-choice.selected {
+  background:#fff1ee;
+  color:#8d1f11;
+  box-shadow:inset 3px 0 0 #c62810;
+}
+.player-battle-inventory-choice-main { min-width:0; }
+.player-battle-inventory-choice-name { font-size:13px; font-weight:900; }
+.player-battle-inventory-choice-description { margin-top:2px; color:#6a6460; font-size:10.5px; line-height:1.2; }
+.player-battle-inventory-choice.selected .player-battle-inventory-choice-description { color:#7c514a; }
+.player-battle-inventory-choice-qty { font-size:12px; font-weight:900; white-space:nowrap; }
+.player-battle-inventory-confirm { width:100%; margin:9px 0 0; }
+
 .player-cloud-map-details { margin:0; }
 .player-cloud-map-details > summary { cursor:pointer; font-size:18px; font-weight:900; min-height:44px; display:flex; align-items:center; justify-content:space-between; gap:8px; list-style:none; }
 .player-cloud-map-details > summary::-webkit-details-marker { display:none; }
@@ -25392,21 +25462,92 @@ async function cloudRefreshPlayerPokemonState(){
   }
 }
 
+function cloudInventoryCategoryRank(category){
+  const categories=[];
+  (Array.isArray(itemDatabase)?itemDatabase:[]).forEach(item=>{
+    const name=String(item?.category||"Other");
+    if(!categories.includes(name))categories.push(name);
+  });
+  const index=categories.indexOf(String(category||"Other"));
+  return index>=0?index:999;
+}
+
+function cloudInventorySortItems(items){
+  const databaseOrder=new Map(
+    (Array.isArray(itemDatabase)?itemDatabase:[]).map((item,index)=>[item.id,index])
+  );
+  return [...(items||[])].sort((a,b)=>{
+    const dbA=(Array.isArray(itemDatabase)?itemDatabase:[]).find(x=>x.id===a?.itemId);
+    const dbB=(Array.isArray(itemDatabase)?itemDatabase:[]).find(x=>x.id===b?.itemId);
+    const catA=dbA?.category||"Other";
+    const catB=dbB?.category||"Other";
+    const categoryDifference=cloudInventoryCategoryRank(catA)-cloudInventoryCategoryRank(catB);
+    if(categoryDifference)return categoryDifference;
+    const orderA=databaseOrder.has(a?.itemId)?databaseOrder.get(a.itemId):9999;
+    const orderB=databaseOrder.has(b?.itemId)?databaseOrder.get(b.itemId):9999;
+    if(orderA!==orderB)return orderA-orderB;
+    const nameA=String(a?.name||dbA?.name||"");
+    const nameB=String(b?.name||dbB?.name||"");
+    return nameA.localeCompare(nameB);
+  });
+}
+
+function cloudInventoryGroupedHTML(items,options={}){
+  const battle=Boolean(options.battle);
+  const battleType=String(options.battleType||"");
+  const sorted=cloudInventorySortItems(items);
+  if(!sorted.length)return battle
+    ? '<div class="player-cloud-empty">No currently usable battle items.</div>'
+    : '<div class="player-cloud-empty">No items in inventory.</div>';
+
+  const groups=[];
+  sorted.forEach(entry=>{
+    const db=(Array.isArray(itemDatabase)?itemDatabase:[]).find(x=>x.id===entry?.itemId);
+    const category=db?.category||"Other";
+    let group=groups.find(g=>g.category===category);
+    if(!group){group={category,items:[]};groups.push(group);}
+    group.items.push({entry,db});
+  });
+
+  return groups.map(group=>{
+    if(!battle){
+      return '<div class="player-inventory-category">'+
+        '<div class="player-inventory-category-title">'+cloudEscape(group.category)+'</div>'+
+        '<div class="player-inventory-category-list">'+
+          group.items.map(({entry,db})=>{
+            const itemName=entry?.name||db?.name||"Item";
+            const description=db?.description||"";
+            return '<div class="player-inventory-row">'+
+              '<div><div class="player-inventory-row-name">'+cloudEscape(itemName)+'</div>'+
+              (description?'<div class="player-inventory-row-description">'+cloudEscape(description)+'</div>':'')+
+              '</div><div class="player-inventory-row-qty">× '+cloudEscape(Math.max(0,Number(entry?.quantity||0)))+'</div></div>';
+          }).join("")+
+        '</div></div>';
+    }
+
+    return '<div class="player-battle-inventory-category">'+
+      '<div class="player-battle-inventory-category-title">'+cloudEscape(group.category)+'</div>'+
+      group.items.map(({entry,db})=>{
+        const itemName=entry?.name||db?.name||entry?.itemId||"Item";
+        const description=db?.description||"";
+        const selected=entry?.itemId===cloudPlayerBattleItemDraft;
+        return '<button type="button" class="player-battle-inventory-choice '+(selected?'selected':'')+'" '+
+          'data-item-id="'+cloudEscape(entry?.itemId||'')+'" data-battle-type="'+cloudEscape(battleType)+'" '+
+          'onclick="cloudSelectPlayerBattleInventoryItem(this)">'+
+          '<span class="player-battle-inventory-choice-main"><span class="player-battle-inventory-choice-name">'+cloudEscape(itemName)+'</span>'+
+          (description?'<span class="player-battle-inventory-choice-description">'+cloudEscape(description)+'</span>':'')+
+          '</span><span class="player-battle-inventory-choice-qty">×'+Number(entry?.quantity||0)+'</span></button>';
+      }).join("")+
+    '</div>';
+  }).join("");
+}
+
 function cloudRenderPlayerInventoryFromTrainer(trainer){
   const inventory=Array.isArray(trainer?.inventory)?trainer.inventory.filter(item=>Number(item?.quantity||0)>0):[];
-  const inventorySummary=document.getElementById("playerCloudInventorySummary");
   const inventoryCount=document.getElementById("playerCloudInventoryCount");
   const inventoryList=document.getElementById("playerCloudInventoryList");
   if(inventoryCount)inventoryCount.textContent=inventory.length+' item'+(inventory.length===1?'':'s');
-  if(inventoryList){
-    inventoryList.innerHTML=!inventory.length
-      ? '<div class="player-cloud-empty">No items in inventory.</div>'
-      : inventory.map(item=>{
-          const db=Array.isArray(itemDatabase)?itemDatabase.find(x=>x.id===item?.itemId):null;
-          const itemName=item?.name||db?.name||"Item";
-          return '<div class="player-cloud-inventory-item"><span><strong>'+cloudEscape(itemName)+'</strong></span><span class="player-cloud-inventory-qty">× '+cloudEscape(Math.max(0,Number(item?.quantity||0)))+'</span></div>';
-        }).join("");
-  }
+  if(inventoryList)inventoryList.innerHTML=cloudInventoryGroupedHTML(inventory);
 }
 
 async function cloudRefreshPlayerTrainerState(){
@@ -25932,6 +26073,23 @@ function cloudUpdatePlayerCatchPreview(select,battleType){
   const opponent=cloudCurrentBattleOpponentState||{};
   preview.innerHTML=cloudPlayerCatchPreviewHTML({battle_type:battleType},opponent,cloudPlayerBattleItemDraft);
 }
+function cloudSelectPlayerBattleInventoryItem(button){
+  if(!button)return;
+  const itemId=button.dataset.itemId||'';
+  const battleType=button.dataset.battleType||'';
+  cloudPlayerBattleItemDraft=itemId;
+  document.querySelectorAll("#playerCloudBattleArea .player-battle-inventory-choice").forEach(el=>{
+    el.classList.toggle("selected",el===button);
+  });
+  const preview=document.getElementById('playerBattleCatchPreview');
+  if(preview){
+    preview.innerHTML=cloudPlayerCatchPreviewHTML(
+      {battle_type:battleType},
+      cloudCurrentBattleOpponentState||{},
+      itemId
+    );
+  }
+}
 let cloudCurrentBattleOpponentState={};
 
 function cloudBattleSecondaryPanelHTML(battle,mine,action){
@@ -25944,7 +26102,16 @@ function cloudBattleSecondaryPanelHTML(battle,mine,action){
     const items=cloudBattleSupportedInventory(battle.battle_type);
     if(items.length&&!items.some(x=>x.itemId===cloudPlayerBattleItemDraft))cloudPlayerBattleItemDraft=items[0].itemId;
     const selectedItemId=items.length?cloudPlayerBattleItemDraft:'';
-    return '<div class="player-battle-action-panel"><p class="player-battle-action-note">Select a battle item from your inventory.'+(String(battle.battle_type).toLowerCase()==='wild'?' Poké Balls are available in wild battles.':' Poké Balls cannot be used in trainer battles.')+'</p><div class="player-battle-action-panel-row"><select id="playerBattleItemSelect" onfocus="cloudPlayerBattleSelectFocus(true)" onblur="cloudPlayerBattleSelectFocus(false)" onchange="cloudUpdatePlayerCatchPreview(this,\''+cloudEscape(battle.battle_type||'')+'\')">'+(items.length?items.map(x=>'<option value="'+cloudEscape(x.itemId)+'" '+(x.itemId===selectedItemId?'selected':'')+'>'+cloudEscape(x.name||itemDatabase?.find(i=>i.id===x.itemId)?.name||x.itemId)+' ×'+Number(x.quantity)+'</option>').join(''):'<option value="">No battle items available</option>')+'</select><button class="small-button" type="button" '+(items.length?'':'disabled')+' data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" data-battle-type="'+cloudEscape(battle.battle_type||'')+'" onclick="cloudSubmitPlayerItemFromButton(this)">Select</button></div><div id="playerBattleCatchPreview">'+(selectedItemId?cloudPlayerCatchPreviewHTML(battle,cloudCurrentBattleOpponentState,selectedItemId):'')+'</div></div>';
+    return '<div class="player-battle-action-panel">'+
+      '<p class="player-battle-action-note">Choose an item from your inventory.'+
+      (String(battle.battle_type).toLowerCase()==='wild'?' Poké Balls are available in wild battles.':' Poké Balls cannot be used in trainer battles.')+
+      '</p>'+
+      '<div class="player-battle-inventory-browser">'+cloudInventoryGroupedHTML(items,{battle:true,battleType:battle.battle_type})+'</div>'+
+      '<div id="playerBattleCatchPreview">'+(selectedItemId?cloudPlayerCatchPreviewHTML(battle,cloudCurrentBattleOpponentState,selectedItemId):'')+'</div>'+
+      '<button class="primary-button player-battle-inventory-confirm" type="button" '+(items.length?'':'disabled')+
+      ' data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+
+      '" data-battle-type="'+cloudEscape(battle.battle_type||'')+'" onclick="cloudSubmitPlayerItemFromButton(this)">Select Item</button>'+
+    '</div>';
   }
   if(cloudPlayerBattlePanel==='run'){
     return '<div class="player-battle-action-panel"><p class="player-battle-action-note">Attempt to run from the battle. The DM will resolve the attempt.</p><button class="primary-button" style="width:100%;margin:0" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerRunFromButton(this)">Run</button></div>';
@@ -25964,7 +26131,7 @@ async function cloudLoadPlayerBattle(){
   const battleCard=document.getElementById("playerCloudBattleCard");
   if(!area||!cloudSupabaseClient||cloudCurrentMembership?.role!=="player"||!cloudCurrentCampaign)return;
   const focused=document.activeElement;
-  if(cloudPlayerBattleSelectFocused || (focused && (focused.id==='playerBattleSwapSelect'||focused.id==='playerBattleItemSelect')))return;
+  if(cloudPlayerBattleSelectFocused || (focused && focused.id==='playerBattleSwapSelect'))return;
   const {data:battles,error}=await cloudSupabaseClient.from("battles").select("id,round_number,status,battle_type,opponent_name,updated_at")
     .eq("campaign_id",cloudCurrentCampaign.id).eq("status","active").order("updated_at",{ascending:false}).limit(1);
   if(error)throw error;
@@ -26115,7 +26282,7 @@ async function cloudSubmitPlayerSwapFromButton(button){
 }
 async function cloudSubmitPlayerItemFromButton(button){
   const select=document.getElementById('playerBattleItemSelect');
-  const itemId=select?.value||'';
+  const itemId=cloudPlayerBattleItemDraft||select?.value||'';
   if(!itemId)return;
   cloudPlayerBattleItemDraft=itemId;
   const battleType=button?.dataset?.battleType||'';
