@@ -2506,6 +2506,17 @@ select {
 
 .story-map-banner-actions .small-button{white-space:normal;text-align:left}
 
+
+.story-master-details{padding:0!important;overflow:hidden}
+.story-master-details>summary{list-style:none;cursor:pointer;padding:14px 16px;user-select:none}
+.story-master-details>summary::-webkit-details-marker{display:none}
+.story-master-details[open]>summary{border-bottom:1px solid #eadfce}
+.story-master-body{padding:0 16px 16px}
+.story-master-summary-right{display:flex;align-items:center;gap:8px}
+.story-master-chevron{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;font-size:18px;font-weight:900;color:#7a6e5e;transition:transform .18s ease}
+.story-master-details[open] .story-master-chevron{transform:rotate(180deg)}
+.story-master-details:not([open]) .story-arc-header{align-items:center}
+
 /* DM-only Campaign Story system */
 .story-arc-card{border:1px solid #dfd4c3;background:linear-gradient(180deg,#fffdf8,#fff9ee);box-shadow:0 2px 8px rgba(84,60,20,.08)}
 .story-arc-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
@@ -4128,15 +4139,21 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
     <div class="compact-top-actions">
       <button class="small-button" onclick="showPage('homePage')">← Back</button>
     </div>
-    <div class="form-card story-arc-card" id="dmStoryArcCard">
-      <div class="story-arc-header">
-        <div>
-          <div class="story-arc-eyebrow">DM Only</div>
-          <div class="story-arc-title">Campaign Stories</div>
+    <details class="form-card story-arc-card story-master-details" id="dmStoryArcCard">
+      <summary class="story-master-summary">
+        <div class="story-arc-header">
+          <div>
+            <div class="story-arc-eyebrow">DM Only</div>
+            <div class="story-arc-title">Campaign Stories</div>
+          </div>
+          <div class="story-master-summary-right">
+            <span id="dmStoryArcStatus" class="story-status-pill active">4 Story Layers</span>
+            <span class="story-master-chevron" aria-hidden="true">⌄</span>
+          </div>
         </div>
-        <span id="dmStoryArcStatus" class="story-status-pill active">4 Story Layers</span>
-      </div>
-      <div class="story-arc-summary">Run the Kanto Resonance main story alongside a recurring Rival arc, Team Rocket's criminal operation, and optional one-off adventures. Story events are visible only to the DM.</div>
+      </summary>
+      <div class="story-master-body">
+<div class="story-arc-summary">Run the Kanto Resonance main story alongside a recurring Rival arc, Team Rocket's criminal operation, and optional one-off adventures. Story events are visible only to the DM.</div>
       <div class="story-progress-track"><div id="dmStoryProgressFill" class="story-progress-fill"></div></div>
       <div class="story-progress-meta"><span id="dmStoryProgressText">0 completed</span><span id="dmStoryNextLocation">Next story event</span></div>
 
@@ -4157,7 +4174,8 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
         <button class="small-button story-filter-button" type="button" data-story-filter="completed" onclick="setDmStoryFilter('completed',this)">Completed</button>
       </div>
       <div id="dmStoryEventList" class="story-arc-sections"></div>
-    </div>
+      </div>
+    </details>
 
     <div class="form-card campaign-progress-card">
       <h2 style="text-align:center;margin-top:0;">Campaign Progress</h2>
@@ -9253,6 +9271,8 @@ function openDmStoryLocation(eventId){
 }
 function focusDmStoryEvent(eventId){
   showPage("campaignPage");
+  const storyMaster=document.getElementById("dmStoryArcCard");
+  if(storyMaster)storyMaster.open=true;
   dmStoryFilter="all";
   dmStoryArcFilter="all";
   document.querySelectorAll("#dmStoryFilters .story-filter-button").forEach(el=>el.classList.toggle("active",el.dataset.storyFilter==="all"));
@@ -9858,9 +9878,9 @@ const kantoDetailLocationHotspots = {
     {name:"Indigo Plateau",target:"indigo-plateau",x:76,y:0,w:16,h:17}
   ],
   "pallet-town": [
-    {name:"Rival's House",action:"landmark",landmarkType:"Home",storyEventId:"rival-01",description:"The rival family's home in Pallet Town.",x:31,y:13,w:21,h:17},
-    {name:"Professor Oak's Lab",action:"landmark",landmarkType:"Laboratory",storyEventId:"resonance-01",description:"Professor Oak's Pokémon research laboratory and the starting point for many trainers.",x:57,y:10,w:29,h:20},
-    {name:"Mom's House",action:"landmark",landmarkType:"Home",storyEventId:"side-01",description:"The player's family home in Pallet Town.",x:68,y:31,w:19,h:16},
+    {name:"Rival's House",action:"landmark",landmarkType:"Home",storyEventId:"rival-01",markerOffsetX:-6,markerOffsetY:6,description:"The rival family's home in Pallet Town.",x:31,y:13,w:21,h:17},
+    {name:"Professor Oak's Lab",action:"landmark",landmarkType:"Laboratory",storyEventId:"resonance-01",markerOffsetX:15,markerOffsetY:0,description:"Professor Oak's Pokémon research laboratory and the starting point for many trainers.",x:57,y:10,w:29,h:20},
+    {name:"Mom's House",action:"landmark",landmarkType:"Home",storyEventId:"side-01",markerOffsetX:0,markerOffsetY:25,description:"The player's family home in Pallet Town.",x:68,y:31,w:19,h:16},
     {name:"Route 1",target:"route-1",x:46,y:92,w:16,h:8}
   ],
   "route-1": [
@@ -10312,8 +10332,10 @@ function renderKantoDetailTrainerHotspots(locationId) {
       if(visibleStoryEvents.length){
         button.classList.add("story-map-hotspot-marker");
         if(locationId==="pallet-town"){
-          button.style.setProperty("--story-marker-offset-x","50px");
-          button.style.setProperty("--story-marker-offset-y","50px");
+          const markerOffsetX=50+Number(location.markerOffsetX||0);
+          const markerOffsetY=50+Number(location.markerOffsetY||0);
+          button.style.setProperty("--story-marker-offset-x",markerOffsetX+"px");
+          button.style.setProperty("--story-marker-offset-y",markerOffsetY+"px");
         }
         if(visibleStoryEvents.every(event=>getDmStoryStatus(event.id)==="completed"))button.classList.add("story-completed-marker");
         button.title=location.name+" — Campaign Story: "+visibleStoryEvents.map(event=>event.title).join(" / ");
