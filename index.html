@@ -2582,8 +2582,28 @@ select {
 .story-map-entry-title{font-size:14px;font-weight:950;line-height:1.2}
 .story-map-entry-hook{font-size:10.5px;line-height:1.4;color:#665b4d;margin-top:4px}
 .story-map-entry-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.story-map-hotspot-marker::after{content:"!";position:absolute;left:50%;top:50%;transform:translate(calc(-50% + var(--story-marker-offset-x,0px)),calc(-50% + var(--story-marker-offset-y,0px)));width:22px;height:22px;border-radius:50%;background:#c28b25;color:white;border:2px solid rgba(255,255,255,.95);box-shadow:0 2px 6px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:950;pointer-events:none}
+.story-map-hotspot-marker::after{content:"!";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:#c28b25;color:white;border:2px solid rgba(255,255,255,.95);box-shadow:0 2px 6px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:950;pointer-events:none}
 .story-map-hotspot-marker.story-completed-marker::after{content:"✓";background:#5e855b}
+
+.story-map-marker-button{
+  position:absolute;
+  transform:translate(-50%,-50%);
+  width:44px;
+  height:44px;
+  min-width:44px;
+  min-height:44px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  box-shadow:none;
+  pointer-events:auto;
+  cursor:pointer;
+  z-index:8;
+  -webkit-tap-highlight-color:transparent;
+}
+.story-map-marker-button:focus-visible{outline:2px solid #cc0000;outline-offset:2px}
+
 .story-landmark-panel{margin-top:10px;padding:10px;border-radius:9px;background:#fff7e5;border:1px solid #dfc68d}
 .story-landmark-title{font-size:12px;font-weight:950;color:#6e5016}
 .story-landmark-status{font-size:9px;font-weight:900;text-transform:uppercase;margin-top:2px;color:#8d6a28}
@@ -9914,9 +9934,9 @@ const kantoDetailLocationHotspots = {
     {name:"Indigo Plateau",target:"indigo-plateau",x:76,y:0,w:16,h:17}
   ],
   "pallet-town": [
-    {name:"Rival's House",action:"landmark",landmarkType:"Home",storyEventId:"rival-01",markerOffsetX:-12,markerOffsetY:15,description:"The rival family's home in Pallet Town.",x:31,y:13,w:21,h:17},
-    {name:"Professor Oak's Lab",action:"landmark",landmarkType:"Laboratory",storyEventId:"resonance-01",markerOffsetX:40,markerOffsetY:0,description:"Professor Oak's Pokémon research laboratory and the starting point for many trainers.",x:57,y:10,w:29,h:20},
-    {name:"Mom's House",action:"landmark",landmarkType:"Home",storyEventId:"side-01",markerOffsetX:0,markerOffsetY:80,description:"The player's family home in Pallet Town.",x:68,y:31,w:19,h:16},
+    {name:"Rival's House",action:"landmark",landmarkType:"Home",storyEventId:"rival-01",storyMarkerX:37.7857,storyMarkerY:24.6071,description:"The rival family's home in Pallet Town.",x:31,y:13,w:21,h:17},
+    {name:"Professor Oak's Lab",action:"landmark",landmarkType:"Laboratory",storyEventId:"resonance-01",storyMarkerX:73.0714,storyMarkerY:18.9286,description:"Professor Oak's Pokémon research laboratory and the starting point for many trainers.",x:57,y:10,w:29,h:20},
+    {name:"Mom's House",action:"landmark",landmarkType:"Home",storyEventId:"side-01",storyMarkerX:76.9286,storyMarkerY:54.2143,description:"The player's family home in Pallet Town.",x:68,y:31,w:19,h:16},
     {name:"Route 1",target:"route-1",x:46,y:92,w:16,h:8}
   ],
   "route-1": [
@@ -10362,21 +10382,16 @@ function renderKantoDetailTrainerHotspots(locationId) {
     button.setAttribute("aria-label", "Open " + location.name);
     button.title = location.name;
     const hotspotStoryIds=Array.isArray(location.storyEventIds)?location.storyEventIds:(location.storyEventId?[location.storyEventId]:[]);
-    if(hotspotStoryIds.length){
-      const hotspotStoryEvents=hotspotStoryIds.map(getDmStoryEvent).filter(Boolean);
-      const visibleStoryEvents=hotspotStoryEvents.filter(dmStoryVisibleOnMap);
-      if(visibleStoryEvents.length){
-        button.classList.add("story-map-hotspot-marker");
-        if(locationId==="pallet-town"){
-          const markerOffsetX=50+Number(location.markerOffsetX||0);
-          const markerOffsetY=50+Number(location.markerOffsetY||0);
-          button.style.setProperty("--story-marker-offset-x",markerOffsetX+"px");
-          button.style.setProperty("--story-marker-offset-y",markerOffsetY+"px");
-        }
-        if(visibleStoryEvents.every(event=>getDmStoryStatus(event.id)==="completed"))button.classList.add("story-completed-marker");
-        button.title=location.name+" — Campaign Story: "+visibleStoryEvents.map(event=>event.title).join(" / ");
-      }
+    const hotspotStoryEvents=hotspotStoryIds.map(getDmStoryEvent).filter(Boolean);
+    const visibleStoryEvents=hotspotStoryEvents.filter(dmStoryVisibleOnMap);
+    const usesSavedStoryMarker=location.storyMarkerX!=null && location.storyMarkerY!=null;
+
+    if(visibleStoryEvents.length && !usesSavedStoryMarker){
+      button.classList.add("story-map-hotspot-marker");
+      if(visibleStoryEvents.every(event=>getDmStoryStatus(event.id)==="completed"))button.classList.add("story-completed-marker");
+      button.title=location.name+" — Campaign Story: "+visibleStoryEvents.map(event=>event.title).join(" / ");
     }
+
     button.onclick = function(event) {
       event.stopPropagation();
       closeKantoDetailLocationPanel();
@@ -10394,6 +10409,22 @@ function renderKantoDetailTrainerHotspots(locationId) {
       }
     };
     layer.appendChild(button);
+
+    if(visibleStoryEvents.length && usesSavedStoryMarker){
+      const markerButton=document.createElement("button");
+      markerButton.type="button";
+      markerButton.className="story-map-marker-button story-map-hotspot-marker";
+      markerButton.style.left=location.storyMarkerX+"%";
+      markerButton.style.top=location.storyMarkerY+"%";
+      markerButton.setAttribute("aria-label","Open campaign story at "+location.name);
+      markerButton.title=location.name+" — Campaign Story: "+visibleStoryEvents.map(event=>event.title).join(" / ");
+      if(visibleStoryEvents.every(event=>getDmStoryStatus(event.id)==="completed"))markerButton.classList.add("story-completed-marker");
+      markerButton.onclick=function(event){
+        event.stopPropagation();
+        button.click();
+      };
+      layer.appendChild(markerButton);
+    }
   });
 }
 
