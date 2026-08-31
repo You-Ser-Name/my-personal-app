@@ -6961,6 +6961,7 @@ const itemDatabase = [
 {name:"Poké Ball",id:"poke-ball",category:"Poké Balls",description:"Used to catch Pokémon.",buyPrice:200,sellPrice:100},
 {name:"Great Ball",id:"great-ball",category:"Poké Balls",description:"Greater chance of catching Pokémon.",buyPrice:600,sellPrice:300},
 {name:"Ultra Ball",id:"ultra-ball",category:"Poké Balls",description:"Greatest chance of catching Pokémon.",buyPrice:1200,sellPrice:600},
+{name:"Master Ball",id:"master-ball",category:"Poké Balls",description:"Automatically catches a wild Pokémon.",buyPrice:null,sellPrice:null},
 
 {name:"Antidote",id:"antidote",category:"Medicine",description:"Cures poison.",buyPrice:100,sellPrice:50},
 {name:"Burn Heal",id:"burn-heal",category:"Medicine",description:"Cures burn.",buyPrice:250,sellPrice:125},
@@ -11314,258 +11315,135 @@ const battlePokeBallIds =
   new Set([
     "poke-ball",
     "great-ball",
-    "ultra-ball"
+    "ultra-ball",
+    "master-ball"
   ]);
 
+const legendaryCatchSpeciesNumbers = new Set([
+  144,145,146,150,151
+]);
 
-function isBattlePokeBall(
-  itemId
-) {
-  return battlePokeBallIds.has(
-    itemId
+function isBattlePokeBall(itemId) {
+  return battlePokeBallIds.has(itemId);
+}
+
+function getCatchSpeciesDC(catchRate) {
+  const rate = Number(catchRate);
+  if (!Number.isFinite(rate)) return null;
+  if (rate >= 200) return 11;
+  if (rate >= 120) return 13;
+  if (rate >= 75) return 15;
+  if (rate >= 45) return 17;
+  if (rate >= 25) return 20;
+  if (rate >= 10) return 22;
+  return 25;
+}
+
+function getCatchLevelModifier(level) {
+  const lvl = Math.max(1, Number(level) || 1);
+  if (lvl <= 20) return 0;
+  if (lvl <= 35) return 1;
+  if (lvl <= 50) return 2;
+  if (lvl <= 60) return 3;
+  return 4;
+}
+
+function getCatchHPBonus(hpPercent) {
+  const pct = Math.max(0, Math.min(100, Number(hpPercent) || 0));
+  if (pct <= 2) return 7;
+  if (pct <= 15) return 6;
+  if (pct <= 30) return 5;
+  if (pct <= 50) return 4;
+  if (pct <= 70) return 2;
+  if (pct <= 85) return 1;
+  return 0;
+}
+
+function getCatchStatusBonus(status) {
+  const value = String(status || "").trim().toLowerCase();
+  if (value === "sleep" || value === "freeze" || value === "paralysis") return 4;
+  if (value === "burn" || value === "poison") return 2;
+  return 0;
+}
+
+function getCatchBallBonus(itemId) {
+  if (itemId === "great-ball") return 3;
+  if (itemId === "ultra-ball") return 5;
+  return 0;
+}
+
+function isMasterBall(itemId) {
+  return itemId === "master-ball";
+}
+
+function calculateCatchCheck(pokemon, ballItemId) {
+  if (!pokemon) return null;
+
+  const speciesNumber = Number(
+    pokemon.speciesNumber ?? pokemon.pokedex_number ?? pokemon.pokedexNumber
   );
-}
+  const catchRate = gen1CatchRates[speciesNumber];
+  if (typeof catchRate !== "number") return null;
 
+  const maxHP = Math.max(1, Number(
+    pokemon.stats?.hp ?? pokemon.max_hp ?? pokemon.maxHP ?? 1
+  ) || 1);
+  const currentHP = Math.max(0, Math.min(maxHP, Number(
+    pokemon.currentHP ?? pokemon.current_hp ?? 0
+  ) || 0));
+  const hpPercent = (currentHP / maxHP) * 100;
 
-function getCatchBallMultiplier(
-  itemId
-) {
+  const speciesDC = getCatchSpeciesDC(catchRate);
+  const levelModifier = getCatchLevelModifier(pokemon.level);
+  const legendaryModifier = legendaryCatchSpeciesNumbers.has(speciesNumber) ? 3 : 0;
+  const catchDC = speciesDC + levelModifier + legendaryModifier;
 
-  if (
-    itemId ===
-    "great-ball"
-  ) {
-    return 1.5;
-  }
-
-  if (
-    itemId ===
-    "ultra-ball"
-  ) {
-    return 2;
-  }
-
-  return 1;
-}
-
-
-function getCatchStatusMultiplier(
-  status
-) {
-
-  if (
-    status === "Sleep" ||
-    status === "Freeze"
-  ) {
-    return 2;
-  }
-
-  if (
-    status === "Paralysis" ||
-    status === "Burn" ||
-    status === "Poison"
-  ) {
-    return 1.5;
-  }
-
-  return 1;
-}
-
-
-function calculateGen1CatchProbability(
-  pokemon,
-  ballItemId
-) {
-
-  if (!pokemon) {
-    return null;
-  }
-
-  const catchRate =
-    gen1CatchRates[
-      pokemon.speciesNumber
-    ];
-
-  if (
-    typeof catchRate !==
-    "number"
-  ) {
-    return null;
-  }
-
-  const maxHP =
-    Math.max(
-      1,
-      Number(
-        pokemon.stats.hp
-      )
-    );
-
-  const currentHP =
-    Math.max(
-      0,
-      Math.min(
-        maxHP,
-        Number(
-          pokemon.currentHP
-        )
-      )
-    );
-
-  const ballMultiplier =
-    getCatchBallMultiplier(
-      ballItemId
-    );
-
-  const statusMultiplier =
-    getCatchStatusMultiplier(
-      pokemon.status
-    );
-
-  /*
-    User-selected modern-style modified catch formula:
-
-      a =
-      ((3 * MaxHP - 2 * CurrentHP)
-       * Rate
-       * Ball
-       * Status)
-      / (3 * MaxHP)
-
-    If a >= 4096, capture is automatic.
-
-    Otherwise:
-      b =
-      1048560 /
-      sqrt(
-        sqrt(
-          16711680 / a
-        )
-      )
-
-    The game performs four independent shake checks against b.
-    The theoretical total capture probability is therefore:
-      (b / 65536)^4
-  */
-  const a =
-    (
-      (
-        3 * maxHP -
-        2 * currentHP
-      ) *
-      catchRate *
-      ballMultiplier *
-      statusMultiplier
-    ) /
-    (
-      3 * maxHP
-    );
-
-  let probability;
-  let b = 65536;
-
-  if (
-    a >= 4096
-  ) {
-    probability = 1;
-  }
-  else if (
-    a <= 0
-  ) {
-    probability = 0;
-    b = 0;
-  }
-  else {
-
-    b =
-      1048560 /
-      Math.sqrt(
-        Math.sqrt(
-          16711680 /
-          a
-        )
-      );
-
-    const shakeChance =
-      Math.max(
-        0,
-        Math.min(
-          1,
-          b / 65536
-        )
-      );
-
-    probability =
-      Math.pow(
-        shakeChance,
-        4
-      );
-  }
+  const hpBonus = getCatchHPBonus(hpPercent);
+  const statusBonus = getCatchStatusBonus(pokemon.status);
+  const ballBonus = getCatchBallBonus(ballItemId);
+  const totalBonus = hpBonus + statusBonus + ballBonus;
+  const automatic = isMasterBall(ballItemId);
+  const rawRequiredRoll = catchDC - totalBonus;
+  const requiredRoll = automatic ? 1 : Math.max(1, rawRequiredRoll);
+  const possible = automatic || requiredRoll <= 20;
+  const probability = automatic
+    ? 1
+    : (requiredRoll > 20 ? 0 : Math.max(0, Math.min(1, (21 - requiredRoll) / 20)));
 
   return {
-    catchRate:catchRate,
-    modifiedCatchRate:a,
-    shakeThreshold:b,
-    ballMultiplier:
-      ballMultiplier,
-    statusMultiplier:
-      statusMultiplier,
-    probability:
-      Math.max(
-        0,
-        Math.min(
-          1,
-          probability
-        )
-      )
+    catchRate,
+    speciesNumber,
+    speciesDC,
+    levelModifier,
+    legendaryModifier,
+    catchDC,
+    hpPercent,
+    hpBonus,
+    statusBonus,
+    ballBonus,
+    totalBonus,
+    requiredRoll,
+    rawRequiredRoll,
+    possible,
+    automatic,
+    probability
   };
 }
 
-
-function calculateCaptureProbability(
-  pokemon,
-  ballItemId
-) {
-  return calculateGen1CatchProbability(
-    pokemon,
-    ballItemId
-  );
+// Backward-compatible wrapper name used elsewhere in the battle code.
+function calculateGen1CatchProbability(pokemon, ballItemId) {
+  return calculateCatchCheck(pokemon, ballItemId);
 }
 
-
-function catchProbabilityToD20Threshold(
-  probability
-) {
-
-  const percent =
-    Math.max(
-      0,
-      Math.min(
-        100,
-        probability * 100
-      )
-    );
-
-  /*
-    User-requested d20 conversion:
-      99% -> 1+
-      90% -> 2+
-       5% -> 19+
-  */
-  return Math.max(
-    1,
-    Math.min(
-      20,
-      Math.ceil(
-        (
-          100 -
-          percent
-        ) / 5
-      )
-    )
-  );
+function calculateCaptureProbability(pokemon, ballItemId) {
+  return calculateCatchCheck(pokemon, ballItemId);
 }
 
+function catchProbabilityToD20Threshold(probability) {
+  const percent = Math.max(0, Math.min(100, Number(probability || 0) * 100));
+  if (percent <= 0) return 21;
+  return Math.max(1, Math.ceil((100 - percent) / 5));
+}
 
 function getBattleBallInventoryEntry(
   side,
@@ -14484,7 +14362,8 @@ function getBattleUsableInventoryItems(
       "x-speed",
       "poke-ball",
       "great-ball",
-      "ultra-ball"
+      "ultra-ball",
+      "master-ball"
     ]);
 
   return trainer.inventory.filter(
@@ -18971,117 +18850,58 @@ function displayBattleCatchAttempt(
   side,
   itemId
 ) {
+  const box = document.getElementById("battleMoveDetails");
+  const targetSide = side === "A" ? "B" : "A";
+  const target = getBattlePokemon(targetSide);
+  const entry = getBattleBallInventoryEntry(side,itemId);
 
-  const box =
-    document.getElementById(
-      "battleMoveDetails"
-    );
+  if (!box || !target || !target.temporaryWild || !entry) return;
 
-  const targetSide =
-    side === "A"
-    ? "B"
-    : "A";
-
-  const target =
-    getBattlePokemon(
-      targetSide
-    );
-
-  const entry =
-    getBattleBallInventoryEntry(
-      side,
-      itemId
-    );
-
-  if (
-    !box ||
-    !target ||
-    !target.temporaryWild ||
-    !entry
-  ) {
-    return;
-  }
-
-  const catchData =
-    calculateGen1CatchProbability(
-      target,
-      itemId
-    );
-
+  const catchData = calculateCatchCheck(target,itemId);
   if (!catchData) {
-    box.innerHTML = `
-      <div class="action-warning">
-        Unable to calculate this Pokémon's catch rate.
-      </div>
-    `;
+    box.innerHTML = `<div class="action-warning">Unable to calculate this Pokémon's catch rate.</div>`;
     return;
   }
 
-  const threshold =
-    catchProbabilityToD20Threshold(
-      catchData.probability
-    );
-
-  const percent =
-    catchData.probability *
-    100;
+  const statusLabel = target.status || "None";
+  const rollText = catchData.automatic
+    ? "Automatic"
+    : (catchData.possible ? `${catchData.requiredRoll}+` : `${catchData.requiredRoll}+ (currently impossible)`);
+  const chanceText = catchData.automatic
+    ? "100%"
+    : `${(catchData.probability * 100).toFixed(0)}%`;
 
   box.innerHTML = `
-    <h3 style="text-align:center;">
-      Use ${entry.name}
-    </h3>
+    <h3 style="text-align:center;">Use ${entry.name}</h3>
+    <p style="text-align:center;">Attempt to catch <strong>${getPokemonName(target)}</strong>.</p>
 
-    <p style="text-align:center;">
-      Attempt to catch
-      <strong>
-        ${getPokemonName(target)}
-      </strong>.
-    </p>
-
-    <div class="damage-result" style="text-align:center;">
-      <strong>Catch Chance:</strong>
-      ${percent.toFixed(1)}%
-      <br>
-      <strong>Base Catch Rate:</strong>
-      ${catchData.catchRate}
-      <br>
-      <strong>Modified Catch Rate (a):</strong>
-      ${catchData.modifiedCatchRate.toFixed(2)}
-      <br>
-      <strong>Ball Modifier:</strong>
-      ×${catchData.ballMultiplier}
-      <br>
-      <strong>Status Modifier:</strong>
-      ×${catchData.statusMultiplier}
-      <br>
-      <strong>d20 Catch Roll:</strong>
-      ${threshold}+
+    <div class="damage-result" style="text-align:center;line-height:1.55;">
+      <strong>Catch DC:</strong> ${catchData.catchDC}
+      <br><span style="font-size:12px;color:#666;">Species ${catchData.speciesDC} + Level ${catchData.levelModifier}${catchData.legendaryModifier ? ` + Legendary ${catchData.legendaryModifier}` : ""}</span>
+      <br><strong>HP:</strong> ${catchData.hpPercent.toFixed(1)}% (+${catchData.hpBonus})
+      <br><strong>Status:</strong> ${statusLabel} (+${catchData.statusBonus})
+      <br><strong>${entry.name}:</strong> +${catchData.ballBonus}
+      <br><strong>Total Catch Bonus:</strong> +${catchData.totalBonus}
+      <br><strong>d20 Catch Roll:</strong> ${rollText}
+      <br><strong>Current Catch Chance:</strong> ${chanceText}
     </div>
 
-    <div class="form-row" style="margin-top:15px;">
-      <label>Catch d20</label>
-      <input
-        id="battleCatchRoll"
-        type="number"
-        min="1"
-        max="20"
-        placeholder="Enter catch roll">
-    </div>
+    ${catchData.automatic ? "" : `
+      <div class="form-row" style="margin-top:15px;">
+        <label>Catch d20</label>
+        <input id="battleCatchRoll" type="number" min="1" max="20" placeholder="Enter catch roll">
+      </div>
+    `}
 
-    <button
-      class="primary-button"
-      style="width:100%;"
-      onclick="resolveBattleCatchAttempt('${side}','${itemId}')">
+    <button class="primary-button" style="width:100%;" onclick="resolveBattleCatchAttempt('${side}','${itemId}')">
       Throw ${entry.name}
     </button>
 
     <div class="battle-note">
-      The ball is consumed whether the catch succeeds or fails.
-      The d20 target is a 5%-step approximation of the calculated capture probability.
+      The ball is consumed whether the catch succeeds or fails.${catchData.possible || catchData.automatic ? "" : " A natural 20 does not automatically succeed; improve HP, status, or ball quality first."}
     </div>
   `;
 }
-
 
 function consumeBattleBall(
   side,
@@ -19173,142 +18993,57 @@ function resolveBattleCatchAttempt(
   side,
   itemId
 ) {
+  const targetSide = side === "A" ? "B" : "A";
+  const target = getBattlePokemon(targetSide);
 
-  const rollInput =
-    document.getElementById(
-      "battleCatchRoll"
-    );
-
-  const roll =
-    Number(
-      rollInput
-      ? rollInput.value
-      : NaN
-    );
-
-  if (
-    !Number.isInteger(
-      roll
-    ) ||
-    roll < 1 ||
-    roll > 20
-  ) {
-    alert(
-      "Enter a Catch d20 roll from 1 to 20."
-    );
+  if (!target || !target.temporaryWild) {
+    alert("There is no Wild Pokémon to catch.");
     return;
   }
 
-  const targetSide =
-    side === "A"
-    ? "B"
-    : "A";
-
-  const target =
-    getBattlePokemon(
-      targetSide
-    );
-
-  if (
-    !target ||
-    !target.temporaryWild
-  ) {
-    alert(
-      "There is no Wild Pokémon to catch."
-    );
-    return;
-  }
-
-  const catchData =
-    calculateGen1CatchProbability(
-      target,
-      itemId
-    );
-
+  const catchData = calculateCatchCheck(target,itemId);
   if (!catchData) {
-    alert(
-      "Unable to calculate the catch chance."
-    );
+    alert("Unable to calculate the catch chance.");
     return;
   }
 
-  const threshold =
-    catchProbabilityToD20Threshold(
-      catchData.probability
-    );
+  let roll = null;
+  if (!catchData.automatic) {
+    const rollInput = document.getElementById("battleCatchRoll");
+    roll = Number(rollInput ? rollInput.value : NaN);
+    if (!Number.isInteger(roll) || roll < 1 || roll > 20) {
+      alert("Enter a Catch d20 roll from 1 to 20.");
+      return;
+    }
+  }
 
   pushBattleUndoSnapshot();
 
-  if (
-    !consumeBattleBall(
-      side,
-      itemId
-    )
-  ) {
+  if (!consumeBattleBall(side,itemId)) {
     battleUndoHistory.pop();
-
-    alert(
-      "That Poké Ball is no longer available."
-    );
-
+    alert("That Poké Ball is no longer available.");
     return;
   }
 
-  if (
-    roll >= threshold
-  ) {
+  const succeeded = catchData.automatic || (catchData.possible && roll >= catchData.requiredRoll);
 
-    const result =
-      captureWildPokemonForTrainer(
-        side
-      );
-
+  if (succeeded) {
+    const result = captureWildPokemonForTrainer(side);
     if (!result) {
       battleUndoHistory.pop();
-
-      alert(
-        "The catch succeeded, but the Pokémon could not be added to the trainer."
-      );
-
+      alert("The catch succeeded, but the Pokémon could not be added to the trainer.");
       return;
     }
 
-    const locationText =
-      result.location === "party"
-      ? "the shared party"
-      : "PC Storage";
-
-    alert(
-      "Caught " +
-      getPokemonName(
-        result.pokemon
-      ) +
-      "! It was added to " +
-      locationText +
-      "."
-    );
-
+    const locationText = result.location === "party" ? "the shared party" : "PC Storage";
+    alert("Caught " + getPokemonName(result.pokemon) + "! It was added to " + locationText + ".");
     endBattle(true);
-
     return;
   }
 
-  lastBattleEffectMessage =
-    getPokemonName(
-      target
-    ) +
-    " broke free.";
-
-  alert(
-    getPokemonName(
-      target
-    ) +
-    " broke free!"
-  );
-
-  finishBattleAction(
-    side
-  );
+  lastBattleEffectMessage = getPokemonName(target) + " broke free.";
+  alert(getPokemonName(target) + " broke free!");
+  finishBattleAction(side);
 }
 
 
@@ -25569,6 +25304,7 @@ function cloudBattleSupportedInventory(battleType){
     supported.add('poke-ball');
     supported.add('great-ball');
     supported.add('ultra-ball');
+    supported.add('master-ball');
   }
   return (Array.isArray(cloudPlayerTrainerCache?.inventory)?cloudPlayerTrainerCache.inventory:[]).filter(x=>Number(x.quantity)>0&&supported.has(x.itemId));
 }
@@ -25593,6 +25329,23 @@ function cloudBattleActionTabsHTML(){
   const panels=[['fight','Fight'],['pokemon','Pokémon'],['inventory','Inventory'],['run','Run']];
   return '<div class="player-battle-action-tabs">'+panels.map(([id,label])=>'<button type="button" class="small-button player-battle-action-tab '+(cloudPlayerBattlePanel===id?'active':'')+'" onclick="cloudSetPlayerBattlePanel(\''+id+'\')">'+label+'</button>').join('')+'</div>';
 }
+function cloudPlayerCatchPreviewHTML(battle,opponentState,itemId){
+  if(String(battle?.battle_type||'').toLowerCase()!=='wild' || !isBattlePokeBall(itemId))return '';
+  const data=calculateCatchCheck(opponentState,itemId);
+  if(!data)return '';
+  const itemName=itemDatabase?.find(i=>i.id===itemId)?.name||'Poké Ball';
+  const target=data.automatic?'Automatic':(data.possible?(data.requiredRoll+'+'):(data.requiredRoll+'+ • Improve catch conditions'));
+  return '<div class="player-battle-action-note" style="margin-top:7px"><strong>'+cloudEscape(itemName)+' catch target:</strong> '+cloudEscape(target)+' <span style="color:#777">• HP +'+data.hpBonus+' • Status +'+data.statusBonus+' • Ball +'+data.ballBonus+'</span></div>';
+}
+function cloudUpdatePlayerCatchPreview(select,battleType){
+  const preview=document.getElementById('playerBattleCatchPreview');
+  if(!preview)return;
+  if(String(battleType||'').toLowerCase()!=='wild'){preview.innerHTML='';return;}
+  const opponent=cloudCurrentBattleOpponentState||{};
+  preview.innerHTML=cloudPlayerCatchPreviewHTML({battle_type:battleType},opponent,select?.value||'');
+}
+let cloudCurrentBattleOpponentState={};
+
 function cloudBattleSecondaryPanelHTML(battle,mine,action){
   if(cloudPlayerBattlePanel==='pokemon'){
     const options=(cloudSharedPartyPokemonCache||[]).filter(p=>String(p.pokemon_id)!==String(mine.pokemon_id)&&Number(p.current_hp)>0);
@@ -25600,7 +25353,7 @@ function cloudBattleSecondaryPanelHTML(battle,mine,action){
   }
   if(cloudPlayerBattlePanel==='inventory'){
     const items=cloudBattleSupportedInventory(battle.battle_type);
-    return '<div class="player-battle-action-panel"><p class="player-battle-action-note">Select a battle item from your inventory.'+(String(battle.battle_type).toLowerCase()==='wild'?' Poké Balls are available in wild battles.':' Poké Balls cannot be used in trainer battles.')+'</p><div class="player-battle-action-panel-row"><select id="playerBattleItemSelect" onfocus="cloudPlayerBattleSelectFocus(true)" onblur="cloudPlayerBattleSelectFocus(false)">'+(items.length?items.map(x=>'<option value="'+cloudEscape(x.itemId)+'">'+cloudEscape(x.name||itemDatabase?.find(i=>i.id===x.itemId)?.name||x.itemId)+' ×'+Number(x.quantity)+'</option>').join(''):'<option value="">No battle items available</option>')+'</select><button class="small-button" type="button" '+(items.length?'':'disabled')+' data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" data-battle-type="'+cloudEscape(battle.battle_type||'')+'" onclick="cloudSubmitPlayerItemFromButton(this)">Select</button></div></div>';
+    return '<div class="player-battle-action-panel"><p class="player-battle-action-note">Select a battle item from your inventory.'+(String(battle.battle_type).toLowerCase()==='wild'?' Poké Balls are available in wild battles.':' Poké Balls cannot be used in trainer battles.')+'</p><div class="player-battle-action-panel-row"><select id="playerBattleItemSelect" onfocus="cloudPlayerBattleSelectFocus(true)" onblur="cloudPlayerBattleSelectFocus(false)" onchange="cloudUpdatePlayerCatchPreview(this,\''+cloudEscape(battle.battle_type||'')+'\')">'+(items.length?items.map(x=>'<option value="'+cloudEscape(x.itemId)+'">'+cloudEscape(x.name||itemDatabase?.find(i=>i.id===x.itemId)?.name||x.itemId)+' ×'+Number(x.quantity)+'</option>').join(''):'<option value="">No battle items available</option>')+'</select><button class="small-button" type="button" '+(items.length?'':'disabled')+' data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" data-battle-type="'+cloudEscape(battle.battle_type||'')+'" onclick="cloudSubmitPlayerItemFromButton(this)">Select</button></div><div id="playerBattleCatchPreview">'+(items.length?cloudPlayerCatchPreviewHTML(battle,cloudCurrentBattleOpponentState,items[0].itemId):'')+'</div></div>';
   }
   if(cloudPlayerBattlePanel==='run'){
     return '<div class="player-battle-action-panel"><p class="player-battle-action-note">Attempt to run from the battle. The DM will resolve the attempt.</p><button class="primary-button" style="width:100%;margin:0" type="button" data-battle-id="'+cloudEscape(battle.id)+'" data-participant-id="'+cloudEscape(mine.id)+'" data-round-number="'+Number(battle.round_number)+'" onclick="cloudSubmitPlayerRunFromButton(this)">Run</button></div>';
@@ -25659,6 +25412,7 @@ async function cloudLoadPlayerBattle(){
   }
   const controlsBattle=String(playerSide.trainer_id||'')===String(cloudCurrentMembership.trainer_id||'');
   const ms=playerSide.participant_state||{}, os=opp?.participant_state||{};
+  cloudCurrentBattleOpponentState=os;
   const livePill=document.getElementById('playerCloudLivePill'); if(livePill)livePill.textContent='LIVE • ROUND '+Number(battle.round_number);
 
   // Spectators see only the round, Pokémon, and health state — never another
