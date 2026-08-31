@@ -2456,6 +2456,60 @@ select {
   }
 }
 
+
+/* DM-only Campaign Story system */
+.story-arc-card{border:1px solid #dfd4c3;background:linear-gradient(180deg,#fffdf8,#fff9ee);box-shadow:0 2px 8px rgba(84,60,20,.08)}
+.story-arc-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.story-arc-eyebrow{font-size:10px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:#8a641e}
+.story-arc-title{font-size:20px;font-weight:950;margin-top:2px}
+.story-arc-summary{font-size:12px;line-height:1.45;color:#62594c;margin-top:7px}
+.story-progress-track{height:8px;border-radius:999px;background:#ece4d8;overflow:hidden;margin-top:10px}
+.story-progress-fill{height:100%;width:0;background:#b98932;border-radius:999px;transition:width .2s ease}
+.story-progress-meta{display:flex;justify-content:space-between;gap:8px;font-size:10px;color:#786d5e;margin-top:5px;font-weight:800}
+.story-filter-row{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 6px}
+.story-filter-button{padding:6px 9px!important;min-height:auto!important;font-size:10px!important}
+.story-filter-button.active{background:#5f4a25!important;color:#fff!important;border-color:#5f4a25!important}
+.story-event-list{display:grid;gap:8px;margin-top:8px}
+.story-event-card{border:1px solid #e0ddd7;border-radius:10px;background:#fff;overflow:hidden}
+.story-event-card.story-available{border-color:#d7b56f;box-shadow:0 0 0 1px rgba(185,137,50,.12)}
+.story-event-card.story-active{border-color:#b98932;box-shadow:0 0 0 2px rgba(185,137,50,.16)}
+.story-event-card.story-completed{opacity:.78}
+.story-event-summary{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;cursor:pointer;list-style:none}
+.story-event-summary::-webkit-details-marker{display:none}
+.story-order-badge{width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#f3eee6;color:#665b4d;font-size:10px;font-weight:950}
+.story-event-name{font-size:13px;font-weight:950;line-height:1.15}
+.story-event-location{font-size:9.5px;color:#888;margin-top:2px}
+.story-status-pill{border-radius:999px;padding:3px 7px;font-size:8.5px;font-weight:950;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;background:#eee;color:#666}
+.story-status-pill.available{background:#fff3ce;color:#7b5b12}
+.story-status-pill.active{background:#f4dfae;color:#6c4a00}
+.story-status-pill.completed{background:#e5efe4;color:#3d673c}
+.story-event-body{padding:0 10px 11px;border-top:1px solid #eee8df}
+.story-event-hook{font-size:12px;line-height:1.45;margin:9px 0;color:#544d45}
+.story-field{margin-top:9px}
+.story-field-label{font-size:9px;font-weight:950;letter-spacing:.06em;text-transform:uppercase;color:#8a641e;margin-bottom:2px}
+.story-field-text{font-size:11px;line-height:1.45;color:#47423d;white-space:pre-wrap}
+.story-event-actions{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-top:11px}
+.story-event-actions label{font-size:9px;font-weight:900;color:#777}
+.story-event-actions select{margin-top:3px}
+.story-event-notes{width:100%;min-height:75px;resize:vertical;font-size:11px}
+.story-unlock-next{width:100%;margin-top:8px}
+.story-map-banner{display:none;margin:8px 0 0;padding:10px;border:1px solid #d8b873;border-radius:10px;background:linear-gradient(180deg,#fffaf0,#fff5dc);text-align:left}
+.story-map-banner.show{display:block}
+.story-map-banner-eyebrow{font-size:9px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;color:#8a641e}
+.story-map-banner-title{font-size:14px;font-weight:950;margin-top:2px}
+.story-map-banner-text{font-size:10.5px;line-height:1.4;color:#665b4d;margin-top:4px}
+.story-map-banner-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.story-map-hotspot-marker::after{content:"!";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:#c28b25;color:white;border:2px solid rgba(255,255,255,.95);box-shadow:0 2px 6px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:950;pointer-events:none}
+.story-map-hotspot-marker.story-completed-marker::after{content:"✓";background:#5e855b}
+.story-landmark-panel{margin-top:10px;padding:10px;border-radius:9px;background:#fff7e5;border:1px solid #dfc68d}
+.story-landmark-title{font-size:12px;font-weight:950;color:#6e5016}
+.story-landmark-status{font-size:9px;font-weight:900;text-transform:uppercase;margin-top:2px;color:#8d6a28}
+.story-landmark-hook{font-size:10.5px;line-height:1.4;margin-top:6px;color:#5e5549}
+.story-landmark-button{margin-top:7px;width:100%}
+.story-focus-flash{animation:storyFocusFlash 1.3s ease}
+@keyframes storyFocusFlash{0%,100%{box-shadow:none}35%{box-shadow:0 0 0 3px rgba(185,137,50,.35)}}
+@media(max-width:600px){.story-event-summary{grid-template-columns:auto minmax(0,1fr);}.story-status-pill{grid-column:2;justify-self:start}.story-event-actions{grid-template-columns:1fr}.story-arc-title{font-size:18px}}
+
 /* Campaign dashboard: further compressed vertically; home-screen Campaign tab is unchanged */
 #campaignPage header { padding: 15px 20px; }
 #campaignPage .page-content { padding: 15px 20px; }
@@ -3400,6 +3454,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
         <div id="kantoDetailHotspotLayer" class="kanto-detail-hotspot-layer"></div>
       </div>
       <div id="kantoDetailMapCaption" class="kanto-detail-map-caption"></div>
+      <div id="dmStoryMapBanner" class="story-map-banner"></div>
       <button id="kantoDetailWildEncounterButton" class="primary-button small-button" type="button" style="display:none;width:100%;margin:8px 0 0;" onclick="startWildEncounterFromKantoLocation(activeKantoDetailMapId, true)">Start Wild Pokémon Encounter</button>
 
       <div id="kantoDetailLocationPanel" class="kanto-location-panel" style="display:none;margin-top:8px;">
@@ -3412,6 +3467,7 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
         </div>
 
         <div id="kantoDetailLocationDescription" class="kanto-location-description"></div>
+        <div id="dmStoryLandmarkPanel"></div>
 
         <div class="kanto-location-actions">
           <button id="kantoDetailLocationOpenButton" class="primary-button small-button" type="button" style="grid-column:1 / -1;" onclick="openSelectedKantoDetailLocationFromPanel()">Open Detailed Map</button>
@@ -3973,6 +4029,26 @@ body.cloud-player-mode > div:not(#cloudAuthGate):not(#playerCloudPage) { display
     <div class="compact-top-actions">
       <button class="small-button" onclick="showPage('homePage')">← Back</button>
     </div>
+    <div class="form-card story-arc-card" id="dmStoryArcCard">
+      <div class="story-arc-header">
+        <div>
+          <div class="story-arc-eyebrow">DM Story Arc</div>
+          <div class="story-arc-title">The Kanto Resonance</div>
+        </div>
+        <span id="dmStoryArcStatus" class="story-status-pill active">Active</span>
+      </div>
+      <div class="story-arc-summary">A forgotten network built to monitor Pokémon energy is waking back up. As the party crosses Kanto, isolated mysteries reveal a larger question: should humans ever be able to guide—or control—Pokémon behavior at a regional scale?</div>
+      <div class="story-progress-track"><div id="dmStoryProgressFill" class="story-progress-fill"></div></div>
+      <div class="story-progress-meta"><span id="dmStoryProgressText">0 / 19 completed</span><span id="dmStoryNextLocation">Next: Pallet Town</span></div>
+      <div class="story-filter-row" id="dmStoryFilters">
+        <button class="small-button story-filter-button active" type="button" data-story-filter="all" onclick="setDmStoryFilter('all',this)">All</button>
+        <button class="small-button story-filter-button" type="button" data-story-filter="available" onclick="setDmStoryFilter('available',this)">Available</button>
+        <button class="small-button story-filter-button" type="button" data-story-filter="active" onclick="setDmStoryFilter('active',this)">Active</button>
+        <button class="small-button story-filter-button" type="button" data-story-filter="completed" onclick="setDmStoryFilter('completed',this)">Completed</button>
+      </div>
+      <div id="dmStoryEventList" class="story-event-list"></div>
+    </div>
+
     <div class="form-card campaign-progress-card">
       <h2 style="text-align:center;margin-top:0;">Campaign Progress</h2>
       <div id="gymProgressSummary" class="gym-progress-summary">0 / 8 Gym Badges Earned</div>
@@ -8852,6 +8928,146 @@ upgradeSavedData();
 ========================================================= */
 
 
+
+const DM_STORY_STATE_KEY="pokemonCampaignDmStoryStateV1";
+let dmStoryFilter="all";
+
+const dmCampaignStoryEvents=[
+{id:"resonance-01",order:1,arc:"The Kanto Resonance",type:"Main Story",locationId:"pallet-town",location:"Pallet Town",building:"Professor Oak's Lab",title:"Oak's Forgotten Field Journal",hook:"Oak asks the party to retrieve an old research case from storage. Inside is a decades-old field journal filled with unexplained energy readings and several Kanto locations circled in red.",playerInfo:"Oak describes the journal as abandoned research from early in his career. Most of the notes concern unusual Pokémon behavior near specific locations.",dmSecret:"The journal records early measurements from the Kanto Resonance Project. Oak was never part of the control experiments and does not yet realize what the readings ultimately became.",objective:"Retrieve the case, notice the repeated locations, and give the party its first reason to pay attention to unusual behavior across Kanto.",npcs:"Professor Oak",encounter:"No required battle. Optional lab mishap involving a startled starter or research Pokémon.",clues:"A faded project insignia; references to 'passive resonance monitoring'; Viridian City is the next circled location.",reward:"Oak's trust and a copy/photo of the relevant journal pages.",unlocks:"Viridian Trainer School."},
+{id:"resonance-02",order:2,arc:"The Kanto Resonance",type:"Main Story",locationId:"viridian-city",location:"Viridian City",building:"Trainer School",title:"The Pokémon That Won't Listen",hook:"Normally docile training Pokémon suddenly ignore commands and become aggressive during lessons.",playerInfo:"Students and instructors insist the affected Pokémon were behaving normally until very recently.",dmSecret:"An old Resonance Project transmitter beneath the school has reactivated. The equipment was supposed to monitor Pokémon, not influence them.",objective:"Protect the students, calm the affected Pokémon, and trace the disturbance beneath the school.",npcs:"Trainer School instructor; frightened students",encounter:"2–3 agitated low-level Pokémon. Defeating them is optional if the party finds a way to calm them.",clues:"The transmitter carries the same insignia found in Oak's journal. Its power feed should have been disconnected decades ago.",reward:"School gratitude and access to the hidden transmitter room.",unlocks:"The Man Who Remembers."},
+{id:"resonance-03",order:3,arc:"The Kanto Resonance",type:"Main Story",locationId:"viridian-city",location:"Viridian City",building:"Old Man's Corner",title:"The Man Who Remembers",hook:"Viridian's elderly resident recognizes the insignia on the equipment but becomes immediately uncomfortable when questioned.",playerInfo:"He admits he once worked on regional monitoring equipment but claims the project ended long ago.",dmSecret:"He was a technician on the original Resonance Project. He quit when passive receivers were converted into transmitters capable of changing Pokémon behavior.",objective:"Earn his trust and learn what the machines were originally designed to do.",npcs:"Retired Resonance technician",encounter:"Social encounter; optional errand or favor to persuade him to speak openly.",clues:"“Those machines were supposed to listen to Pokémon, not tell them what to do.” He remembers similar hardware at Pewter Museum.",reward:"Historical context and a hand-drawn schematic of an early resonance node.",unlocks:"Pewter Museum."},
+{id:"resonance-04",order:4,arc:"The Kanto Resonance",type:"Main Story",locationId:"pewter-city",location:"Pewter City",building:"Pewter Museum of Science",title:"The Fossil That Reacts",hook:"A fossil exhibit begins producing strange readings whenever certain Pokémon enter the gallery.",playerInfo:"The museum curator believes a piece of exhibit equipment is malfunctioning and asks the party to investigate after hours.",dmSecret:"A dormant resonance station beneath the museum is coupling with fossilized Pokémon tissue, suggesting the signal interacts with Pokémon energy even after death.",objective:"Identify the source of the readings and secure the underground station.",npcs:"Museum curator; night guard; fossil researcher",encounter:"Optional museum-after-dark encounter with Pokémon attracted by the signal.",clues:"Fossil tissue spikes at the same frequency recorded in Oak's journal. A maintenance ledger mentions a second residential repeater nearby.",reward:"Museum access, fossil research notes, and possible future fossil-revival connection.",unlocks:"The Missing Pokémon Mystery."},
+{id:"resonance-05",order:5,arc:"The Kanto Resonance",type:"Main Story",locationId:"pewter-city",location:"Pewter City",building:"Pewter Neighborhood",title:"The Missing Pokémon Mystery",hook:"Several families wake to find small household Pokémon gone without any sign of forced entry.",playerInfo:"The disappearances look like theft until tracks show the Pokémon left willingly and all traveled in the same direction.",dmSecret:"A low-power repeater is emitting a directional resonance signal that is subconsciously drawing nearby Pokémon toward it.",objective:"Track the missing Pokémon, return them safely, and locate the repeater.",npcs:"Worried families; neighborhood children",encounter:"A cluster of confused Pokémon gathered near the repeater; optional territorial wild Pokémon.",clues:"Someone recently opened and serviced the supposedly abandoned repeater.",reward:"Local goodwill and evidence that the old network is being actively maintained.",unlocks:"Cerulean Bike Shop."},
+{id:"resonance-06",order:6,arc:"The Kanto Resonance",type:"Main Story",locationId:"cerulean-city",location:"Cerulean City",building:"Bike Shop",title:"The Impossible Delivery",hook:"A prototype bicycle shipment is stolen, but the thief ignores the expensive bike and takes a sealed component hidden inside its shipping crate.",playerInfo:"The Bike Shop owner only knows the component arrived by mistake with a specialty parts delivery.",dmSecret:"The stolen object is a calibrated Resonance Project component. The thief was hired anonymously and has no idea what it does.",objective:"Chase down the thief, recover or identify the component, and determine who arranged the theft.",npcs:"Bike Shop owner; hired courier/thief",encounter:"City chase followed by a short trainer confrontation or negotiation.",clues:"Anonymous payment; old project serial number; delivery paperwork pointing to a nearby residential address.",reward:"Bike Shop favor, possible bicycle access, and the recovered component.",unlocks:"The Wrong Burglary."},
+{id:"resonance-07",order:7,arc:"The Kanto Resonance",type:"Main Story",locationId:"cerulean-city",location:"Cerulean City",building:"Burglarized House",title:"The Wrong Burglary",hook:"A house has clearly been broken into, yet the owner insists no money, jewelry, or valuables are missing.",playerInfo:"The only strange detail is a freshly opened section of the basement wall.",dmSecret:"Someone entered specifically to remove an old resonance device that had been built into the foundation decades earlier.",objective:"Investigate the burglary and establish that someone is systematically collecting or activating old network hardware.",npcs:"Homeowner; neighbor who saw a late-night utility van",encounter:"Investigation-focused; optional confrontation with someone returning to destroy evidence.",clues:"Matching serial format; tool marks; a shipping/utility trail toward Vermilion.",reward:"Concrete proof of an organized modern operation.",unlocks:"Vermilion Fan Club."},
+{id:"resonance-08",order:8,arc:"The Kanto Resonance",type:"Main Story",locationId:"vermilion-city",location:"Vermilion City",building:"Pokémon Fan Club",title:"The Conspiracy Board",hook:"The Fan Club president has covered a wall with bizarre maps, newspaper clippings, migration reports, and theories about Pokémon behaving 'out of rhythm.'",playerInfo:"Most of his theories are nonsense, but several marked locations exactly match Oak's journal.",dmSecret:"Without understanding the technology, he has independently mapped the recent resonance anomalies through owner reports and local news.",objective:"Separate useful observations from the noise and identify the next cluster of activity around Vermilion Harbor.",npcs:"Eccentric Fan Club president; club members",encounter:"No required combat; roleplay and clue-sorting scene.",clues:"Harbor Pokémon all changed migration direction within the same two-day window.",reward:"A regional anomaly map that can foreshadow later locations.",unlocks:"Something Under the Harbor."},
+{id:"resonance-09",order:9,arc:"The Kanto Resonance",type:"Main Story",locationId:"vermilion-city",location:"Vermilion City",building:"Fishing Guru's House",title:"Something Under the Harbor",hook:"Fishermen report catches disappearing, entire schools turning at once, and unusually powerful Water Pokémon entering the harbor.",playerInfo:"The Fishing Guru believes something beneath the docks is disturbing the currents or frightening Pokémon.",dmSecret:"An underwater resonance node has been deliberately modified from passive monitoring into a directional transmitter.",objective:"Investigate beneath the harbor and prove that the current incidents are intentional rather than equipment failure.",npcs:"Fishing Guru; dockworkers; local divers",encounter:"Water Pokémon defending the modified node or reacting aggressively to its signal.",clues:"Recent replacement parts; non-original control board; transmitter aimed toward offshore shipping lanes.",reward:"First undeniable evidence of deliberate modern tampering.",unlocks:"The Ghost Ship Signal."},
+{id:"resonance-10",order:10,arc:"The Kanto Resonance",type:"Main Story",locationId:"vermilion-city",location:"Vermilion City",building:"S.S. Anne Harbor",title:"The Ghost Ship Signal",hook:"An unmanned research vessel drifts into Vermilion Harbor at night. Its crew appears to be missing.",playerInfo:"The ship's systems are damaged, and frightened Pokémon are loose throughout the vessel.",dmSecret:"The vessel was tracing the resonance signal offshore when a transmission overwhelmed its instruments and triggered a Pokémon panic. One researcher survived and hid below deck.",objective:"Search the vessel, rescue the survivor, and recover its data.",npcs:"Missing research crew; one surviving researcher; harbor officials",encounter:"Mini-dungeon aboard the ship with loose Pokémon and environmental hazards.",clues:"The signal is spreading through ocean routes; data predicts anomalous effects near Lavender and farther south.",reward:"Research logs and a frequency trace.",unlocks:"Lavender Town."},
+{id:"resonance-11",order:11,arc:"The Kanto Resonance",type:"Main Story",locationId:"lavender-town",location:"Lavender Town",building:"Pokémon Tower",title:"Pokémon Can Hear It",hook:"Ghost Pokémon in Lavender are unusually active and seem less hostile than desperate to communicate.",playerInfo:"Residents report lights, sounds, and Ghost Pokémon repeatedly pointing or moving toward the same places.",dmSecret:"Ghost Pokémon can perceive the resonance signal in a way humans cannot. They sense a vast artificial 'call' beneath Kanto and are trying to warn people.",objective:"Interpret the Ghost Pokémon's behavior and understand that the network affects more than simple aggression or migration.",npcs:"Mr. Fuji; mourners; local caretakers",encounter:"Ghost-focused puzzle/encounter where combat may make communication harder.",clues:"Repeated imagery of lines beneath Kanto; a pull toward the Safari Zone; the sense of something 'calling' Pokémon.",reward:"A major conceptual breakthrough: the network can interact with Pokémon perception itself.",unlocks:"Safari Zone Experiment."},
+{id:"resonance-12",order:12,arc:"The Kanto Resonance",type:"Main Story",locationId:"safari-zone",location:"Safari Zone",building:"Safari Zone Preserve",title:"The Safari Zone Experiment",hook:"Species that normally avoid one another suddenly converge in the same habitats as if migration boundaries have vanished.",playerInfo:"Rangers are overwhelmed by displaced and agitated Pokémon throughout the preserve.",dmSecret:"Someone has activated a powerful node near the Safari Zone as a deliberate full-scale field test of population control.",objective:"Protect visitors, stabilize the preserve, find the active node, and shut it down.",npcs:"Safari rangers; preserve staff; stranded visitors",encounter:"Multi-stage wildlife crisis using species that normally would not share an encounter.",clues:"Activation logs show remote commands; the transmitter's output is dramatically stronger than previous nodes.",reward:"Proof that the antagonist is now intentionally testing regional-scale influence.",unlocks:"Fuchsia Fallout."},
+{id:"resonance-13",order:13,arc:"The Kanto Resonance",type:"Main Story",locationId:"fuchsia-city",location:"Fuchsia City",building:"Warden's House",title:"Fallout from the Safari Experiment",hook:"Fuchsia fills with injured rangers, displaced Pokémon, and conflicting reports about what happened inside the preserve.",playerInfo:"The Warden needs help coordinating recovery and identifying which reports are genuine.",dmSecret:"Among the chaos is evidence that the node activation was scheduled in advance and monitored remotely from a central urban system.",objective:"Help stabilize Fuchsia and reconstruct the activation timeline.",npcs:"Safari Warden; rangers; Pokémon caretakers",encounter:"Recovery scenes, escaped Pokémon, and optional confrontation with an operative collecting data.",clues:"Remote-control routing points toward Saffron City.",reward:"The first actionable trail to the network's original control infrastructure.",unlocks:"Saffron Control Center."},
+{id:"resonance-14",order:14,arc:"The Kanto Resonance",type:"Main Story",locationId:"saffron-city",location:"Saffron City",building:"Silph Co.",title:"The Original Control Center",hook:"Records hidden beneath Saffron reveal that the old monitoring network was once coordinated from a forgotten central facility.",playerInfo:"The facility began as environmental research infrastructure intended to predict dangerous Pokémon migrations.",dmSecret:"Researchers discovered that transmitting specific frequencies could attract, repel, calm, agitate, and potentially direct Pokémon. Ethical objections forced the project to shut down.",objective:"Access the abandoned control center and learn what the Resonance Project truly became.",npcs:"Silph archivist; former project staff or security systems",encounter:"Facility exploration with automated defenses, unstable equipment, or Pokémon drawn into the building.",clues:"Shutdown reports; ethical objections; records showing that project assets were later sold through shell companies.",reward:"The truth about the original project and the identities of organizations that acquired its equipment.",unlocks:"Celadon Corporate Connection."},
+{id:"resonance-15",order:15,arc:"The Kanto Resonance",type:"Main Story",locationId:"celadon-city",location:"Celadon City",building:"Celadon Mansion",title:"The Corporate Connection",hook:"Property and purchasing records reveal that a legitimate company has quietly acquired abandoned Resonance Project hardware across Kanto.",playerInfo:"On paper, the purchases are framed as ecological monitoring and Pokémon-safety research.",dmSecret:"The modern antagonist genuinely believes the technology can prevent attacks, stampedes, habitat collapse, and dangerous migrations. Their goal is control, but not necessarily cruelty.",objective:"Identify who is rebuilding the network, why they believe it should exist, and where the next major activation will occur.",npcs:"Corporate representative; records clerk; sympathetic researcher",encounter:"Primarily social/investigative. The antagonist's representatives should make a convincing ethical argument.",clues:"Seafoam energy readings are essential to calibrating the system against legendary-scale Pokémon energy.",reward:"A face and philosophy behind the conspiracy, not merely another villain reveal.",unlocks:"Seafoam / Articuno Resonance."},
+{id:"resonance-16",order:16,arc:"The Kanto Resonance",type:"Legendary",locationId:"seafoam-cave",location:"Seafoam Islands",building:"Resonance Chamber",title:"Articuno and the Resonance Escalation",hook:"The Seafoam currents become violent, temperatures fall unexpectedly, and wild Pokémon flee deeper into the caves.",playerInfo:"Something in Seafoam is disturbing both the environment and Articuno's territory.",dmSecret:"The network is using Seafoam as a calibration point because Articuno is an enormous natural source of Pokémon energy. Articuno is reacting defensively, not attacking Kanto without reason.",objective:"Reach the deep chamber, stop or alter the calibration, and decide how to handle Articuno.",npcs:"Optional field researchers; Articuno",encounter:"Environmental cave challenge culminating in the legendary encounter.",clues:"Data references parallel legendary-energy observations involving Zapdos and Moltres.",reward:"Legendary-scale resonance data and a major chance to weaken the antagonist's network.",unlocks:"Cinnabar Research."},
+{id:"resonance-17",order:17,arc:"The Kanto Resonance",type:"Main Story",locationId:"cinnabar-island",location:"Cinnabar Island",building:"Pokémon Mansion",title:"The Experiment That Went Too Far",hook:"Abandoned research notes in the Pokémon Mansion connect resonance studies with experiments on Pokémon development and artificial creation.",playerInfo:"Cinnabar researchers pushed far beyond habitat monitoring, experimenting with how Pokémon energy responds during growth and transformation.",dmSecret:"Resonance research became one of several technologies feeding into experiments surrounding Mew and ultimately Mewtwo. Mewtwo is not simply an unrelated secret—it is tied to the same history the party has followed across Kanto.",objective:"Recover the surviving research, learn how the project crossed its final ethical boundary, and determine what the modern network operators know about Mewtwo.",npcs:"Former Cinnabar researcher; surviving lab systems",encounter:"Pokémon Mansion dungeon material, escaped experiments, or unstable lab hazards.",clues:"Mew genetic references; resonance response data; files marked with a later Mewtwo designation.",reward:"The link between the regional mystery and the campaign's eventual endgame.",unlocks:"Legendary Network Consequences."},
+{id:"resonance-18",order:18,arc:"The Kanto Resonance",type:"Legendary",locationId:"indigo-plateau",location:"Late Game / Kanto",building:"Regional Network",title:"The Legendary Network Consequences",hook:"Storms, unusual heat, electrical disturbances, and reports of legendary Pokémon activity intensify as the rebuilt network approaches full power.",playerInfo:"The legendary birds are reacting to the same system that disturbed Articuno.",dmSecret:"Zapdos and Moltres are additional natural resonance anchors. The antagonist needs enough legendary-scale data to make the network stable across all of Kanto.",objective:"Deal with the remaining legendary consequences and prevent the final calibration from becoming permanent.",npcs:"Zapdos; Moltres; network researchers",encounter:"Late-game legendary encounters placed where best fits the campaign's remaining maps and pacing.",clues:"Final control references point toward the Mewtwo research and the network's ultimate activation plan.",reward:"Disable major portions of the network and open the final confrontation.",unlocks:"Mewtwo / Truth of the Project."},
+{id:"resonance-19",order:19,arc:"The Kanto Resonance",type:"Endgame",locationId:"indigo-plateau",location:"Endgame",building:"Final Resonance Site",title:"Mewtwo and the Truth of the Project",hook:"The final phase of the Resonance Project collides with the existence of Mewtwo—the clearest possible consequence of treating Pokémon power as something humans can engineer and control.",playerInfo:"The party finally understands that the campaign's scattered mysteries were pieces of one decades-long argument about the relationship between people, Pokémon, and control.",dmSecret:"The antagonist's plan should force a genuine choice: destroy the technology, preserve only passive monitoring, attempt strict safeguards, or find another solution. Mewtwo's own perspective can challenge both sides.",objective:"Resolve the network crisis, confront its architect, survive or negotiate the Mewtwo encounter, and decide the future of the Resonance technology.",npcs:"Mewtwo; modern Resonance architect; surviving researchers; allies gathered through the campaign",encounter:"Final multi-stage story encounter combining technology, Pokémon conflict, and a meaningful decision.",clues:"All prior clues converge here; no new mystery is required—the payoff is understanding and choice.",reward:"Campaign-defining resolution and the long-term fate of Kanto's Resonance network.",unlocks:"Epilogue."}
+];
+
+function getDmStoryState(){
+  let stored={};
+  try{stored=JSON.parse(localStorage.getItem(DM_STORY_STATE_KEY)||"{}")||{};}catch(e){stored={};}
+  const state={events:{},notes:{}};
+  dmCampaignStoryEvents.forEach((event,index)=>{
+    state.events[event.id]=stored.events?.[event.id]|| (index===0?"available":"locked");
+    state.notes[event.id]=stored.notes?.[event.id]||"";
+  });
+  return state;
+}
+function saveDmStoryState(state){
+  localStorage.setItem(DM_STORY_STATE_KEY,JSON.stringify(state));
+}
+function getDmStoryEvent(eventId){return dmCampaignStoryEvents.find(event=>event.id===eventId)||null;}
+function getDmStoryStatus(eventId){return getDmStoryState().events[eventId]||"locked";}
+function dmStoryStatusLabel(status){return status==="active"?"Active":status==="available"?"Available":status==="completed"?"Completed":"Locked";}
+function dmStoryVisibleOnMap(event){const s=getDmStoryStatus(event.id);return s==="available"||s==="active"||s==="completed";}
+
+function setDmStoryStatus(eventId,status){
+  const state=getDmStoryState();
+  state.events[eventId]=status;
+  saveDmStoryState(state);
+  renderDmStoryDashboard();
+  if(activeKantoDetailMapId){renderDmStoryMapBanner(activeKantoDetailMapId);renderKantoDetailTrainerHotspots(activeKantoDetailMapId);}
+}
+function saveDmStoryNote(eventId,value){
+  const state=getDmStoryState();
+  state.notes[eventId]=value||"";
+  saveDmStoryState(state);
+}
+function unlockNextDmStoryEvent(eventId){
+  const event=getDmStoryEvent(eventId); if(!event)return;
+  const next=dmCampaignStoryEvents.find(item=>item.order===event.order+1);
+  if(!next){alert("This is the final story event.");return;}
+  const state=getDmStoryState();
+  state.events[eventId]="completed";
+  if(state.events[next.id]==="locked")state.events[next.id]="available";
+  saveDmStoryState(state);
+  renderDmStoryDashboard();
+  alert(next.title+" is now available in "+next.location+".");
+}
+function setDmStoryFilter(filter,button){
+  dmStoryFilter=filter||"all";
+  document.querySelectorAll("#dmStoryFilters .story-filter-button").forEach(el=>el.classList.toggle("active",el===button));
+  renderDmStoryDashboard();
+}
+function storyFieldHTML(label,value){
+  if(!value)return"";
+  return '<div class="story-field"><div class="story-field-label">'+escapeHtml(label)+'</div><div class="story-field-text">'+escapeHtml(value)+'</div></div>';
+}
+function renderDmStoryDashboard(){
+  const list=document.getElementById("dmStoryEventList"); if(!list)return;
+  const state=getDmStoryState();
+  const completed=dmCampaignStoryEvents.filter(e=>state.events[e.id]==="completed").length;
+  const progress=document.getElementById("dmStoryProgressFill");
+  const progressText=document.getElementById("dmStoryProgressText");
+  const nextText=document.getElementById("dmStoryNextLocation");
+  if(progress)progress.style.width=((completed/dmCampaignStoryEvents.length)*100)+"%";
+  if(progressText)progressText.textContent=completed+" / "+dmCampaignStoryEvents.length+" completed";
+  const next=dmCampaignStoryEvents.find(e=>["available","active"].includes(state.events[e.id]));
+  if(nextText)nextText.textContent=next?"Next: "+next.location:"Arc complete";
+  const visible=dmCampaignStoryEvents.filter(event=>dmStoryFilter==="all"||state.events[event.id]===dmStoryFilter);
+  list.innerHTML=visible.map(event=>{
+    const status=state.events[event.id];
+    return '<details class="story-event-card story-'+status+'" id="story-card-'+event.id+'">'+
+      '<summary class="story-event-summary"><span class="story-order-badge">'+event.order+'</span><span><div class="story-event-name">'+escapeHtml(event.title)+'</div><div class="story-event-location">'+escapeHtml(event.location)+' • '+escapeHtml(event.building)+' • '+escapeHtml(event.type)+'</div></span><span class="story-status-pill '+status+'">'+dmStoryStatusLabel(status)+'</span></summary>'+
+      '<div class="story-event-body"><div class="story-event-hook">'+escapeHtml(event.hook)+'</div>'+
+      storyFieldHTML("Player Information",event.playerInfo)+storyFieldHTML("DM Secret",event.dmSecret)+storyFieldHTML("Objective",event.objective)+storyFieldHTML("NPCs",event.npcs)+storyFieldHTML("Encounter / Challenge",event.encounter)+storyFieldHTML("Clues",event.clues)+storyFieldHTML("Reward",event.reward)+storyFieldHTML("Unlocks",event.unlocks)+
+      '<div class="story-field"><div class="story-field-label">DM Notes</div><textarea class="story-event-notes" placeholder="Session notes, changes, NPC names, outcomes…" data-story-id="'+escapeHtml(event.id)+'" oninput="saveDmStoryNote(this.dataset.storyId,this.value)">'+escapeHtml(state.notes[event.id]||"")+'</textarea></div>'+
+      '<div class="story-event-actions"><label>Status<select data-story-id="'+escapeHtml(event.id)+'" onchange="setDmStoryStatus(this.dataset.storyId,this.value)"><option value="locked" '+(status==="locked"?"selected":"")+'>Locked</option><option value="available" '+(status==="available"?"selected":"")+'>Available</option><option value="active" '+(status==="active"?"selected":"")+'>Active</option><option value="completed" '+(status==="completed"?"selected":"")+'>Completed</option></select></label><button class="small-button" type="button" data-story-id="'+escapeHtml(event.id)+'" onclick="event.preventDefault();openDmStoryLocation(this.dataset.storyId)">Open Map</button></div>'+
+      (event.order<dmCampaignStoryEvents.length?'<button class="small-button story-unlock-next" type="button" data-story-id="'+escapeHtml(event.id)+'" onclick="unlockNextDmStoryEvent(this.dataset.storyId)">Complete & Unlock Next Story Event</button>':'')+
+      '</div></details>';
+  }).join("")||'<div class="empty-message">No story events match this filter.</div>';
+}
+function openDmStoryLocation(eventId){
+  const event=getDmStoryEvent(eventId);if(!event)return;
+  if(kantoDetailMaps[event.locationId]){openKantoDetailMap(event.locationId);return;}
+  alert(event.location+" does not have its own detailed map yet. The complete story entry remains available in the Campaign tab.");
+}
+function focusDmStoryEvent(eventId){
+  showPage("campaignPage");
+  dmStoryFilter="all";
+  document.querySelectorAll("#dmStoryFilters .story-filter-button").forEach(el=>el.classList.toggle("active",el.dataset.storyFilter==="all"));
+  renderDmStoryDashboard();
+  setTimeout(()=>{
+    const card=document.getElementById("story-card-"+eventId);
+    if(card){card.open=true;card.classList.add("story-focus-flash");card.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>card.classList.remove("story-focus-flash"),1500);}
+  },50);
+}
+function getDmStoryEventsForLocation(locationId){
+  return dmCampaignStoryEvents.filter(event=>event.locationId===locationId);
+}
+function renderDmStoryMapBanner(locationId){
+  const box=document.getElementById("dmStoryMapBanner");if(!box)return;
+  const events=getDmStoryEventsForLocation(locationId).filter(dmStoryVisibleOnMap);
+  const actionable=events.filter(e=>["available","active"].includes(getDmStoryStatus(e.id)));
+  if(!events.length){box.className="story-map-banner";box.innerHTML="";return;}
+  const lead=actionable[0]||events[events.length-1];
+  const leadStatus=getDmStoryStatus(lead.id);
+  box.className="story-map-banner show";
+  box.innerHTML='<div class="story-map-banner-eyebrow">Campaign Arc'+(actionable.length>1?' • '+actionable.length+' events available':'')+'</div>'+
+    '<div class="story-map-banner-title">'+escapeHtml(lead.title)+'</div>'+
+    '<div class="story-map-banner-text">'+escapeHtml(lead.hook)+'</div>'+
+    '<div class="story-map-banner-actions"><button class="small-button" type="button" data-story-id="'+escapeHtml(lead.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">View Story Details</button>'+
+    (leadStatus==="available"?'<button class="small-button" type="button" data-story-id="'+escapeHtml(lead.id)+'" onclick="setDmStoryStatus(this.dataset.storyId,\'active\')">Start Event</button>':'')+'</div>';
+}
+function renderDmStoryLandmarkPanel(location){
+  const panel=document.getElementById("dmStoryLandmarkPanel");if(!panel)return;
+  const event=location?.storyEventId?getDmStoryEvent(location.storyEventId):null;
+  if(!event||!dmStoryVisibleOnMap(event)){panel.innerHTML="";return;}
+  const status=getDmStoryStatus(event.id);
+  panel.innerHTML='<div class="story-landmark-panel"><div class="story-landmark-title">Campaign Story: '+escapeHtml(event.title)+'</div><div class="story-landmark-status">'+dmStoryStatusLabel(status)+'</div><div class="story-landmark-hook">'+escapeHtml(event.hook)+'</div><button class="small-button story-landmark-button" type="button" data-story-id="'+escapeHtml(event.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">Open DM Story Guide</button></div>';
+}
+
 const KANTO_MAP_PROGRESS_KEY =
   "pokemonCampaignKantoMapProgress";
 
@@ -9409,7 +9625,7 @@ const kantoDetailLocationHotspots = {
   ],
   "pallet-town": [
     {name:"Mom's House",action:"landmark",landmarkType:"Home",description:"The player's family home in Pallet Town.",x:15,y:33,w:28,h:30},
-    {name:"Professor Oak's Lab",action:"landmark",landmarkType:"Laboratory",description:"Professor Oak's Pokémon research laboratory and the starting point for many trainers.",x:55,y:22,w:31,h:34},
+    {name:"Professor Oak's Lab",action:"landmark",landmarkType:"Laboratory",storyEventId:"resonance-01",description:"Professor Oak's Pokémon research laboratory and the starting point for many trainers.",x:55,y:22,w:31,h:34},
     {name:"Rival's House",action:"landmark",landmarkType:"Home",description:"The rival family's home in Pallet Town.",x:57,y:61,w:27,h:25},
     {name:"Route 1",target:"route-1",x:50,y:95,w:28,h:10}
   ],
@@ -9421,7 +9637,8 @@ const kantoDetailLocationHotspots = {
     {name:"Viridian Poké Center",action:"pokemon-center",cityName:"Viridian City",x:56,y:5,w:28,h:28},
     {name:"Viridian Poké Mart",action:"poke-mart",cityName:"Viridian City",martId:"viridian-city",x:59,y:31,w:25,h:25},
     {name:"Viridian Gym",target:"viridian-gym",x:18,y:9,w:27,h:24},
-    {name:"Trainer School",action:"landmark",landmarkType:"School",description:"Viridian City's Trainer School, where new trainers learn basic Pokémon battling concepts.",x:18,y:37,w:24,h:20},
+    {name:"Trainer School",action:"landmark",landmarkType:"School",storyEventId:"resonance-02",description:"Viridian City's Trainer School, where new trainers learn basic Pokémon battling concepts.",x:18,y:37,w:24,h:20},
+    {name:"Old Man's Corner",action:"landmark",landmarkType:"NPC",storyEventId:"resonance-03",description:"A familiar corner where one of Viridian's longtime residents spends his afternoons.",x:17,y:62,w:24,h:20},
     {name:"Route 1",target:"route-1",x:0,y:42,w:10,h:18},
     {name:"Route 2",target:"route-2",x:43,y:0,w:14,h:11},
     {name:"Viridian Forest",target:"viridian-forest",x:44,y:88,w:13,h:12},
@@ -9438,7 +9655,8 @@ const kantoDetailLocationHotspots = {
     {name:"Pewter Poké Center",action:"pokemon-center",cityName:"Pewter City",x:49,y:6,w:29,h:29},
     {name:"Pewter Poké Mart",action:"poke-mart",cityName:"Pewter City",martId:"pewter-city",x:57,y:31,w:23,h:23},
     {name:"Pewter Gym",target:"pewter-gym",x:32,y:19,w:36,h:31},
-    {name:"Pewter Museum of Science",action:"landmark",landmarkType:"Museum",description:"Pewter City's museum featuring fossils, science exhibits, and space-related displays.",x:7,y:8,w:25,h:26},
+    {name:"Pewter Museum of Science",action:"landmark",landmarkType:"Museum",storyEventId:"resonance-04",description:"Pewter City's museum featuring fossils, science exhibits, and space-related displays.",x:7,y:8,w:25,h:26},
+    {name:"Pewter Neighborhood",action:"landmark",landmarkType:"Neighborhood",storyEventId:"resonance-05",description:"A quiet cluster of Pewter homes where several families have reported missing Pokémon.",x:70,y:54,w:24,h:25},
     {name:"Route 2",target:"route-2",x:43,y:96,w:24,h:12},
     {name:"Route 3",target:"route-3",x:96,y:35,w:12,h:24}
   ],
@@ -9459,8 +9677,8 @@ const kantoDetailLocationHotspots = {
     {name:"Cerulean Poké Center",action:"pokemon-center",cityName:"Cerulean City",x:59,y:5,w:27,h:29},
     {name:"Cerulean Poké Mart",action:"poke-mart",cityName:"Cerulean City",martId:"cerulean-city",x:73,y:31,w:24,h:25},
     {name:"Cerulean Gym",target:"cerulean-gym",x:30,y:18,w:38,h:30},
-    {name:"Bike Shop",action:"landmark",landmarkType:"Shop",description:"Cerulean City's bicycle shop.",x:15,y:36,w:24,h:22},
-    {name:"Burglarized House",action:"landmark",landmarkType:"Home",description:"The Cerulean home damaged during the Team Rocket burglary incident.",x:68,y:59,w:25,h:22},
+    {name:"Bike Shop",action:"landmark",landmarkType:"Shop",storyEventId:"resonance-06",description:"Cerulean City's bicycle shop.",x:15,y:36,w:24,h:22},
+    {name:"Burglarized House",action:"landmark",landmarkType:"Home",storyEventId:"resonance-07",description:"The Cerulean home damaged during a suspicious burglary.",x:68,y:59,w:25,h:22},
     {name:"Route 4",target:"route-4",x:5,y:43,w:20,h:24},
     {name:"Route 5",target:"route-5",x:50,y:84,w:24,h:23},
     {name:"Cerulean Crossroads",target:"cerulean-crossroads",x:42,y:0,w:16,h:13}
@@ -9474,9 +9692,9 @@ const kantoDetailLocationHotspots = {
     {name:"Vermilion Poké Center",action:"pokemon-center",cityName:"Vermilion City",x:55,y:3,w:29,h:30},
     {name:"Vermilion Poké Mart",action:"poke-mart",cityName:"Vermilion City",martId:"vermilion-city",x:61,y:27,w:22,h:23},
     {name:"Vermilion Gym",target:"vermilion-gym",x:16,y:4,w:33,h:29},
-    {name:"Pokémon Fan Club",action:"landmark",landmarkType:"Club",description:"Vermilion City's Pokémon Fan Club, a gathering place for enthusiastic Pokémon owners.",x:14,y:28,w:24,h:22},
-    {name:"Fishing Guru's House",action:"landmark",landmarkType:"Home",description:"The Vermilion home of the Fishing Guru.",x:14,y:49,w:22,h:22},
-    {name:"S.S. Anne Harbor",action:"landmark",landmarkType:"Harbor",description:"Vermilion City's harbor and docking area for the S.S. Anne.",x:66,y:54,w:20,h:34},
+    {name:"Pokémon Fan Club",action:"landmark",landmarkType:"Club",storyEventId:"resonance-08",description:"Vermilion City's Pokémon Fan Club, a gathering place for enthusiastic Pokémon owners.",x:14,y:28,w:24,h:22},
+    {name:"Fishing Guru's House",action:"landmark",landmarkType:"Home",storyEventId:"resonance-09",description:"The Vermilion home of the Fishing Guru.",x:14,y:49,w:22,h:22},
+    {name:"S.S. Anne Harbor",action:"landmark",landmarkType:"Harbor",storyEventId:"resonance-10",description:"Vermilion City's harbor and docking area for the S.S. Anne.",x:66,y:54,w:20,h:34},
     {name:"Route 5",target:"route-5",x:0,y:34,w:23,h:25},
     {name:"Route 6",target:"route-6",x:77,y:34,w:23,h:25}
   ],
@@ -9487,7 +9705,7 @@ const kantoDetailLocationHotspots = {
   "lavender-town": [
     {name:"Lavender Poké Center",action:"pokemon-center",cityName:"Lavender Town",x:54,y:7,w:27,h:27},
     {name:"Lavender Poké Mart",action:"poke-mart",cityName:"Lavender Town",martId:"lavender-town",x:58,y:31,w:25,h:24},
-    {name:"Pokémon Tower",action:"landmark",landmarkType:"Landmark",description:"Lavender Town's towering memorial site for departed Pokémon.",x:20,y:8,w:25,h:32},
+    {name:"Pokémon Tower",action:"landmark",landmarkType:"Landmark",storyEventId:"resonance-11",description:"Lavender Town's towering memorial site for departed Pokémon.",x:20,y:8,w:25,h:32},
     {name:"Mr. Fuji's House",action:"landmark",landmarkType:"Home",description:"Mr. Fuji's home and a place associated with the care of abandoned Pokémon.",x:13,y:53,w:24,h:23},
     {name:"Name Rater's House",action:"landmark",landmarkType:"Home",description:"The home of Lavender Town's Name Rater.",x:35,y:69,w:24,h:22},
     {name:"Route 6",target:"route-6",x:0,y:38,w:21,h:20},
@@ -9499,6 +9717,7 @@ const kantoDetailLocationHotspots = {
     {name:"Safari Zone",target:"safari-zone",x:50,y:91,w:28,h:18}
   ],
   "safari-zone": [
+    {name:"Safari Zone Preserve",action:"landmark",landmarkType:"Wildlife Preserve",storyEventId:"resonance-12",description:"The central preserve where unusual Pokémon migration behavior has been reported.",x:36,y:33,w:28,h:30},
     {name:"Route 7",target:"route-7",x:55,y:0,w:24,h:18},
     {name:"Route 8",target:"route-8",x:0,y:41,w:18,h:23}
   ],
@@ -9511,7 +9730,7 @@ const kantoDetailLocationHotspots = {
     {name:"Fuchsia Poké Center",action:"pokemon-center",cityName:"Fuchsia City",x:75.0,y:21.5,w:27,h:27},
     {name:"Fuchsia Poké Mart",action:"poke-mart",cityName:"Fuchsia City",martId:"fuchsia-city",x:75.0,y:43.5,w:25,h:24},
     {name:"Fuchsia Zoo",action:"landmark",landmarkType:"Exhibit",description:"Fuchsia City's outdoor Pokémon exhibit and zoo area.",x:14,y:40,w:25,h:22},
-    {name:"Warden's House",action:"landmark",landmarkType:"Home",description:"The home of the Safari Zone Warden.",x:67,y:57,w:25,h:23},
+    {name:"Warden's House",action:"landmark",landmarkType:"Home",storyEventId:"resonance-13",description:"The home of the Safari Zone Warden.",x:67,y:57,w:25,h:23},
     {name:"Route 9",target:"route-9",x:7.0,y:36.0,w:14,h:20},
     {name:"Route 8",target:"route-8",x:94.0,y:52.0,w:12,h:22},
     {name:"Coastal Path",target:"coastal-fuchsia-path",x:44.0,y:89.0,w:16.0,h:11.0}
@@ -9521,7 +9740,7 @@ const kantoDetailLocationHotspots = {
     {name:"Saffron Poké Center",action:"pokemon-center",cityName:"Saffron City",x:67.0,y:11.0,w:26.5,h:24.5},
     {name:"Saffron Poké Mart",action:"poke-mart",cityName:"Saffron City",martId:"saffron-city",x:76.0,y:42.0,w:21.0,h:21.0},
     {name:"Fighting Dojo",action:"landmark",landmarkType:"Dojo",description:"Saffron City's Fighting Dojo, the former rival Gym specializing in Fighting-type Pokémon.",x:44,y:11,w:20,h:23},
-    {name:"Silph Co.",action:"landmark",landmarkType:"Corporate Headquarters",description:"The towering headquarters of Silph Co., one of Kanto's major technology companies.",x:38,y:30,w:25,h:32},
+    {name:"Silph Co.",action:"landmark",landmarkType:"Corporate Headquarters",storyEventId:"resonance-14",description:"The towering headquarters of Silph Co., one of Kanto's major technology companies.",x:38,y:30,w:25,h:32},
     {name:"Copycat's House",action:"landmark",landmarkType:"Home",description:"The home of Saffron City's Copycat.",x:16,y:66,w:22,h:22},
     {name:"Mr. Psychic's House",action:"landmark",landmarkType:"Home",description:"The home of Mr. Psychic in Saffron City.",x:42,y:66,w:22,h:22},
     {name:"Route 10",target:"route-10",x:0.0,y:42.0,w:14.0,h:18.0},
@@ -9540,7 +9759,7 @@ const kantoDetailLocationHotspots = {
     {name:"Celadon Poké Center",action:"pokemon-center",cityName:"Celadon City",x:72.0,y:9.0,w:23.0,h:27.0},
     {name:"Celadon Department Store",action:"poke-mart",cityName:"Celadon City",martId:"celadon-city",x:39.0,y:4.0,w:24.0,h:36.0},
     {name:"Game Corner",action:"landmark",landmarkType:"Entertainment",description:"Celadon City's brightly lit Game Corner.",x:72,y:39,w:24,h:23},
-    {name:"Celadon Mansion",action:"landmark",landmarkType:"Landmark",description:"Celadon Mansion, one of the city's notable residential buildings.",x:11,y:62,w:23,h:24},
+    {name:"Celadon Mansion",action:"landmark",landmarkType:"Landmark",storyEventId:"resonance-15",description:"Celadon Mansion, one of the city's notable residential buildings.",x:11,y:62,w:23,h:24},
     {name:"Celadon Hotel",action:"landmark",landmarkType:"Hotel",description:"A hotel serving visitors to Celadon City.",x:35,y:63,w:20,h:23},
     {name:"Route 11",target:"route-11",x:27.0,y:86.0,w:15.0,h:14.0},
     {name:"Route 10",target:"route-10",x:64.0,y:86.0,w:15.0,h:14.0},
@@ -9591,7 +9810,7 @@ const kantoDetailLocationHotspots = {
     {name:"Cinnabar Gym",target:"cinnabar-gym",x:17.0,y:45.0,w:20.0,h:23.0},
     {name:"Cinnabar Poké Center",action:"pokemon-center",cityName:"Cinnabar Island",x:45.0,y:12.0,w:20.0,h:22.0},
     {name:"Cinnabar Poké Mart",action:"poke-mart",cityName:"Cinnabar Island",martId:"cinnabar-island",x:65.0,y:21.0,w:20.0,h:22.0},
-    {name:"Pokémon Mansion",action:"landmark",landmarkType:"Mansion",description:"The abandoned Pokémon Mansion, filled with old research notes and mysteries tied to Cinnabar Island.",x:36,y:62,w:23,h:25},
+    {name:"Pokémon Mansion",action:"landmark",landmarkType:"Mansion",storyEventId:"resonance-17",description:"The abandoned Pokémon Mansion, filled with old research notes and mysteries tied to Cinnabar Island.",x:36,y:62,w:23,h:25},
     {name:"Pokémon Lab",action:"landmark",landmarkType:"Laboratory",description:"Cinnabar Island's Pokémon Lab, known for fossil research and revival work.",x:59,y:62,w:22,h:24},
     {name:"Route 13",target:"route-13",x:82.0,y:38.0,w:18.0,h:22.0}
   ],
@@ -9601,6 +9820,7 @@ const kantoDetailLocationHotspots = {
     {name:"Route 12",target:"route-12",x:95,y:50,w:10,h:90}
   ],
   "seafoam-cave": [
+    {name:"Resonance Chamber",action:"landmark",landmarkType:"Cavern",storyEventId:"resonance-16",description:"A deep chamber where the Seafoam currents and Pokémon energy behave unnaturally.",x:48,y:24,w:28,h:30},
     {name:"Seafoam Islands",target:"seafoam-islands",x:20.5,y:88.5,w:13,h:15}
   ]
 };
@@ -9849,6 +10069,15 @@ function renderKantoDetailTrainerHotspots(locationId) {
     button.style.height = location.h + "%";
     button.setAttribute("aria-label", "Open " + location.name);
     button.title = location.name;
+    if(location.storyEventId){
+      const storyEvent=getDmStoryEvent(location.storyEventId);
+      const storyStatus=storyEvent?getDmStoryStatus(storyEvent.id):"locked";
+      if(storyEvent && dmStoryVisibleOnMap(storyEvent)){
+        button.classList.add("story-map-hotspot-marker");
+        if(storyStatus==="completed")button.classList.add("story-completed-marker");
+        button.title=location.name+" — Campaign Story: "+storyEvent.title;
+      }
+    }
     button.onclick = function(event) {
       event.stopPropagation();
       closeKantoDetailLocationPanel();
@@ -10213,6 +10442,7 @@ function openGenericCityLandmark(location) {
   if (martShop) martShop.style.display = "none";
   openButton.style.display = "none";
 
+  renderDmStoryLandmarkPanel(location);
   type.textContent = location.landmarkType || "Landmark";
   name.textContent = location.name || "Landmark";
   description.textContent = location.description || "A notable location in this area.";
@@ -10248,6 +10478,8 @@ function openKantoDetailLocationHotspot(locationId) {
     trainerPanel.innerHTML = "";
   }
   selectedKantoDetailTrainerKey = null;
+  const storyLandmarkPanel=document.getElementById("dmStoryLandmarkPanel");
+  if(storyLandmarkPanel)storyLandmarkPanel.innerHTML="";
 
   name.textContent = location.name;
   type.textContent = location.type;
@@ -10578,6 +10810,7 @@ function openKantoDetailMap(locationId) {
     image.alt = detail.alt;
   }
   if (caption) caption.textContent = detail.caption;
+  renderDmStoryMapBanner(locationId);
 
   const wildEncounterButton = document.getElementById("kantoDetailWildEncounterButton");
   if (wildEncounterButton) {
@@ -10870,6 +11103,7 @@ function showPage(pageId) {
   });
 
   document.getElementById(pageId).style.display = "block";
+  if(pageId==="campaignPage" && typeof renderDmStoryDashboard==="function")renderDmStoryDashboard();
 
   if (pageId === "pokemonPage") {
     const pokedexSection = document.getElementById("pokedexSection");
