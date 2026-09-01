@@ -3236,6 +3236,60 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
 .story-quest-complete-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 
 
+
+.battle-objective-setup{
+  margin:10px 0;
+  border:1px solid #d7dde5;
+  border-radius:9px;
+  background:#f8fafc;
+  overflow:hidden;
+}
+.battle-objective-setup>summary{
+  cursor:pointer;
+  list-style:none;
+  padding:8px 10px;
+  font-size:11px;
+  font-weight:950;
+  color:#4f5b68;
+  background:#f1f4f7;
+}
+.battle-objective-setup>summary::-webkit-details-marker{display:none}
+.battle-objective-setup-body{padding:8px}
+.battle-objective-setup .form-row{margin:6px 0}
+.battle-objective-setup textarea{min-height:50px;resize:vertical}
+.battle-objective-active{
+  margin:8px 0;
+  border:1px solid #d7b85d;
+  border-radius:9px;
+  background:#fff9e8;
+  overflow:hidden;
+}
+.battle-objective-active>summary{
+  cursor:pointer;
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:7px 9px;
+  background:#fff1c8;
+  font-size:10px;
+  font-weight:950;
+  color:#6f5414;
+}
+.battle-objective-active>summary::-webkit-details-marker{display:none}
+.battle-objective-active-short{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-weight:700;
+  color:#866d31;
+}
+.battle-objective-active-content{padding:8px 9px;display:grid;gap:6px}
+.battle-objective-line{font-size:10px;line-height:1.35;color:#333}
+.battle-objective-line strong{color:#645017}
+
 </style>
 
 
@@ -4280,6 +4334,41 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
         <div id="mapWildEncounterSelectedRarity" class="map-encounter-selected-rarity" style="display:none;"></div>
       </div>
 
+      <details id="battleObjectiveSetupDetails" class="battle-objective-setup">
+        <summary>Encounter Objective <span style="font-weight:500;">(Optional)</span></summary>
+        <div class="battle-objective-setup-body">
+          <div class="form-row">
+            <label>Encounter Type</label>
+            <select id="battleObjectivePreset" onchange="applyBattleObjectivePreset(this.value)">
+              <option value="">Standard Battle / None</option>
+              <option value="survive">Survive / Protect</option>
+              <option value="capture">Capture — Don't Defeat</option>
+              <option value="escape">Stop an Escape</option>
+              <option value="disable">Disable Equipment / Objective</option>
+              <option value="calm">Calm the Pokémon</option>
+              <option value="custom">Custom Objective</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Objective</label>
+            <input id="battleObjectiveText" type="text" maxlength="240" placeholder="Example: Protect the injured Pokémon for 5 rounds.">
+          </div>
+          <div class="form-row">
+            <label>Success Condition</label>
+            <input id="battleObjectiveSuccess" type="text" maxlength="240" placeholder="What counts as success?">
+          </div>
+          <div class="form-row">
+            <label>Failure Condition</label>
+            <input id="battleObjectiveFailure" type="text" maxlength="240" placeholder="Optional failure condition.">
+          </div>
+          <div class="form-row">
+            <label>Special Rules / DM Note</label>
+            <textarea id="battleObjectiveSpecial" rows="2" placeholder="Optional environmental rule, round timer, escape rule, etc."></textarea>
+          </div>
+          <button class="small-button" type="button" onclick="clearBattleObjectiveEditor()">Clear Objective</button>
+        </div>
+      </details>
+
       <button
         id="startBattleButton"
         class="primary-button"
@@ -4326,6 +4415,14 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
       
 
     </div>
+
+    <details id="battleObjectiveActivePanel" class="battle-objective-active" style="display:none;">
+      <summary>
+        <span>Encounter Objective</span>
+        <span id="battleObjectiveActiveShort" class="battle-objective-active-short"></span>
+      </summary>
+      <div id="battleObjectiveActiveContent" class="battle-objective-active-content"></div>
+    </details>
 
     <div
       id="battleBottomNav"
@@ -11193,6 +11290,7 @@ function updateMapEncounterSelectedRarity() {
 
 function startWildEncounterFromKantoLocation(locationId, fromDetailMap) {
   if (!canStartWildEncounterAtKantoLocation(locationId)) return;
+  resetBattleObjectiveForNewEncounter();
   const table = getKantoWildEncounterTable(locationId);
   if (!table) {
     alert("No wild encounter table is configured for this location yet.");
@@ -11891,6 +11989,7 @@ function ensureKantoMapTrainerEncounter(trainerKey) {
 
 function prepareKantoMapTrainerBattle(trainerKey) {
   activeMapWildEncounterLocationId = null;
+  resetBattleObjectiveForNewEncounter();
   const trainer = ensureKantoMapTrainerEncounter(trainerKey);
   if (!trainer) {
     alert("This trainer encounter could not be prepared.");
@@ -17108,6 +17207,142 @@ function displayBattleSetup() {
 }
 
 
+
+const BATTLE_OBJECTIVE_STORAGE_KEY="pokemonCampaignDmBattleObjectiveV1";
+let activeBattleObjective=null;
+
+const BATTLE_OBJECTIVE_PRESETS={
+  survive:{
+    objective:"Protect the target and survive the encounter.",
+    success:"The protected target remains safe until the encounter objective is reached.",
+    failure:"The protected target is defeated, captured, or otherwise lost.",
+    special:"Set a round limit or escape condition as appropriate."
+  },
+  capture:{
+    objective:"Capture the target Pokémon without defeating it.",
+    success:"The target Pokémon is successfully captured.",
+    failure:"The target Pokémon faints or escapes.",
+    special:"Consider ending the encounter immediately if the target faints."
+  },
+  escape:{
+    objective:"Prevent the opposing Pokémon or trainer from escaping.",
+    success:"The target is stopped before it can leave the encounter.",
+    failure:"The target escapes.",
+    special:"Decide how many rounds the party has before the escape occurs."
+  },
+  disable:{
+    objective:"Disable the encounter objective instead of simply defeating the opponent.",
+    success:"The device, machinery, transmitter, or other objective is disabled.",
+    failure:"The objective completes its task before the party can stop it.",
+    special:"Decide what player or Pokémon actions can affect the objective."
+  },
+  calm:{
+    objective:"Calm the Pokémon rather than defeating it.",
+    success:"The Pokémon is calmed, rescued, or convinced to stop fighting.",
+    failure:"The Pokémon is defeated, escapes, or the situation escalates.",
+    special:"Allow creative actions, status effects, environmental interaction, or roleplay to contribute."
+  },
+  custom:{objective:"",success:"",failure:"",special:""}
+};
+
+function applyBattleObjectivePreset(value){
+  if(!value){
+    clearBattleObjectiveEditor(false);
+    return;
+  }
+  const preset=BATTLE_OBJECTIVE_PRESETS[value];
+  if(!preset)return;
+  const objective=document.getElementById("battleObjectiveText");
+  const success=document.getElementById("battleObjectiveSuccess");
+  const failure=document.getElementById("battleObjectiveFailure");
+  const special=document.getElementById("battleObjectiveSpecial");
+  if(objective)objective.value=preset.objective||"";
+  if(success)success.value=preset.success||"";
+  if(failure)failure.value=preset.failure||"";
+  if(special)special.value=preset.special||"";
+}
+
+function clearBattleObjectiveEditor(resetPreset=true){
+  ["battleObjectiveText","battleObjectiveSuccess","battleObjectiveFailure","battleObjectiveSpecial"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.value="";
+  });
+  if(resetPreset){
+    const preset=document.getElementById("battleObjectivePreset");
+    if(preset)preset.value="";
+  }
+}
+
+function readBattleObjectiveEditor(){
+  const objective=(document.getElementById("battleObjectiveText")?.value||"").trim();
+  const success=(document.getElementById("battleObjectiveSuccess")?.value||"").trim();
+  const failure=(document.getElementById("battleObjectiveFailure")?.value||"").trim();
+  const special=(document.getElementById("battleObjectiveSpecial")?.value||"").trim();
+  const preset=document.getElementById("battleObjectivePreset")?.value||"";
+  if(!objective && !success && !failure && !special)return null;
+  return {preset,objective,success,failure,special};
+}
+
+function saveActiveBattleObjective(){
+  activeBattleObjective=readBattleObjectiveEditor();
+  if(activeBattleObjective){
+    localStorage.setItem(BATTLE_OBJECTIVE_STORAGE_KEY,JSON.stringify(activeBattleObjective));
+  }else{
+    localStorage.removeItem(BATTLE_OBJECTIVE_STORAGE_KEY);
+  }
+  renderActiveBattleObjective();
+}
+
+function restoreBattleObjectiveEditor(){
+  let saved=null;
+  try{saved=JSON.parse(localStorage.getItem(BATTLE_OBJECTIVE_STORAGE_KEY)||"null");}catch(e){saved=null;}
+  if(!saved)return;
+  const preset=document.getElementById("battleObjectivePreset");
+  const objective=document.getElementById("battleObjectiveText");
+  const success=document.getElementById("battleObjectiveSuccess");
+  const failure=document.getElementById("battleObjectiveFailure");
+  const special=document.getElementById("battleObjectiveSpecial");
+  if(preset)preset.value=saved.preset||"custom";
+  if(objective)objective.value=saved.objective||"";
+  if(success)success.value=saved.success||"";
+  if(failure)failure.value=saved.failure||"";
+  if(special)special.value=saved.special||"";
+}
+
+function renderActiveBattleObjective(){
+  const panel=document.getElementById("battleObjectiveActivePanel");
+  const content=document.getElementById("battleObjectiveActiveContent");
+  const short=document.getElementById("battleObjectiveActiveShort");
+  if(!panel||!content)return;
+
+  const data=activeBattleObjective;
+  if(!data || (!data.objective&&!data.success&&!data.failure&&!data.special)){
+    panel.style.display="none";
+    panel.open=false;
+    content.innerHTML="";
+    if(short)short.textContent="";
+    return;
+  }
+
+  panel.style.display="block";
+  panel.open=false;
+  if(short)short.textContent=data.objective||"Special encounter";
+
+  const rows=[];
+  if(data.objective)rows.push('<div class="battle-objective-line"><strong>Objective:</strong> '+dmStoryEscape(data.objective)+'</div>');
+  if(data.success)rows.push('<div class="battle-objective-line"><strong>Success:</strong> '+dmStoryEscape(data.success)+'</div>');
+  if(data.failure)rows.push('<div class="battle-objective-line"><strong>Failure:</strong> '+dmStoryEscape(data.failure)+'</div>');
+  if(data.special)rows.push('<div class="battle-objective-line"><strong>Special:</strong> '+dmStoryEscape(data.special)+'</div>');
+  content.innerHTML=rows.join("");
+}
+
+function resetBattleObjectiveForNewEncounter(){
+  activeBattleObjective=null;
+  localStorage.removeItem(BATTLE_OBJECTIVE_STORAGE_KEY);
+  clearBattleObjectiveEditor();
+  renderActiveBattleObjective();
+}
+
 function startBattle() {
 
   const aId =
@@ -17225,9 +17460,11 @@ function startBattle() {
 
   lastBattleEffectMessage = "";
 
+  saveActiveBattleObjective();
   resetBattleTemporaryState();
 
   displayBattle();
+  renderActiveBattleObjective();
 
   if (typeof cloudPublishCurrentBattle === "function") {
     cloudPublishCurrentBattle().catch(function(error){
