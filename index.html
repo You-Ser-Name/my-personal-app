@@ -2563,6 +2563,38 @@ select {
 .story-map-master-details[open] .story-map-master-chevron{transform:rotate(180deg)}
 .story-map-master-body{padding:10px 12px 12px}
 
+.dm-session-overview{display:grid;gap:9px}
+.dm-session-topline{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.dm-session-location{font-size:15px;font-weight:950;color:#20242a}
+.dm-session-counts{font-size:10px;color:#69727d;line-height:1.35;margin-top:2px}
+.dm-session-shortcuts{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.dm-session-shortcuts .small-button{margin:0!important;padding:5px 8px!important;min-height:30px!important}
+.dm-session-section{border:1px solid #e1e5ea;border-radius:9px;background:#fff;overflow:hidden}
+.dm-session-section-title{padding:7px 9px;background:#f3f5f7;border-bottom:1px solid #e1e5ea;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.45px;color:#555f6b}
+.dm-session-section-body{padding:8px}
+.dm-session-list{display:grid;gap:6px}
+.dm-session-item{border:1px solid #e3e7eb;border-radius:8px;padding:7px;background:#fbfcfd}
+.dm-session-item-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.dm-session-item-title{font-size:11px;font-weight:950;line-height:1.2}
+.dm-session-item-meta{font-size:9px;line-height:1.3;color:#6f7780;margin-top:2px}
+.dm-session-item-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.dm-session-item-actions .small-button{margin:0!important;padding:5px 7px!important;min-height:29px!important}
+.dm-session-status{flex:0 0 auto;font-size:8px;font-weight:950;border-radius:999px;padding:3px 6px;text-transform:uppercase;letter-spacing:.25px}
+.dm-session-status.locked{background:#eceff2;color:#616971}
+.dm-session-status.available{background:#e5efff;color:#2d5ea8}
+.dm-session-status.active{background:#fff0d3;color:#8b6117}
+.dm-session-status.completed{background:#e6f2e5;color:#4b7149}
+.dm-session-service-row{display:flex;gap:6px;flex-wrap:wrap}
+.dm-session-service-row .small-button{margin:0!important;flex:1 1 120px}
+.dm-session-reminder{width:100%;min-height:70px;resize:vertical;font-size:12px;line-height:1.35;margin:0}
+.dm-session-empty{font-size:10px;color:#7a828b;font-style:italic}
+.dm-session-trainer-team{font-size:9px;color:#69727d;margin-top:3px}
+@media(max-width:600px){
+  .dm-session-topline{grid-template-columns:1fr}
+  .dm-session-shortcuts{justify-content:flex-start}
+}
+
+
 .story-map-banner{display:none;margin:8px 0 0;padding:11px 12px;border:1px solid #d8b873;border-radius:12px;background:linear-gradient(180deg,#fffaf0,#fff5dc);text-align:left}
 .story-map-banner.show{display:block}
 .story-map-banner:not(.show){display:none!important}
@@ -3691,8 +3723,8 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
       <details id="dmStoryMapBanner" class="story-map-banner story-map-master-details">
   <summary class="story-map-master-summary">
     <div>
-      <div class="story-map-banner-eyebrow">Campaign Stories</div>
-      <div id="dmStoryMapSummaryText" class="story-map-master-summary-text">Story details</div>
+      <div class="story-map-banner-eyebrow">DM Session</div>
+      <div id="dmStoryMapSummaryText" class="story-map-master-summary-text">Location overview</div>
     </div>
     <span class="story-map-master-chevron" aria-hidden="true">⌄</span>
   </summary>
@@ -9599,6 +9631,62 @@ function focusDmStoryEvent(eventId){
     }
   },50);
 }
+
+const DM_SESSION_REMINDERS_KEY="pokemonCampaignDmSessionRemindersV1";
+
+function getDmSessionReminders(){
+  try{return JSON.parse(localStorage.getItem(DM_SESSION_REMINDERS_KEY)||"{}")||{};}
+  catch(e){return{};}
+}
+
+function saveDmSessionReminder(locationId,value){
+  const reminders=getDmSessionReminders();
+  reminders[locationId]=String(value||"");
+  localStorage.setItem(DM_SESSION_REMINDERS_KEY,JSON.stringify(reminders));
+}
+
+function getDmSessionLocationTitle(locationId){
+  const detail=kantoDetailMaps?.[locationId];
+  if(detail?.title)return detail.title.replace(/\s*Map\s*$/i,"");
+  const location=typeof getKantoLocationDisplayData==="function"?getKantoLocationDisplayData(locationId):null;
+  return location?.name||String(locationId||"Current Location");
+}
+
+function getDmSessionServices(locationId){
+  const hotspots=kantoDetailLocationHotspots?.[locationId]||[];
+  const services=[];
+  if(hotspots.some(item=>item.action==="pokemon-center"))services.push({type:"center",label:"Poké Center"});
+  if(hotspots.some(item=>item.action==="poke-mart"))services.push({type:"mart",label:"Poké Mart"});
+  if(typeof canStartWildEncounterAtKantoLocation==="function" && canStartWildEncounterAtKantoLocation(locationId)){
+    services.push({type:"wild",label:"Wild Encounter"});
+  }
+  return services;
+}
+
+function openDmSessionService(locationId,type){
+  const hotspots=kantoDetailLocationHotspots?.[locationId]||[];
+  if(type==="center"){
+    const target=hotspots.find(item=>item.action==="pokemon-center");
+    if(target)openCityPokemonCenterLandmark(target.cityName||target.name);
+    return;
+  }
+  if(type==="mart"){
+    const target=hotspots.find(item=>item.action==="poke-mart");
+    if(target)openCityPokeMartLandmark(target.martId||locationId,target.cityName||target.name);
+    return;
+  }
+  if(type==="wild")startWildEncounterFromKantoLocation(locationId,true);
+}
+
+function getDmSessionEncounterStatus(encounter){
+  const existing=(trainers||[]).find(trainer=>trainer.mapEncounterKey===encounter.key);
+  return existing?.completed?"completed":"ready";
+}
+
+function openDmSessionTrainerEncounter(trainerKey){
+  selectKantoDetailTrainer(trainerKey);
+}
+
 function getDmStoryEventsForLocation(locationId){
   return dmCampaignStoryEvents.filter(event=>event.locationId===locationId);
 }
@@ -9608,17 +9696,9 @@ function renderDmStoryMapBanner(locationId){
   const summary=document.getElementById("dmStoryMapSummaryText");
   if(!box||!content)return;
 
-  const events=getDmStoryEventsForLocation(locationId).filter(dmStoryVisibleOnMap);
-  if(!events.length){
-    box.className="story-map-banner story-map-master-details";
-    box.open=false;
-    content.innerHTML="";
-    if(summary)summary.textContent="Story details";
-    return;
-  }
-
-  const arcShort={"The Kanto Resonance":"Kanto Resonance","Always One Step Ahead":"Rival","The Business of Pokémon":"Team Rocket","Side Stories":"Side Story"};
+  const events=getDmStoryEventsForLocation(locationId);
   const statusLabelMap={locked:"Locked",available:"Available",active:"In Progress",completed:"Completed"};
+  const arcShort={"The Kanto Resonance":"Kanto Resonance","Always One Step Ahead":"Rival","The Business of Pokémon":"Team Rocket","Side Stories":"Side Story"};
   const ordered=[...events].sort((a,b)=>{
     const statusRank={active:0,available:1,locked:2,completed:3};
     const statusDifference=(statusRank[getDmStoryStatus(a.id)]??9)-(statusRank[getDmStoryStatus(b.id)]??9);
@@ -9629,36 +9709,112 @@ function renderDmStoryMapBanner(locationId){
     return (Number(a.order)||0)-(Number(b.order)||0);
   });
 
+  const encounters=kantoDetailTrainerEncounters?.[locationId]||[];
+  const undefeated=encounters.filter(encounter=>getDmSessionEncounterStatus(encounter)!=="completed");
+  const services=getDmSessionServices(locationId);
+  const reminders=getDmSessionReminders();
+  const locationTitle=getDmSessionLocationTitle(locationId);
+
+  const activeCount=ordered.filter(event=>getDmStoryStatus(event.id)==="active").length;
+  const availableCount=ordered.filter(event=>getDmStoryStatus(event.id)==="available").length;
+  const lockedCount=ordered.filter(event=>getDmStoryStatus(event.id)==="locked").length;
+  const completedCount=ordered.filter(event=>getDmStoryStatus(event.id)==="completed").length;
+
   box.className="story-map-banner story-map-master-details show";
-  box.open=false;
+  box.open=true;
+
   if(summary){
-    const activeCount=ordered.filter(event=>["available","active"].includes(getDmStoryStatus(event.id))).length;
-    if(locationId==="pallet-town"){
-      const state=getDmStoryState();
-      const palletEvents=[PALLET_TOWN_STORY_PRECURSOR,...PALLET_TOWN_STORY_SEQUENCE];
-      const completedCount=palletEvents.filter(id=>state.events[id]==="completed").length;
-      summary.textContent="Pallet Town Stories • "+completedCount+" / "+palletEvents.length+" completed";
-    }else{
-      summary.textContent=ordered.length+" stor"+(ordered.length===1?"y":"ies")+(activeCount?" • "+activeCount+" available":"");
-    }
+    const pieces=[];
+    if(activeCount)pieces.push(activeCount+" in progress");
+    if(availableCount)pieces.push(availableCount+" available");
+    if(undefeated.length)pieces.push(undefeated.length+" trainer"+(undefeated.length===1?"":"s"));
+    summary.textContent=locationTitle+(pieces.length?" • "+pieces.join(" • "):"");
   }
 
-  content.innerHTML=
-    '<div class="story-map-banner-list">'+
-      ordered.map(event=>{
+  const storyHtml=ordered.length
+    ? '<div class="dm-session-list">'+ordered.map(event=>{
         const status=getDmStoryStatus(event.id);
-        return '<div class="story-map-entry">'+
-          '<div class="story-map-entry-meta">'+dmStoryEscape(arcShort[event.arc]||event.arc)+' • '+dmStoryEscape((statusLabelMap[status]||status)+(status==="locked"?" - "+getDmStoryLockedReason(event.id):""))+'</div>'+
-          '<div class="story-map-entry-title">'+dmStoryEscape(event.title)+'</div>'+
-          '<div class="story-map-entry-hook">'+dmStoryEscape(event.hook)+'</div>'+
-          '<div class="story-map-entry-actions">'+
-            '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="event.stopPropagation();focusDmStoryEvent(this.dataset.storyId)">Open Story Details</button>'+
+        const statusText=(statusLabelMap[status]||status)+(status==="locked"?" - "+getDmStoryLockedReason(event.id):"");
+        return '<div class="dm-session-item">'+
+          '<div class="dm-session-item-head">'+
+            '<div><div class="dm-session-item-title">'+dmStoryEscape(event.title)+'</div>'+
+            '<div class="dm-session-item-meta">'+dmStoryEscape(arcShort[event.arc]||event.arc)+' • '+dmStoryEscape(statusText)+'</div></div>'+
+            '<span class="dm-session-status '+dmStoryEscape(status)+'">'+dmStoryEscape(statusLabelMap[status]||status)+'</span>'+
+          '</div>'+
+          '<div class="dm-session-item-actions">'+
+            '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="event.stopPropagation();openDmStoryQuestPopup(this.dataset.storyId)">Open Here</button>'+
             (status==="available"
-              ? '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" data-story-start="active" onclick="event.stopPropagation();setDmStoryStatus(this.dataset.storyId,this.dataset.storyStart)">Start Event</button>'
+              ? '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" data-story-start="active" onclick="event.stopPropagation();setDmStoryStatus(this.dataset.storyId,this.dataset.storyStart);openDmStoryQuestPopup(this.dataset.storyId)">Start</button>'
               : '')+
           '</div>'+
         '</div>';
-      }).join("")+
+      }).join("")+'</div>'
+    : '<div class="dm-session-empty">No campaign stories are assigned to this location yet.</div>';
+
+  const encounterHtml=encounters.length
+    ? '<div class="dm-session-list">'+encounters.map(encounter=>{
+        const encounterStatus=getDmSessionEncounterStatus(encounter);
+        const teamText=(encounter.team||[]).map(member=>member[0]+" Lv."+member[1]).join(" • ");
+        return '<div class="dm-session-item">'+
+          '<div class="dm-session-item-head">'+
+            '<div><div class="dm-session-item-title">'+dmStoryEscape(encounter.name)+'</div>'+
+            '<div class="dm-session-item-meta">'+dmStoryEscape(encounter.role)+' • Reward '+dmStoryEscape(encounter.reward)+'</div></div>'+
+            '<span class="dm-session-status '+(encounterStatus==="completed"?"completed":"available")+'">'+(encounterStatus==="completed"?"Defeated":"Ready")+'</span>'+
+          '</div>'+
+          '<div class="dm-session-trainer-team">'+dmStoryEscape(teamText)+'</div>'+
+          '<div class="dm-session-item-actions">'+
+            '<button class="small-button" type="button" data-trainer-key="'+dmStoryEscape(encounter.key)+'" onclick="event.stopPropagation();openDmSessionTrainerEncounter(this.dataset.trainerKey)">View Trainer</button>'+
+            (encounterStatus!=="completed"
+              ? '<button class="small-button" type="button" data-trainer-key="'+dmStoryEscape(encounter.key)+'" onclick="event.stopPropagation();prepareKantoMapTrainerBattle(this.dataset.trainerKey)">Prepare Battle</button>'
+              : '')+
+          '</div>'+
+        '</div>';
+      }).join("")+'</div>'
+    : '<div class="dm-session-empty">No map trainer encounters are assigned here.</div>';
+
+  const servicesHtml=services.length
+    ? '<div class="dm-session-service-row">'+services.map(service=>
+        '<button class="small-button" type="button" data-location-id="'+dmStoryEscape(locationId)+'" data-service="'+dmStoryEscape(service.type)+'" onclick="event.stopPropagation();openDmSessionService(this.dataset.locationId,this.dataset.service)">'+dmStoryEscape(service.label)+'</button>'
+      ).join("")+'</div>'
+    : '<div class="dm-session-empty">No location services are configured here.</div>';
+
+  content.innerHTML=
+    '<div class="dm-session-overview">'+
+      '<div class="dm-session-topline">'+
+        '<div>'+
+          '<div class="dm-session-location">'+dmStoryEscape(locationTitle)+'</div>'+
+          '<div class="dm-session-counts">'+
+            ordered.length+' quest'+(ordered.length===1?'':'s')+
+            ' • '+activeCount+' in progress'+
+            ' • '+availableCount+' available'+
+            ' • '+lockedCount+' locked'+
+            ' • '+completedCount+' completed'+
+          '</div>'+
+        '</div>'+
+        '<div class="dm-session-shortcuts">'+
+          '<button class="small-button" type="button" onclick="showPage(&quot;campaignPage&quot;)">Campaign</button>'+
+          '<button class="small-button" type="button" onclick="showPage(&quot;trainersPage&quot;)">Trainers</button>'+
+          '<button class="small-button" type="button" onclick="showPage(&quot;battlesPage&quot;)">Battles</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="dm-session-section">'+
+        '<div class="dm-session-section-title">Quests at this location</div>'+
+        '<div class="dm-session-section-body">'+storyHtml+'</div>'+
+      '</div>'+
+      '<div class="dm-session-section">'+
+        '<div class="dm-session-section-title">Trainers / Encounters</div>'+
+        '<div class="dm-session-section-body">'+encounterHtml+'</div>'+
+      '</div>'+
+      '<div class="dm-session-section">'+
+        '<div class="dm-session-section-title">Location Tools</div>'+
+        '<div class="dm-session-section-body">'+servicesHtml+'</div>'+
+      '</div>'+
+      '<div class="dm-session-section">'+
+        '<div class="dm-session-section-title">DM Reminder</div>'+
+        '<div class="dm-session-section-body">'+
+          '<textarea class="dm-session-reminder" placeholder="Anything you need to remember while running this location…" data-location-id="'+dmStoryEscape(locationId)+'" oninput="saveDmSessionReminder(this.dataset.locationId,this.value)">'+dmStoryEscape(reminders[locationId]||"")+'</textarea>'+
+        '</div>'+
+      '</div>'+
     '</div>';
 }
 function renderDmStoryLandmarkPanel(location){
