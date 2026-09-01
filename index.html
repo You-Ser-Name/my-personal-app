@@ -9309,6 +9309,30 @@ function saveDmStoryState(state){
 function getDmStoryEvent(eventId){return dmCampaignStoryEvents.find(event=>event.id===eventId)||null;}
 function getDmStoryStatus(eventId){return getDmStoryState().events[eventId]||"locked";}
 function dmStoryStatusLabel(status){return status==="active"?"Active":status==="available"?"Available":status==="completed"?"Completed":"Locked";}
+
+function getDmStoryLockedReason(eventId){
+  const event=getDmStoryEvent(eventId);
+  if(!event || getDmStoryStatus(eventId)!=="locked")return"";
+
+  // Pallet Town custom prerequisites.
+  if(eventId==="rival-01" || eventId==="resonance-01"){
+    return "Complete Retrieve Your Starter Pokémon";
+  }
+  if(eventId==="side-01"){
+    return "Complete Oak's Forgotten Field Journal";
+  }
+
+  // Standard sequential story arcs unlock from the previous event in the same arc.
+  if(event.arc!=="Side Stories"){
+    const previous=dmCampaignStoryEvents
+      .filter(item=>item.arc===event.arc && Number(item.order)<Number(event.order))
+      .sort((a,b)=>Number(b.order)-Number(a.order))[0];
+    if(previous)return "Complete "+previous.title;
+  }
+
+  return "Complete its prerequisite quest";
+}
+
 function dmStoryVisibleOnMap(event){
   return !!event;
 }
@@ -9488,7 +9512,7 @@ function renderDmStoryDashboard(){
             '<div class="story-event-name">'+dmStoryEscape(event.title)+'</div>'+
             '<div class="story-event-location">'+dmStoryEscape(meta.short)+' • '+dmStoryEscape(event.location)+' • '+dmStoryEscape(event.building)+'</div>'+
           '</span>'+
-          '<span class="story-status-pill '+status+'">'+dmStoryStatusLabel(status)+'</span>'+
+          '<span class="story-status-pill '+status+'">'+dmStoryEscape(dmStoryStatusLabel(status)+(status==="locked"?" - "+getDmStoryLockedReason(event.id):""))+'</span>'+
         '</summary>'+
         '<div class="story-event-body">'+
           '<div class="story-event-hook">'+dmStoryEscape(event.hook)+'</div>'+
@@ -9624,12 +9648,9 @@ function renderDmStoryMapBanner(locationId){
       ordered.map(event=>{
         const status=getDmStoryStatus(event.id);
         return '<div class="story-map-entry">'+
-          '<div class="story-map-entry-meta">'+dmStoryEscape(arcShort[event.arc]||event.arc)+' • '+dmStoryEscape(statusLabelMap[status]||status)+'</div>'+
+          '<div class="story-map-entry-meta">'+dmStoryEscape(arcShort[event.arc]||event.arc)+' • '+dmStoryEscape((statusLabelMap[status]||status)+(status==="locked"?" - "+getDmStoryLockedReason(event.id):""))+'</div>'+
           '<div class="story-map-entry-title">'+dmStoryEscape(event.title)+'</div>'+
           '<div class="story-map-entry-hook">'+dmStoryEscape(event.hook)+'</div>'+
-          (status==="locked"
-            ? '<div class="story-map-banner-note">Locked — complete the prerequisite Pallet Town quest to unlock this story.</div>'
-            : '')+
           '<div class="story-map-entry-actions">'+
             '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="event.stopPropagation();focusDmStoryEvent(this.dataset.storyId)">Open Story Details</button>'+
             (status==="available"
@@ -9800,6 +9821,8 @@ function openDmStoryQuestPopup(eventId){
   openButton.style.display="none";
 
   const status=getDmStoryStatus(storyEvent.id);
+  const lockedReason=status==="locked"?getDmStoryLockedReason(storyEvent.id):"";
+  const statusDisplay=dmStoryStatusLabel(status)+(lockedReason?" - "+lockedReason:"");
   const arcShort={
     "The Kanto Resonance":"Main Story",
     "Always One Step Ahead":"Rival",
@@ -9810,9 +9833,9 @@ function openDmStoryQuestPopup(eventId){
   const palletSequenceInfo=getPalletTownStorySequenceInfo(storyEvent.id);
   type.textContent=palletSequenceInfo
     ? (palletSequenceInfo.index===0
-        ? "Pallet Town Prologue • "+dmStoryStatusLabel(status)
-        : "Pallet Town Quest "+palletSequenceInfo.index+" of "+palletSequenceInfo.total+" • "+dmStoryStatusLabel(status))
-    : (arcShort[storyEvent.arc]||storyEvent.arc)+" • "+dmStoryStatusLabel(status);
+        ? "Pallet Town Prologue • "+statusDisplay
+        : "Pallet Town Quest "+palletSequenceInfo.index+" of "+palletSequenceInfo.total+" • "+statusDisplay)
+    : (arcShort[storyEvent.arc]||storyEvent.arc)+" • "+statusDisplay;
   name.textContent=storyEvent.title;
   description.textContent=storyEvent.hook;
 
@@ -9823,9 +9846,9 @@ function openDmStoryQuestPopup(eventId){
         '<div class="story-landmark-status">'+dmStoryEscape(
           palletSequenceInfo
             ? (palletSequenceInfo.index===0
-                ? "Pallet Town Prologue • "+dmStoryStatusLabel(status)
-                : "Pallet Town Quest "+palletSequenceInfo.index+" of "+palletSequenceInfo.total+" • "+dmStoryStatusLabel(status))
-            : dmStoryStatusLabel(status)
+                ? "Pallet Town Prologue • "+statusDisplay
+                : "Pallet Town Quest "+palletSequenceInfo.index+" of "+palletSequenceInfo.total+" • "+statusDisplay)
+            : statusDisplay
         )+'</div>'+
         '<div class="story-landmark-hook">'+dmStoryEscape(storyEvent.objective||storyEvent.hook)+'</div>'+
         (palletSequenceInfo && palletSequenceInfo.index===0
