@@ -2634,6 +2634,26 @@ select {
 .story-landmark-status{font-size:9px;font-weight:900;text-transform:uppercase;margin-top:2px;color:#8d6a28}
 .story-landmark-hook{font-size:10.5px;line-height:1.4;margin-top:6px;color:#5e5549}
 .story-landmark-button{margin-top:7px;width:100%}
+
+.story-starter-assignment{margin-top:10px;padding:10px;border:1px solid #d7e0eb;border-radius:10px;background:#f7fbff}
+.story-starter-assignment-title{font-size:12px;font-weight:950;color:#315b8b;margin-bottom:3px}
+.story-starter-assignment-note{font-size:10px;line-height:1.35;color:#66717d;margin-bottom:8px}
+.story-starter-assignment-list{display:grid;gap:7px}
+.story-starter-assignment-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(115px,.8fr) auto;gap:6px;align-items:center;padding:7px;border:1px solid #dde4ec;border-radius:8px;background:#fff}
+.story-starter-pokemon-name{font-size:11px;font-weight:900;line-height:1.2}
+.story-starter-pokemon-meta{font-size:9px;color:#777;margin-top:2px}
+.story-starter-assignment-row select{margin:0!important;min-width:0!important;font-size:13px!important;height:34px!important;padding:4px 6px!important}
+.story-starter-assignment-row .small-button{margin:0!important;min-height:34px!important;padding:5px 8px!important}
+.story-starter-party-status{margin-top:8px;display:grid;gap:5px}
+.story-starter-party-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 7px;border-radius:7px;background:#fff;border:1px solid #e6edf4;font-size:10px}
+.story-starter-party-row strong{font-size:10.5px}
+.story-starter-ready{color:#3d673c;font-weight:900}
+.story-starter-missing{color:#9b4c33;font-weight:900}
+@media(max-width:600px){
+  .story-starter-assignment-row{grid-template-columns:minmax(0,1fr) 110px}
+  .story-starter-assignment-row .small-button{grid-column:1/-1;width:100%}
+}
+
 .story-focus-flash{animation:storyFocusFlash 1.3s ease}
 @keyframes storyFocusFlash{0%,100%{box-shadow:none}35%{box-shadow:0 0 0 3px rgba(185,137,50,.35)}}
 @media(max-width:600px){.story-event-summary{grid-template-columns:auto minmax(0,1fr);}.story-status-pill{grid-column:2;justify-self:start}.story-event-actions{grid-template-columns:1fr}.story-arc-title{font-size:18px}}
@@ -9646,6 +9666,102 @@ function applyDmStoryMarkerStatusClass(button,events){
   else if(status==="completed")button.classList.add("story-completed-marker");
 }
 
+
+function getDmPcTrainersForStarterAssignment(){
+  return (trainers||[])
+    .filter(trainer=>trainer && String(trainer.trainerType||"").toUpperCase()==="PC")
+    .sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
+}
+
+function getDmUnassignedPokemonForStarterAssignment(){
+  return (ownedPokemon||[])
+    .filter(pokemon=>pokemon && !getTrainerById(pokemon.trainerId) && !pokemon.temporaryWild)
+    .sort((a,b)=>(Number(a.speciesNumber)||0)-(Number(b.speciesNumber)||0));
+}
+
+function isDmStarterQuestReadyToComplete(){
+  const pcTrainers=getDmPcTrainersForStarterAssignment();
+  if(!pcTrainers.length)return false;
+  return pcTrainers.every(trainer=>
+    (ownedPokemon||[]).some(pokemon=>String(pokemon.trainerId)===String(trainer.id))
+  );
+}
+
+function buildDmStarterAssignmentHTML(){
+  const pcTrainers=getDmPcTrainersForStarterAssignment();
+  const unassigned=getDmUnassignedPokemonForStarterAssignment();
+
+  const trainerOptions=pcTrainers.map(trainer=>
+    '<option value="'+dmStoryEscape(trainer.id)+'">'+dmStoryEscape(trainer.trainerName||trainer.name)+'</option>'
+  ).join("");
+
+  const assignmentRows=unassigned.length
+    ? unassigned.map(pokemon=>
+        '<div class="story-starter-assignment-row">'+
+          '<div><div class="story-starter-pokemon-name">'+dmStoryEscape(getPokemonName(pokemon))+'</div>'+
+          '<div class="story-starter-pokemon-meta">#'+String(pokemon.speciesNumber||"").padStart(3,"0")+' • Lv. '+dmStoryEscape(pokemon.level)+'</div></div>'+
+          '<select id="storyStarterTrainer-'+dmStoryEscape(pokemon.id)+'" aria-label="Assign '+dmStoryEscape(getPokemonName(pokemon))+' to trainer">'+
+            '<option value="">Choose trainer…</option>'+trainerOptions+
+          '</select>'+
+          '<button class="small-button" type="button" data-pokemon-id="'+dmStoryEscape(pokemon.id)+'" onclick="assignStarterPokemonFromMap(this.dataset.pokemonId)">Assign</button>'+
+        '</div>'
+      ).join("")
+    : '<div class="empty-message" style="margin:0;">No unassigned Pokémon remain.</div>';
+
+  const trainerStatus=pcTrainers.length
+    ? pcTrainers.map(trainer=>{
+        const assigned=(ownedPokemon||[]).filter(pokemon=>String(pokemon.trainerId)===String(trainer.id));
+        const hasStarter=assigned.length>0;
+        return '<div class="story-starter-party-row"><strong>'+dmStoryEscape(trainer.trainerName||trainer.name)+'</strong>'+
+          '<span class="'+(hasStarter?'story-starter-ready':'story-starter-missing')+'">'+
+            (hasStarter?dmStoryEscape(getPokemonName(assigned[0])):'Needs Pokémon')+
+          '</span></div>';
+      }).join("")
+    : '<div class="empty-message" style="margin:0;">No PC trainers have been created yet.</div>';
+
+  return '<div id="dmStarterAssignmentPanel" class="story-starter-assignment">'+
+    '<div class="story-starter-assignment-title">Assign Starter Pokémon</div>'+
+    '<div class="story-starter-assignment-note">Assign your pre-created unassigned Pokémon to each player without leaving the Pallet Town map.</div>'+
+    '<div class="story-starter-assignment-list">'+assignmentRows+'</div>'+
+    '<div class="story-starter-party-status">'+trainerStatus+'</div>'+
+  '</div>';
+}
+
+function toggleDmStarterAssignmentPanel(){
+  const panel=document.getElementById("dmStarterAssignmentPanel");
+  if(!panel)return;
+  panel.style.display=panel.style.display==="none"?"block":"none";
+}
+
+function assignStarterPokemonFromMap(pokemonId){
+  const select=document.getElementById("storyStarterTrainer-"+pokemonId);
+  if(!select||!select.value){
+    alert("Choose a trainer for this Pokémon first.");
+    return;
+  }
+
+  const pokemon=(ownedPokemon||[]).find(entry=>String(entry.id)===String(pokemonId));
+  const trainer=getTrainerById(Number(select.value));
+  if(!pokemon||!trainer)return;
+
+  assignTrainer(
+    typeof pokemon.id==="number" ? pokemon.id : Number(pokemon.id),
+    String(trainer.id)
+  );
+
+  // Stay on the detailed Pallet Town map and refresh the same quest popup.
+  openDmStoryQuestPopup(PALLET_TOWN_STORY_PRECURSOR);
+}
+
+function completeStarterQuestFromMap(){
+  if(!isDmStarterQuestReadyToComplete()){
+    alert("Assign at least one Pokémon to every PC trainer before completing this quest.");
+    return;
+  }
+  setDmStoryStatus(PALLET_TOWN_STORY_PRECURSOR,"completed");
+  openDmStoryQuestPopup(PALLET_TOWN_STORY_PRECURSOR);
+}
+
 function openDmStoryQuestPopup(eventId){
   const storyEvent=getDmStoryEvent(eventId);
   if(!storyEvent)return;
@@ -9709,11 +9825,17 @@ function openDmStoryQuestPopup(eventId){
               ? '<div class="story-map-banner-note">Next: '+dmStoryEscape(getDmStoryEvent(PALLET_TOWN_STORY_SEQUENCE[palletSequenceInfo.index])?.title||"Next Pallet Town quest")+'</div>'
               : ''))+
         '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;">'+
-          '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(storyEvent.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">Open Full Quest</button>'+
+          (storyEvent.id===PALLET_TOWN_STORY_PRECURSOR && status==="active"
+            ? '<button class="small-button" type="button" onclick="toggleDmStarterAssignmentPanel()">Assign Starter Pokémon</button>'+
+              '<button class="small-button" type="button" '+(isDmStarterQuestReadyToComplete()?'':'disabled')+' onclick="completeStarterQuestFromMap()">Complete Quest</button>'
+            : '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(storyEvent.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">Open Full Quest</button>')+
           (status==="available"
             ? '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(storyEvent.id)+'" data-story-start="active" onclick="setDmStoryStatus(this.dataset.storyId,this.dataset.storyStart);openDmStoryQuestPopup(this.dataset.storyId)">Start Quest</button>'
             : '')+
         '</div>'+
+        (storyEvent.id===PALLET_TOWN_STORY_PRECURSOR && status==="active"
+          ? buildDmStarterAssignmentHTML()
+          : '')+
       '</div>';
   }
 
