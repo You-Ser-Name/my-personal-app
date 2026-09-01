@@ -9126,6 +9126,7 @@ upgradeSavedData();
 
 const DM_STORY_STATE_KEY="pokemonCampaignDmStoryStateV1";
 
+const PALLET_TOWN_STORY_PRECURSOR="pallet-00";
 const PALLET_TOWN_STORY_SEQUENCE=[
   "rival-01",
   "resonance-01",
@@ -9133,33 +9134,39 @@ const PALLET_TOWN_STORY_SEQUENCE=[
 ];
 
 function getPalletTownStorySequenceInfo(eventId){
+  if(eventId===PALLET_TOWN_STORY_PRECURSOR){
+    return {index:0,total:PALLET_TOWN_STORY_SEQUENCE.length,label:"Prologue"};
+  }
   const index=PALLET_TOWN_STORY_SEQUENCE.indexOf(eventId);
   if(index<0)return null;
-  return {index:index+1,total:PALLET_TOWN_STORY_SEQUENCE.length};
+  return {index:index+1,total:PALLET_TOWN_STORY_SEQUENCE.length,label:"Quest "+(index+1)};
 }
 
 function applyPalletTownStorySequenceToState(state){
   if(!state||!state.events)return state;
 
+  const precursorId=PALLET_TOWN_STORY_PRECURSOR;
   const firstId=PALLET_TOWN_STORY_SEQUENCE[0];
   const secondId=PALLET_TOWN_STORY_SEQUENCE[1];
   const thirdId=PALLET_TOWN_STORY_SEQUENCE[2];
 
-  const firstStatus=state.events[firstId]||"available";
+  const precursorStatus=state.events[precursorId]||"available";
+  const firstStatus=state.events[firstId]||"locked";
   const secondStatus=state.events[secondId]||"locked";
   const thirdStatus=state.events[thirdId]||"locked";
 
-  // Quest 1 is always available unless it has already been started/completed.
-  if(!["active","completed"].includes(firstStatus))state.events[firstId]="available";
+  if(!["active","completed"].includes(precursorStatus))state.events[precursorId]="available";
 
-  // Quest 2 cannot begin until Quest 1 is complete.
-  if(state.events[firstId]==="completed"){
+  // Completing the starter quest unlocks both Quest 1 and Quest 2.
+  if(state.events[precursorId]==="completed"){
+    if(!["active","completed"].includes(firstStatus))state.events[firstId]="available";
     if(!["active","completed"].includes(secondStatus))state.events[secondId]="available";
   }else{
+    state.events[firstId]="locked";
     state.events[secondId]="locked";
   }
 
-  // Quest 3 cannot begin until Quest 2 is complete.
+  // Quest 3 follows Oak's Forgotten Field Journal.
   if(state.events[secondId]==="completed"){
     if(!["active","completed"].includes(thirdStatus))state.events[thirdId]="available";
   }else{
@@ -9231,6 +9238,7 @@ const dmRocketStoryEvents=[
 ];
 
 const dmSideStoryEvents=[
+{id:"pallet-00",order:0,arc:"Side Stories",type:"Pallet Town Prologue",locationId:"pallet-town",location:"Pallet Town",building:"Professor Oak's Lab",title:"Retrieve Your Starter Pokémon",hook:"Professor Oak is ready to begin the party's journey. Meet him at the laboratory, receive your starter Pokémon, and make the partnership official before leaving Pallet Town.",playerInfo:"This is the party's first formal campaign objective. Each player receives their starting Pokémon and has a chance to establish its personality, nickname, and first interaction with its trainer.",dmSecret:"Keep this scene simple and character-focused. The purpose is to establish the trainer–Pokémon bond and make sure everyone has their starter before the first rival and Resonance story beats become available.",objective:"Go to Professor Oak's Lab, receive the party's starter Pokémon, finalize ownership and nicknames, and prepare to begin the journey.",npcs:"Professor Oak; the Rival can be present in the background if desired",encounter:"No required battle. This works best as a short roleplay/tutorial scene.",clues:"Oak has another old research case he wants to look at later, while the Rival is already eager to test the party in battle.",reward:"Each player receives their starter Pokémon. Completing this quest unlocks The First Challenge and Oak's Forgotten Field Journal.",unlocks:"The First Challenge and Oak's Forgotten Field Journal."},
 {id:"side-01",order:1,arc:"Side Stories",type:"One-Off",locationId:"pallet-town",location:"Pallet Town",building:"Mom's House",title:"The Runaway Starter",hook:"A brand-new trainer has lost their first Pokémon only hours after receiving it.",playerInfo:"The embarrassed trainer is convinced the Pokémon ran away because it dislikes them.",dmSecret:"The Pokémon actually left to retrieve something important its trainer accidentally abandoned.",objective:"Track the Pokémon through Pallet and the edge of Route 1, then reunite the pair.",npcs:"Nervous new trainer; family member",encounter:"Lighthearted tracking and optional wild encounter.",clues:"The Pokémon repeatedly doubles back toward places the trainer visited earlier.",reward:"Small item, friendship, and a warm early-campaign story.",unlocks:"Independent side story; no required follow-up."},
 {id:"side-02",order:2,arc:"Side Stories",type:"One-Off",locationId:"mt-moon",location:"Mt. Moon",building:"Hidden Moon Chamber",title:"Clefairy Festival",hook:"At night, faint music and moving lights lead deeper into Mt. Moon.",playerInfo:"The party can discover a hidden Clefairy gathering that few humans ever witness.",dmSecret:"The challenge is restraint. The Clefairy will flee if the party treats the gathering like a resource to exploit.",objective:"Observe or participate without disrupting the festival.",npcs:"Clefairy group",encounter:"Social/environmental scene rather than combat.",clues:"Moon Stones are being used ceremonially rather than randomly scattered treasure.",reward:"Moon Stone, Clefairy trust, or a future rare encounter.",unlocks:"Independent side story."},
 {id:"side-03",order:3,arc:"Side Stories",type:"One-Off",locationId:"cerulean-city",location:"Cerulean City",building:"Bike Shop",title:"The Missing Bicycle",hook:"Bicycles keep disappearing from outside Cerulean buildings and mysteriously returning several hours later.",playerInfo:"No locks are broken and nothing else is ever stolen.",dmSecret:"A clever Pokémon has learned how to move or ride the bicycles and uses them for its own daily mission.",objective:"Catch the 'thief' in the act and discover what it is actually doing.",npcs:"Bike Shop owner; frustrated residents",encounter:"Comedic city chase.",clues:"Tiny tracks or Pokémon-sized marks appear near every returned bicycle.",reward:"Bike Shop discount/favor and a memorable city story.",unlocks:"Independent side story."},
@@ -9575,9 +9583,13 @@ function renderDmStoryMapBanner(locationId){
     const activeCount=ordered.filter(event=>["available","active"].includes(getDmStoryStatus(event.id))).length;
     if(locationId==="pallet-town"){
       const state=getDmStoryState();
-      const nextIndex=PALLET_TOWN_STORY_SEQUENCE.findIndex(id=>state.events[id]!=="completed");
-      const displayIndex=nextIndex<0?PALLET_TOWN_STORY_SEQUENCE.length:nextIndex+1;
-      summary.textContent="Pallet Town Quest "+displayIndex+" of "+PALLET_TOWN_STORY_SEQUENCE.length+(activeCount?" • "+activeCount+" available":"");
+      if(state.events[PALLET_TOWN_STORY_PRECURSOR]!=="completed"){
+        summary.textContent="Pallet Town Prologue"+(activeCount?" • "+activeCount+" available":"");
+      }else{
+        const nextIndex=PALLET_TOWN_STORY_SEQUENCE.findIndex(id=>state.events[id]!=="completed");
+        const displayIndex=nextIndex<0?PALLET_TOWN_STORY_SEQUENCE.length:nextIndex+1;
+        summary.textContent="Pallet Town Quest "+displayIndex+" of "+PALLET_TOWN_STORY_SEQUENCE.length+(activeCount?" • "+activeCount+" available":"");
+      }
     }else{
       summary.textContent=ordered.length+" stor"+(ordered.length===1?"y":"ies")+(activeCount?" • "+activeCount+" available":"");
     }
@@ -9606,6 +9618,14 @@ function renderDmStoryLandmarkPanel(location){
   if(panel)panel.innerHTML="";
 }
 
+
+function getPrimaryDmStoryEvent(events){
+  if(!Array.isArray(events)||!events.length)return null;
+  const rank={active:0,available:1,completed:2,locked:3};
+  return [...events].sort((a,b)=>
+    (rank[getDmStoryStatus(a.id)]??9)-(rank[getDmStoryStatus(b.id)]??9)
+  )[0]||null;
+}
 
 function getDmStoryMarkerStatus(events){
   if(!Array.isArray(events)||!events.length)return"";
@@ -9664,7 +9684,9 @@ function openDmStoryQuestPopup(eventId){
 
   const palletSequenceInfo=getPalletTownStorySequenceInfo(storyEvent.id);
   type.textContent=palletSequenceInfo
-    ? "Pallet Town Quest "+palletSequenceInfo.index+" of "+palletSequenceInfo.total+" • "+dmStoryStatusLabel(status)
+    ? (palletSequenceInfo.index===0
+        ? "Pallet Town Prologue • "+dmStoryStatusLabel(status)
+        : "Pallet Town Quest "+palletSequenceInfo.index+" of "+palletSequenceInfo.total+" • "+dmStoryStatusLabel(status))
     : (arcShort[storyEvent.arc]||storyEvent.arc)+" • "+dmStoryStatusLabel(status);
   name.textContent=storyEvent.title;
   description.textContent=storyEvent.hook;
@@ -9673,11 +9695,19 @@ function openDmStoryQuestPopup(eventId){
     storyPanel.innerHTML=
       '<div class="story-landmark-panel">'+
         '<div class="story-landmark-title">'+dmStoryEscape(storyEvent.title)+'</div>'+
-        '<div class="story-landmark-status">'+dmStoryEscape(palletSequenceInfo?("Pallet Town Quest "+palletSequenceInfo.index+" of "+palletSequenceInfo.total+" • "+dmStoryStatusLabel(status)):dmStoryStatusLabel(status))+'</div>'+
+        '<div class="story-landmark-status">'+dmStoryEscape(
+          palletSequenceInfo
+            ? (palletSequenceInfo.index===0
+                ? "Pallet Town Prologue • "+dmStoryStatusLabel(status)
+                : "Pallet Town Quest "+palletSequenceInfo.index+" of "+palletSequenceInfo.total+" • "+dmStoryStatusLabel(status))
+            : dmStoryStatusLabel(status)
+        )+'</div>'+
         '<div class="story-landmark-hook">'+dmStoryEscape(storyEvent.objective||storyEvent.hook)+'</div>'+
-        (palletSequenceInfo && palletSequenceInfo.index<palletSequenceInfo.total
-          ? '<div class="story-map-banner-note">Next: '+dmStoryEscape(getDmStoryEvent(PALLET_TOWN_STORY_SEQUENCE[palletSequenceInfo.index])?.title||"Next Pallet Town quest")+'</div>'
-          : '')+
+        (palletSequenceInfo && palletSequenceInfo.index===0
+          ? '<div class="story-map-banner-note">Unlocks: The First Challenge + Oak\'s Forgotten Field Journal</div>'
+          : (palletSequenceInfo && palletSequenceInfo.index<palletSequenceInfo.total
+              ? '<div class="story-map-banner-note">Next: '+dmStoryEscape(getDmStoryEvent(PALLET_TOWN_STORY_SEQUENCE[palletSequenceInfo.index])?.title||"Next Pallet Town quest")+'</div>'
+              : ''))+
         '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;">'+
           '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(storyEvent.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">Open Full Quest</button>'+
           (status==="available"
@@ -10248,7 +10278,7 @@ const kantoDetailLocationHotspots = {
   ],
   "pallet-town": [
     {name:"Rival's House",action:"landmark",landmarkType:"Home",storyEventId:"rival-01",storyMarkerX:37.7857,storyMarkerY:24.6071,description:"The rival family's home in Pallet Town.",x:31,y:13,w:21,h:17},
-    {name:"Professor Oak's Lab",action:"landmark",landmarkType:"Laboratory",storyEventId:"resonance-01",storyMarkerX:73.0714,storyMarkerY:18.9286,description:"Professor Oak's Pokémon research laboratory and the starting point for many trainers.",x:57,y:10,w:29,h:20},
+    {name:"Professor Oak's Lab",action:"landmark",landmarkType:"Laboratory",storyEventIds:["pallet-00","resonance-01"],storyMarkerX:73.0714,storyMarkerY:18.9286,description:"Professor Oak's Pokémon research laboratory and the starting point for many trainers.",x:57,y:10,w:29,h:20},
     {name:"Mom's House",action:"landmark",landmarkType:"Home",storyEventId:"side-01",storyMarkerX:76.9286,storyMarkerY:50.6429,description:"The player's family home in Pallet Town.",x:68,y:31,w:19,h:16},
     {name:"Route 1",target:"route-1",x:46,y:92,w:16,h:8}
   ],
@@ -10733,17 +10763,18 @@ function renderKantoDetailTrainerHotspots(locationId) {
       markerButton.className="story-map-marker-button story-map-hotspot-marker";
       markerButton.style.left=location.storyMarkerX+"%";
       markerButton.style.top=location.storyMarkerY+"%";
-      markerButton.setAttribute("aria-label","Open quest "+visibleStoryEvents[0].title);
+      const primaryStoryEvent=getPrimaryDmStoryEvent(visibleStoryEvents);
+      markerButton.setAttribute("aria-label","Open quest "+(primaryStoryEvent?.title||location.name));
       markerButton.title=visibleStoryEvents.map(event=>event.title).join(" / ");
-      const palletSequenceInfo=getPalletTownStorySequenceInfo(visibleStoryEvents[0].id);
+      const palletSequenceInfo=getPalletTownStorySequenceInfo(primaryStoryEvent?.id);
       if(locationId==="pallet-town" && palletSequenceInfo){
-        markerButton.dataset.storySequence=String(palletSequenceInfo.index);
+        markerButton.dataset.storySequence=palletSequenceInfo.index===0?"P":String(palletSequenceInfo.index);
       }
-      applyDmStoryMarkerStatusClass(markerButton,visibleStoryEvents);
+      applyDmStoryMarkerStatusClass(markerButton,primaryStoryEvent?[primaryStoryEvent]:visibleStoryEvents);
       markerButton.onclick=function(event){
         event.stopPropagation();
         closeKantoDetailLocationPanel();
-        openDmStoryQuestPopup(visibleStoryEvents[0].id);
+        if(primaryStoryEvent)openDmStoryQuestPopup(primaryStoryEvent.id);
       };
       layer.appendChild(markerButton);
     }
