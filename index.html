@@ -3236,24 +3236,6 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
 .story-quest-complete-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 
 
-.story-clue-block{margin-top:8px;border:1px solid #dce5ee;border-radius:8px;overflow:hidden;background:#f8fbff}
-.story-clue-block.revelation{background:#fbf8ff;border-color:#e3dced}
-.story-clue-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;background:#edf5ff;border-bottom:1px solid #dce5ee}
-.story-clue-block.revelation .story-clue-head{background:#f3edfb;border-color:#e3dced}
-.story-clue-title{font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.4px;color:#4d6480}
-.story-clue-toggle{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:850;color:#57616d}
-.story-clue-body{padding:7px 8px}
-.story-clue-input{width:100%;min-height:48px;resize:vertical;margin:0;font-size:11px;line-height:1.35}
-.dm-clue-tracker-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.dm-clue-column-title{font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.4px;color:#5d6670;margin-bottom:5px}
-.dm-clue-list{display:grid;gap:5px}
-.dm-clue-item{border:1px solid #dce5ee;border-radius:8px;background:#f8fbff;padding:7px}
-.dm-clue-item.revelation{border-color:#e3dced;background:#fbf8ff}
-.dm-clue-item-title{font-size:10px;font-weight:950}
-.dm-clue-item-meta{font-size:8px;color:#78818a;margin-top:1px}
-.dm-clue-item-text{font-size:9.5px;line-height:1.3;color:#333;margin-top:4px}
-@media(max-width:600px){.dm-clue-tracker-grid{grid-template-columns:1fr}}
-
 </style>
 
 
@@ -4417,21 +4399,6 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
       </button>
 
     </div>
-
-    
-    <details class="form-card story-arc-card story-master-details" id="dmCampaignClueTracker">
-      <summary class="story-master-summary">
-        <div>
-          <div class="story-master-title">Known Clues & Revelations</div>
-          <div id="dmCampaignClueTrackerSummary" class="story-master-subtitle">0 known clues • 0 revelations</div>
-        </div>
-        <span class="story-master-chevron" aria-hidden="true">⌄</span>
-      </summary>
-      <div class="story-master-body">
-        <div id="dmCampaignClueTrackerContent"></div>
-      </div>
-    </details>
-
 <details class="form-card story-arc-card story-master-details" id="dmStoryArcCard">
       <summary class="story-master-summary">
         <div class="story-arc-header">
@@ -9800,16 +9767,6 @@ function renderDmStoryDashboard(){
             '<div class="story-field-label">DM Reminder</div>'+
             '<textarea class="story-event-notes" placeholder="Optional reminder for running this quest…" data-story-id="'+dmStoryEscape(event.id)+'" oninput="saveDmStoryReminder(this.dataset.storyId,this.value)">'+dmStoryEscape(state.reminders[event.id]||"")+'</textarea>'+
           '</div>'+
-          '<div class="story-field">'+
-            '<div class="story-field-label">Clue '+(state.clueDiscovered[event.id]?'• Discovered':'• Not Yet Discovered')+'</div>'+
-            '<textarea class="story-event-notes" placeholder="What clue can the party discover?" data-story-id="'+dmStoryEscape(event.id)+'" oninput="saveDmStoryClueText(this.dataset.storyId,this.value)">'+dmStoryEscape(state.clueText[event.id]||"")+'</textarea>'+
-            '<label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;"><input type="checkbox" data-story-id="'+dmStoryEscape(event.id)+'" '+(state.clueDiscovered[event.id]?'checked':'')+' onchange="setDmStoryClueDiscovered(this.dataset.storyId,this.checked)"> Mark discovered</label>'+
-          '</div>'+
-          '<div class="story-field">'+
-            '<div class="story-field-label">Revelation '+(state.revelationLearned[event.id]?'• Learned':'• Not Yet Learned')+'</div>'+
-            '<textarea class="story-event-notes" placeholder="What larger conclusion does this support?" data-story-id="'+dmStoryEscape(event.id)+'" oninput="saveDmStoryRevelationText(this.dataset.storyId,this.value)">'+dmStoryEscape(state.revelationText[event.id]||"")+'</textarea>'+
-            '<label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;"><input type="checkbox" data-story-id="'+dmStoryEscape(event.id)+'" '+(state.revelationLearned[event.id]?'checked':'')+' onchange="setDmStoryRevelationLearned(this.dataset.storyId,this.checked)"> Mark learned</label>'+
-          '</div>'+
           storyFieldHTML("NPCs",event.npcs)+
           storyFieldHTML("Encounter / Challenge",event.encounter)+
           storyFieldHTML("Clues",event.clues)+
@@ -9862,7 +9819,6 @@ function renderDmStoryDashboard(){
   syncDmStoryArcFilterButtons();
   syncDmStoryStatusFilterButtons();
 
-  renderDmCampaignClueTracker();
 }
 function openDmStoryLocation(eventId){
   const event=getDmStoryEvent(eventId);if(!event)return;
@@ -10070,10 +10026,6 @@ function renderDmStoryMapBanner(locationId){
       '</div>'+
       encounterHtml+
       servicesHtml+
-      '<details class="dm-session-section compact-details">'+
-        '<summary>Known Clues / Revelations <span>'+getDmKnownClueEntries().length+' / '+getDmKnownRevelationEntries().length+'</span></summary>'+
-        '<div class="dm-session-section-body">'+buildDmKnownCluesRevelationsHTML()+'</div>'+
-      '</details>'+
       reminderHtml+
       '<div class="dm-session-shortcuts-bottom">'+
         '<button class="small-button" type="button" onclick="showPage(&quot;campaignPage&quot;)">Campaign</button>'+
@@ -10138,6 +10090,8 @@ function isDmStarterQuestReadyToComplete(){
   );
 }
 
+let dmStarterAssignmentExpanded=false;
+
 function buildDmStarterAssignmentHTML(){
   const pcTrainers=getDmPcTrainersForStarterAssignment();
   const unassigned=getDmUnassignedPokemonForStarterAssignment();
@@ -10170,7 +10124,7 @@ function buildDmStarterAssignmentHTML(){
       }).join("")
     : '<div class="empty-message" style="margin:0;">No PC trainers have been created yet.</div>';
 
-  return '<div id="dmStarterAssignmentPanel" class="story-starter-assignment">'+
+  return '<div id="dmStarterAssignmentPanel" class="story-starter-assignment" style="display:'+(dmStarterAssignmentExpanded?'block':'none')+';">'+
     '<div class="story-starter-assignment-title">Assign Starter Pokémon</div>'+
     '<div class="story-starter-assignment-note">Assign your pre-created unassigned Pokémon to each player without leaving the Pallet Town map.</div>'+
     '<div class="story-starter-assignment-list">'+assignmentRows+'</div>'+
@@ -10181,7 +10135,8 @@ function buildDmStarterAssignmentHTML(){
 function toggleDmStarterAssignmentPanel(){
   const panel=document.getElementById("dmStarterAssignmentPanel");
   if(!panel)return;
-  panel.style.display=panel.style.display==="none"?"block":"none";
+  dmStarterAssignmentExpanded=!dmStarterAssignmentExpanded;
+  panel.style.display=dmStarterAssignmentExpanded?"block":"none";
 }
 
 function assignStarterPokemonFromMap(pokemonId){
@@ -10200,7 +10155,8 @@ function assignStarterPokemonFromMap(pokemonId){
     String(trainer.id)
   );
 
-  // Stay on the detailed Pallet Town map and refresh the same quest popup.
+  // Stay on the detailed Pallet Town map and keep the assignment area expanded.
+  dmStarterAssignmentExpanded=true;
   openDmStoryQuestPopup(PALLET_TOWN_STORY_PRECURSOR);
 }
 
@@ -10245,10 +10201,6 @@ function openDmStoryQuestPopup(eventId){
   const storyState=getDmStoryState();
   const completionCriteria=storyState.criteria[storyEvent.id]||storyEvent.objective||"";
   const questReminder=storyState.reminders[storyEvent.id]||"";
-  const clueText=storyState.clueText[storyEvent.id]||"";
-  const clueDiscovered=!!storyState.clueDiscovered[storyEvent.id];
-  const revelationText=storyState.revelationText[storyEvent.id]||"";
-  const revelationLearned=!!storyState.revelationLearned[storyEvent.id];
   const lockedReason=status==="locked"?getDmStoryLockedReason(storyEvent.id):"";
   const statusDisplay=dmStoryStatusLabel(status)+(lockedReason?" - "+lockedReason:"");
   const arcShort={
@@ -10294,24 +10246,6 @@ function openDmStoryQuestPopup(eventId){
           '<div class="story-quest-run-label">DM Reminder</div>'+
           '<div class="story-quest-run-body">'+
             '<textarea class="story-quest-run-input" data-story-id="'+dmStoryEscape(storyEvent.id)+'" oninput="saveDmStoryReminder(this.dataset.storyId,this.value)" placeholder="Optional reminder for running this quest…">'+dmStoryEscape(questReminder)+'</textarea>'+
-          '</div>'+
-        '</div>'+
-        '<div class="story-clue-block">'+
-          '<div class="story-clue-head">'+
-            '<div class="story-clue-title">Clue</div>'+
-            '<label class="story-clue-toggle"><input type="checkbox" data-story-id="'+dmStoryEscape(storyEvent.id)+'" '+(clueDiscovered?'checked':'')+' onchange="setDmStoryClueDiscovered(this.dataset.storyId,this.checked)"> Discovered</label>'+
-          '</div>'+
-          '<div class="story-clue-body">'+
-            '<textarea class="story-clue-input" data-story-id="'+dmStoryEscape(storyEvent.id)+'" oninput="saveDmStoryClueText(this.dataset.storyId,this.value)" placeholder="What clue can the party discover during this quest?">'+dmStoryEscape(clueText)+'</textarea>'+
-          '</div>'+
-        '</div>'+
-        '<div class="story-clue-block revelation">'+
-          '<div class="story-clue-head">'+
-            '<div class="story-clue-title">Revelation / Conclusion</div>'+
-            '<label class="story-clue-toggle"><input type="checkbox" data-story-id="'+dmStoryEscape(storyEvent.id)+'" '+(revelationLearned?'checked':'')+' onchange="setDmStoryRevelationLearned(this.dataset.storyId,this.checked)"> Learned</label>'+
-          '</div>'+
-          '<div class="story-clue-body">'+
-            '<textarea class="story-clue-input" data-story-id="'+dmStoryEscape(storyEvent.id)+'" oninput="saveDmStoryRevelationText(this.dataset.storyId,this.value)" placeholder="What larger conclusion should this clue eventually support?">'+dmStoryEscape(revelationText)+'</textarea>'+
           '</div>'+
         '</div>'+
         '<div class="story-quest-complete-row">'+
