@@ -2583,6 +2583,7 @@ select {
 .story-map-entry-hook{font-size:10.5px;line-height:1.4;color:#665b4d;margin-top:4px}
 .story-map-entry-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .story-map-hotspot-marker::after{content:"!";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:#c28b25;color:white;border:2px solid rgba(255,255,255,.95);box-shadow:0 2px 6px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:950;pointer-events:none}
+.story-map-hotspot-marker.story-locked-marker::after{content:"🔒";background:#737b86;font-size:10px}
 .story-map-hotspot-marker.story-available-marker::after{content:"?";background:#2d6cdf}
 .story-map-hotspot-marker.story-active-marker::after{content:"!";background:#c28b25}
 .story-map-hotspot-marker.story-completed-marker::after{content:"✓";background:#5e855b}
@@ -9308,7 +9309,9 @@ function saveDmStoryState(state){
 function getDmStoryEvent(eventId){return dmCampaignStoryEvents.find(event=>event.id===eventId)||null;}
 function getDmStoryStatus(eventId){return getDmStoryState().events[eventId]||"locked";}
 function dmStoryStatusLabel(status){return status==="active"?"Active":status==="available"?"Available":status==="completed"?"Completed":"Locked";}
-function dmStoryVisibleOnMap(event){const s=getDmStoryStatus(event.id);return s==="available"||s==="active"||s==="completed";}
+function dmStoryVisibleOnMap(event){
+  return !!event;
+}
 
 function setDmStoryStatus(eventId,status){
   const state=getDmStoryState();
@@ -9591,10 +9594,15 @@ function renderDmStoryMapBanner(locationId){
   }
 
   const arcShort={"The Kanto Resonance":"Kanto Resonance","Always One Step Ahead":"Rival","The Business of Pokémon":"Team Rocket","Side Stories":"Side Story"};
-  const statusLabelMap={available:"Available",active:"Active",completed:"Completed"};
+  const statusLabelMap={locked:"Locked",available:"Available",active:"In Progress",completed:"Completed"};
   const ordered=[...events].sort((a,b)=>{
-    const statusRank={active:0,available:1,completed:2};
-    return (statusRank[getDmStoryStatus(a.id)]??9)-(statusRank[getDmStoryStatus(b.id)]??9);
+    const statusRank={active:0,available:1,locked:2,completed:3};
+    const statusDifference=(statusRank[getDmStoryStatus(a.id)]??9)-(statusRank[getDmStoryStatus(b.id)]??9);
+    if(statusDifference)return statusDifference;
+    const aPallet=getPalletTownStorySequenceInfo(a.id);
+    const bPallet=getPalletTownStorySequenceInfo(b.id);
+    if(locationId==="pallet-town" && aPallet && bPallet)return aPallet.index-bPallet.index;
+    return (Number(a.order)||0)-(Number(b.order)||0);
   });
 
   box.className="story-map-banner story-map-master-details show";
@@ -9603,13 +9611,9 @@ function renderDmStoryMapBanner(locationId){
     const activeCount=ordered.filter(event=>["available","active"].includes(getDmStoryStatus(event.id))).length;
     if(locationId==="pallet-town"){
       const state=getDmStoryState();
-      if(state.events[PALLET_TOWN_STORY_PRECURSOR]!=="completed"){
-        summary.textContent="Pallet Town Prologue"+(activeCount?" • "+activeCount+" available":"");
-      }else{
-        const nextIndex=PALLET_TOWN_STORY_SEQUENCE.findIndex(id=>state.events[id]!=="completed");
-        const displayIndex=nextIndex<0?PALLET_TOWN_STORY_SEQUENCE.length:nextIndex+1;
-        summary.textContent="Pallet Town Quest "+displayIndex+" of "+PALLET_TOWN_STORY_SEQUENCE.length+(activeCount?" • "+activeCount+" available":"");
-      }
+      const palletEvents=[PALLET_TOWN_STORY_PRECURSOR,...PALLET_TOWN_STORY_SEQUENCE];
+      const completedCount=palletEvents.filter(id=>state.events[id]==="completed").length;
+      summary.textContent="Pallet Town Stories • "+completedCount+" / "+palletEvents.length+" completed";
     }else{
       summary.textContent=ordered.length+" stor"+(ordered.length===1?"y":"ies")+(activeCount?" • "+activeCount+" available":"");
     }
@@ -9623,6 +9627,9 @@ function renderDmStoryMapBanner(locationId){
           '<div class="story-map-entry-meta">'+dmStoryEscape(arcShort[event.arc]||event.arc)+' • '+dmStoryEscape(statusLabelMap[status]||status)+'</div>'+
           '<div class="story-map-entry-title">'+dmStoryEscape(event.title)+'</div>'+
           '<div class="story-map-entry-hook">'+dmStoryEscape(event.hook)+'</div>'+
+          (status==="locked"
+            ? '<div class="story-map-banner-note">Locked — complete the prerequisite Pallet Town quest to unlock this story.</div>'
+            : '')+
           '<div class="story-map-entry-actions">'+
             '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="event.stopPropagation();focusDmStoryEvent(this.dataset.storyId)">Open Story Details</button>'+
             (status==="available"
@@ -9652,6 +9659,7 @@ function getDmStoryMarkerStatus(events){
   const statuses=events.map(event=>getDmStoryStatus(event.id));
   if(statuses.includes("active"))return"active";
   if(statuses.includes("available"))return"available";
+  if(statuses.includes("locked"))return"locked";
   if(statuses.every(status=>status==="completed"))return"completed";
   if(statuses.includes("completed"))return"completed";
   return"";
@@ -9659,9 +9667,10 @@ function getDmStoryMarkerStatus(events){
 
 function applyDmStoryMarkerStatusClass(button,events){
   if(!button)return;
-  button.classList.remove("story-available-marker","story-active-marker","story-completed-marker");
+  button.classList.remove("story-locked-marker","story-available-marker","story-active-marker","story-completed-marker");
   const status=getDmStoryMarkerStatus(events);
-  if(status==="available")button.classList.add("story-available-marker");
+  if(status==="locked")button.classList.add("story-locked-marker");
+  else if(status==="available")button.classList.add("story-available-marker");
   else if(status==="active")button.classList.add("story-active-marker");
   else if(status==="completed")button.classList.add("story-completed-marker");
 }
