@@ -3385,6 +3385,44 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
   .dm-session-record-grid{grid-template-columns:1fr}
 }
 
+
+.story-run-details{
+  margin-top:8px;
+  border:1px solid #dfe4ea;
+  border-radius:8px;
+  overflow:hidden;
+  background:#fbfcfd;
+}
+.story-run-details>summary{
+  cursor:pointer;
+  list-style:none;
+  padding:7px 8px;
+  font-size:10px;
+  font-weight:950;
+  background:#f1f4f7;
+  color:#4f5964;
+}
+.story-run-details>summary::-webkit-details-marker{display:none}
+.story-run-details-body{padding:7px 8px;display:grid;gap:6px}
+.story-run-detail-row{
+  border-bottom:1px solid #eceff2;
+  padding-bottom:5px;
+}
+.story-run-detail-row:last-child{border-bottom:0;padding-bottom:0}
+.story-run-detail-label{
+  font-size:8px;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.35px;
+  color:#737b84;
+  margin-bottom:2px;
+}
+.story-run-detail-text{
+  font-size:10px;
+  line-height:1.35;
+  color:#2f3337;
+}
+
 </style>
 
 
@@ -10508,6 +10546,34 @@ function buildDmRelevantQuestConsequencesHTML(storyEvent){
   '</div>';
 }
 
+
+function buildDmStoryRunDetailsHTML(storyEvent){
+  if(!storyEvent)return"";
+  const rows=[
+    ["Player Information",storyEvent.playerInfo],
+    ["DM Intent / Secret",storyEvent.dmSecret],
+    ["NPC Guidance",storyEvent.npcs],
+    ["Scene / Encounter Flow",storyEvent.encounter],
+    ["Clues",storyEvent.clues],
+    ["Reward",storyEvent.reward],
+    ["Unlocks",storyEvent.unlocks]
+  ].filter(entry=>String(entry[1]||"").trim());
+
+  if(!rows.length)return"";
+
+  return '<details class="story-run-details" open>'+
+    '<summary>Run This Quest</summary>'+
+    '<div class="story-run-details-body">'+
+      rows.map(entry=>
+        '<div class="story-run-detail-row">'+
+          '<div class="story-run-detail-label">'+dmStoryEscape(entry[0])+'</div>'+
+          '<div class="story-run-detail-text">'+dmStoryEscape(entry[1])+'</div>'+
+        '</div>'
+      ).join("")+
+    '</div>'+
+  '</details>';
+}
+
 function openDmStoryQuestPopup(eventId){
   const storyEvent=getDmStoryEvent(eventId);
   if(!storyEvent)return;
@@ -10570,6 +10636,7 @@ function openDmStoryQuestPopup(eventId){
             : statusDisplay
         )+'</div>'+
         '<div class="story-landmark-hook">'+dmStoryEscape(storyEvent.objective||storyEvent.hook)+'</div>'+
+        buildDmStoryRunDetailsHTML(storyEvent)+
         (palletSequenceInfo && palletSequenceInfo.index===0
           ? '<div class="story-map-banner-note">Unlocks: The First Challenge + Oak\'s Forgotten Field Journal</div>'
           : (palletSequenceInfo && palletSequenceInfo.index<palletSequenceInfo.total
