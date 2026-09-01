@@ -3225,6 +3225,16 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
   .dm-session-quest-actions{grid-column:1/-1}
 }
 
+
+.story-quest-run-block{margin-top:8px;border:1px solid #dfe4ea;border-radius:8px;overflow:hidden;background:#fff}
+.story-quest-run-label{padding:6px 8px;background:#f3f5f7;border-bottom:1px solid #dfe4ea;font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.4px;color:#5d6670}
+.story-quest-run-body{padding:7px 8px}
+.story-quest-run-text{font-size:10px;line-height:1.35;color:#333}
+.story-quest-run-input{width:100%;min-height:52px;resize:vertical;margin:0;font-size:11px;line-height:1.35}
+.story-quest-reminder-highlight{border-color:#e2bf67;background:#fffaf0}
+.story-quest-reminder-highlight .story-quest-run-label{background:#fff3ce;color:#765a18}
+.story-quest-complete-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+
 </style>
 
 
@@ -9396,7 +9406,7 @@ function dmStoryEscape(value){
 function getDmStoryState(){
   let stored={};
   try{stored=JSON.parse(localStorage.getItem(DM_STORY_STATE_KEY)||"{}")||{};}catch(e){stored={};}
-  const state={events:{},notes:{}};
+  const state={events:{},notes:{},criteria:{},reminders:{}};
   const firstByArc={};
   dmCampaignStoryEvents.forEach(event=>{
     if(event.arc!=="Side Stories" && (!firstByArc[event.arc] || event.order<firstByArc[event.arc].order))firstByArc[event.arc]=event;
@@ -9405,6 +9415,8 @@ function getDmStoryState(){
     const defaultStatus=event.arc==="Side Stories"?"available":(firstByArc[event.arc]?.id===event.id?"available":"locked");
     state.events[event.id]=stored.events?.[event.id]||defaultStatus;
     state.notes[event.id]=stored.notes?.[event.id]||"";
+    state.criteria[event.id]=stored.criteria?.[event.id] ?? (event.completionCriteria||event.objective||"");
+    state.reminders[event.id]=stored.reminders?.[event.id]||"";
   });
 
   applyPalletTownStorySequenceToState(state);
@@ -9457,6 +9469,33 @@ function saveDmStoryNote(eventId,value){
   state.notes[eventId]=value||"";
   saveDmStoryState(state);
 }
+
+function saveDmStoryCompletionCriteria(eventId,value){
+  const state=getDmStoryState();
+  state.criteria[eventId]=value||"";
+  saveDmStoryState(state);
+}
+
+function saveDmStoryReminder(eventId,value){
+  const state=getDmStoryState();
+  state.reminders[eventId]=value||"";
+  saveDmStoryState(state);
+}
+
+function completeDmStoryEventFromMap(eventId){
+  const event=getDmStoryEvent(eventId);
+  if(!event)return;
+
+  if(eventId===PALLET_TOWN_STORY_PRECURSOR){
+    completeStarterQuestFromMap();
+    return;
+  }
+
+  if(!confirm("Mark "+event.title+" as completed?"))return;
+  unlockNextDmStoryEvent(eventId);
+  if(activeKantoDetailMapId)openDmStoryQuestPopup(eventId);
+}
+
 function unlockNextDmStoryEvent(eventId){
   const event=getDmStoryEvent(eventId); if(!event)return;
   const state=getDmStoryState();
@@ -9627,6 +9666,14 @@ function renderDmStoryDashboard(){
           storyFieldHTML("Player Information",event.playerInfo)+
           storyFieldHTML("DM Secret",event.dmSecret)+
           storyFieldHTML("Objective",event.objective)+
+          '<div class="story-field">'+
+            '<div class="story-field-label">Completion Criteria</div>'+
+            '<textarea class="story-event-notes" placeholder="What must happen before this quest is complete?" data-story-id="'+dmStoryEscape(event.id)+'" oninput="saveDmStoryCompletionCriteria(this.dataset.storyId,this.value)">'+dmStoryEscape(state.criteria[event.id]||event.objective||"")+'</textarea>'+
+          '</div>'+
+          '<div class="story-field">'+
+            '<div class="story-field-label">DM Reminder</div>'+
+            '<textarea class="story-event-notes" placeholder="Optional reminder for running this quest…" data-story-id="'+dmStoryEscape(event.id)+'" oninput="saveDmStoryReminder(this.dataset.storyId,this.value)">'+dmStoryEscape(state.reminders[event.id]||"")+'</textarea>'+
+          '</div>'+
           storyFieldHTML("NPCs",event.npcs)+
           storyFieldHTML("Encounter / Challenge",event.encounter)+
           storyFieldHTML("Clues",event.clues)+
@@ -9814,6 +9861,7 @@ function renderDmStoryMapBanner(locationId){
           '<div class="dm-session-quest-copy">'+
             '<div class="dm-session-quest-title">'+dmStoryEscape(event.title)+'</div>'+
             '<div class="dm-session-quest-meta">'+dmStoryEscape(statusText)+'</div>'+
+            ((getDmStoryState().reminders[event.id]||"")?'<div class="dm-session-quest-meta" style="color:#8a6719;font-weight:800;">Reminder: '+dmStoryEscape(getDmStoryState().reminders[event.id])+'</div>':'')+
           '</div>'+
           '<span class="dm-session-status '+dmStoryEscape(status)+'">'+dmStoryEscape(statusLabelMap[status]||status)+'</span>'+
           '<div class="dm-session-quest-actions">'+
@@ -10052,6 +10100,9 @@ function openDmStoryQuestPopup(eventId){
   openButton.style.display="none";
 
   const status=getDmStoryStatus(storyEvent.id);
+  const storyState=getDmStoryState();
+  const completionCriteria=storyState.criteria[storyEvent.id]||storyEvent.objective||"";
+  const questReminder=storyState.reminders[storyEvent.id]||"";
   const lockedReason=status==="locked"?getDmStoryLockedReason(storyEvent.id):"";
   const statusDisplay=dmStoryStatusLabel(status)+(lockedReason?" - "+lockedReason:"");
   const arcShort={
@@ -10087,13 +10138,28 @@ function openDmStoryQuestPopup(eventId){
           : (palletSequenceInfo && palletSequenceInfo.index<palletSequenceInfo.total
               ? '<div class="story-map-banner-note">Next: '+dmStoryEscape(getDmStoryEvent(PALLET_TOWN_STORY_SEQUENCE[palletSequenceInfo.index])?.title||"Next Pallet Town quest")+'</div>'
               : ''))+
-        '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;">'+
+        '<div class="story-quest-run-block">'+
+          '<div class="story-quest-run-label">Completion Criteria</div>'+
+          '<div class="story-quest-run-body">'+
+            '<textarea class="story-quest-run-input" data-story-id="'+dmStoryEscape(storyEvent.id)+'" oninput="saveDmStoryCompletionCriteria(this.dataset.storyId,this.value)" placeholder="What must happen before this quest is complete?">'+dmStoryEscape(completionCriteria)+'</textarea>'+
+          '</div>'+
+        '</div>'+
+        '<div class="story-quest-run-block story-quest-reminder-highlight">'+
+          '<div class="story-quest-run-label">DM Reminder</div>'+
+          '<div class="story-quest-run-body">'+
+            '<textarea class="story-quest-run-input" data-story-id="'+dmStoryEscape(storyEvent.id)+'" oninput="saveDmStoryReminder(this.dataset.storyId,this.value)" placeholder="Optional reminder for running this quest…">'+dmStoryEscape(questReminder)+'</textarea>'+
+          '</div>'+
+        '</div>'+
+        '<div class="story-quest-complete-row">'+
           (storyEvent.id===PALLET_TOWN_STORY_PRECURSOR && status==="active"
             ? '<button class="small-button" type="button" onclick="toggleDmStarterAssignmentPanel()">Assign Starter Pokémon</button>'+
               '<button class="small-button" type="button" '+(isDmStarterQuestReadyToComplete()?'':'disabled')+' onclick="completeStarterQuestFromMap()">Complete Quest</button>'
             : '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(storyEvent.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">Open Full Quest</button>')+
           (status==="available"
             ? '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(storyEvent.id)+'" data-story-start="active" onclick="setDmStoryStatus(this.dataset.storyId,this.dataset.storyStart);openDmStoryQuestPopup(this.dataset.storyId)">Start Quest</button>'
+            : '')+
+          (status==="active" && storyEvent.id!==PALLET_TOWN_STORY_PRECURSOR
+            ? '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(storyEvent.id)+'" onclick="completeDmStoryEventFromMap(this.dataset.storyId)">Complete Quest</button>'
             : '')+
         '</div>'+
         (storyEvent.id===PALLET_TOWN_STORY_PRECURSOR && status==="active"
