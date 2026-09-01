@@ -3239,6 +3239,53 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
 
 
 
+
+.dm-consequence-card{margin-top:12px}
+.dm-consequence-summary{
+  cursor:pointer;
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.dm-consequence-summary::-webkit-details-marker{display:none}
+.dm-consequence-title{font-size:16px;font-weight:950}
+.dm-consequence-subtitle{font-size:10px;color:#6d747c;margin-top:2px}
+.dm-consequence-body{margin-top:10px}
+.dm-consequence-grid{display:grid;gap:6px}
+.dm-consequence-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  padding:8px 9px;
+  border:1px solid #e1e5ea;
+  border-radius:8px;
+  background:#fafbfc;
+}
+.dm-consequence-row strong{display:block;font-size:11px;line-height:1.25}
+.dm-consequence-row small{display:block;font-size:9px;line-height:1.3;color:#737b84;margin-top:2px}
+.dm-consequence-row input[type="checkbox"]{width:20px;height:20px}
+.dm-consequence-row select{margin:0!important;min-width:105px!important;width:auto!important}
+.dm-quest-consequence{
+  margin-top:8px;
+  padding:7px 8px;
+  border:1px solid #d9d5ea;
+  border-radius:8px;
+  background:#f9f7ff;
+}
+.dm-quest-consequence-title{
+  font-size:9px;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:#655b82;
+  margin-bottom:4px;
+}
+.dm-quest-consequence-list{display:grid;gap:3px}
+.dm-quest-consequence-item{font-size:10px;line-height:1.3;color:#40394f}
+
 </style>
 
 
@@ -4400,6 +4447,64 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
       </button>
 
     </div>
+
+    <details class="form-card dm-consequence-card" id="dmCampaignConsequenceCard">
+      <summary class="dm-consequence-summary">
+        <div>
+          <div class="dm-consequence-title">Campaign Consequences</div>
+          <div id="dmCampaignConsequenceSummary" class="dm-consequence-subtitle">No major consequence flags set</div>
+        </div>
+        <span aria-hidden="true">⌄</span>
+      </summary>
+      <div class="dm-consequence-body">
+        <div class="dm-consequence-grid">
+          <label class="dm-consequence-row">
+            <span>
+              <strong>Rival trusts the party</strong>
+              <small>Use for later Rival dialogue, cooperation, and information sharing.</small>
+            </span>
+            <input id="dmFlagRivalTrusts" type="checkbox" onchange="saveDmCampaignConsequencesFromControls()">
+          </label>
+
+          <label class="dm-consequence-row">
+            <span>
+              <strong>Team Rocket recognizes the party</strong>
+              <small>Use when Rocket should prepare for or react specifically to the party.</small>
+            </span>
+            <input id="dmFlagRocketRecognizes" type="checkbox" onchange="saveDmCampaignConsequencesFromControls()">
+          </label>
+
+          <label class="dm-consequence-row">
+            <span>
+              <strong>Oak knows about the Resonance network</strong>
+              <small>Tracks whether Oak has been brought fully into the larger mystery.</small>
+            </span>
+            <input id="dmFlagOakKnows" type="checkbox" onchange="saveDmCampaignConsequencesFromControls()">
+          </label>
+
+          <label class="dm-consequence-row">
+            <span>
+              <strong>Party has used Resonance technology</strong>
+              <small>Tracks whether the party has crossed from investigating the network into using it.</small>
+            </span>
+            <input id="dmFlagUsedResonance" type="checkbox" onchange="saveDmCampaignConsequencesFromControls()">
+          </label>
+
+          <label class="dm-consequence-row dm-consequence-select-row">
+            <span>
+              <strong>Legendary Pokémon disposition</strong>
+              <small>Overall attitude of the legendary birds toward the party.</small>
+            </span>
+            <select id="dmFlagLegendaryDisposition" onchange="saveDmCampaignConsequencesFromControls()">
+              <option value="neutral">Neutral</option>
+              <option value="hostile">Hostile</option>
+              <option value="trusting">Trusting</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </details>
+
 <details class="form-card story-arc-card story-master-details" id="dmStoryArcCard">
       <summary class="story-master-summary">
         <div class="story-arc-header">
@@ -9820,6 +9925,8 @@ function renderDmStoryDashboard(){
   syncDmStoryArcFilterButtons();
   syncDmStoryStatusFilterButtons();
 
+
+  renderDmCampaignConsequenceControls();
 }
 function openDmStoryLocation(eventId){
   const event=getDmStoryEvent(eventId);if(!event)return;
@@ -10170,6 +10277,117 @@ function completeStarterQuestFromMap(){
   openDmStoryQuestPopup(PALLET_TOWN_STORY_PRECURSOR);
 }
 
+
+const DM_CAMPAIGN_CONSEQUENCE_KEY="pokemonCampaignDmConsequenceFlagsV1";
+
+function getDmCampaignConsequences(){
+  const defaults={
+    rivalTrusts:false,
+    rocketRecognizes:false,
+    oakKnows:false,
+    usedResonance:false,
+    legendaryDisposition:"neutral"
+  };
+  try{
+    return Object.assign(defaults,JSON.parse(localStorage.getItem(DM_CAMPAIGN_CONSEQUENCE_KEY)||"{}")||{});
+  }catch(e){
+    return defaults;
+  }
+}
+
+function saveDmCampaignConsequences(flags){
+  localStorage.setItem(DM_CAMPAIGN_CONSEQUENCE_KEY,JSON.stringify(flags||{}));
+  renderDmCampaignConsequenceControls();
+}
+
+function saveDmCampaignConsequencesFromControls(){
+  const flags={
+    rivalTrusts:!!document.getElementById("dmFlagRivalTrusts")?.checked,
+    rocketRecognizes:!!document.getElementById("dmFlagRocketRecognizes")?.checked,
+    oakKnows:!!document.getElementById("dmFlagOakKnows")?.checked,
+    usedResonance:!!document.getElementById("dmFlagUsedResonance")?.checked,
+    legendaryDisposition:document.getElementById("dmFlagLegendaryDisposition")?.value||"neutral"
+  };
+  saveDmCampaignConsequences(flags);
+}
+
+function renderDmCampaignConsequenceControls(){
+  const flags=getDmCampaignConsequences();
+  const rival=document.getElementById("dmFlagRivalTrusts");
+  const rocket=document.getElementById("dmFlagRocketRecognizes");
+  const oak=document.getElementById("dmFlagOakKnows");
+  const used=document.getElementById("dmFlagUsedResonance");
+  const legendary=document.getElementById("dmFlagLegendaryDisposition");
+  const summary=document.getElementById("dmCampaignConsequenceSummary");
+
+  if(rival)rival.checked=!!flags.rivalTrusts;
+  if(rocket)rocket.checked=!!flags.rocketRecognizes;
+  if(oak)oak.checked=!!flags.oakKnows;
+  if(used)used.checked=!!flags.usedResonance;
+  if(legendary)legendary.value=flags.legendaryDisposition||"neutral";
+
+  if(summary){
+    let count=0;
+    if(flags.rivalTrusts)count++;
+    if(flags.rocketRecognizes)count++;
+    if(flags.oakKnows)count++;
+    if(flags.usedResonance)count++;
+    if((flags.legendaryDisposition||"neutral")!=="neutral")count++;
+    summary.textContent=count
+      ? count+" major consequence"+(count===1?"":"s")+" currently set"
+      : "No major consequence flags set";
+  }
+}
+
+function getDmRelevantQuestConsequences(storyEvent){
+  if(!storyEvent)return[];
+  const flags=getDmCampaignConsequences();
+  const items=[];
+
+  if(storyEvent.arc==="Always One Step Ahead" && flags.rivalTrusts){
+    items.push("Rival trusts the party — consider more openness, voluntary cooperation, or shared information.");
+  }
+
+  if(storyEvent.arc==="The Business of Pokémon" && flags.rocketRecognizes){
+    items.push("Team Rocket recognizes the party — Rocket members may prepare for them, avoid them, or target them specifically.");
+  }
+
+  if(storyEvent.arc==="The Kanto Resonance" && flags.oakKnows){
+    items.push("Oak knows about the Resonance network — he can be used as an informed ally instead of being kept outside the mystery.");
+  }
+
+  if(storyEvent.arc==="The Kanto Resonance" && flags.usedResonance){
+    items.push("The party has used Resonance technology — later NPCs or Pokémon may judge them based on that choice.");
+  }
+
+  const legendaryEvent=
+    /articuno|zapdos|moltres|legendary/i.test(
+      [storyEvent.title,storyEvent.location,storyEvent.encounter].filter(Boolean).join(" ")
+    );
+
+  if(legendaryEvent && flags.legendaryDisposition!=="neutral"){
+    items.push(
+      "Legendary disposition: "+flags.legendaryDisposition+
+      (flags.legendaryDisposition==="trusting"
+        ?" — the legendary Pokémon may hesitate, listen, or allow nonviolent solutions."
+        :" — the legendary Pokémon may react defensively or assume hostile intent.")
+    );
+  }
+
+  return items;
+}
+
+function buildDmRelevantQuestConsequencesHTML(storyEvent){
+  const items=getDmRelevantQuestConsequences(storyEvent);
+  if(!items.length)return"";
+  return '<div class="dm-quest-consequence">'+
+    '<div class="dm-quest-consequence-title">Relevant Campaign Consequences</div>'+
+    '<div class="dm-quest-consequence-list">'+
+      items.map(item=>'<div class="dm-quest-consequence-item">• '+dmStoryEscape(item)+'</div>').join("")+
+    '</div>'+
+  '</div>';
+}
+
 function openDmStoryQuestPopup(eventId){
   const storyEvent=getDmStoryEvent(eventId);
   if(!storyEvent)return;
@@ -10249,6 +10467,7 @@ function openDmStoryQuestPopup(eventId){
             '<textarea class="story-quest-run-input" data-story-id="'+dmStoryEscape(storyEvent.id)+'" oninput="saveDmStoryReminder(this.dataset.storyId,this.value)" placeholder="Optional reminder for running this quest…">'+dmStoryEscape(questReminder)+'</textarea>'+
           '</div>'+
         '</div>'+
+        buildDmRelevantQuestConsequencesHTML(storyEvent)+
         '<div class="story-quest-complete-row">'+
           (storyEvent.id===PALLET_TOWN_STORY_PRECURSOR && status==="active"
             ? '<button class="small-button" type="button" onclick="toggleDmStarterAssignmentPanel()">Assign Starter Pokémon</button>'+
