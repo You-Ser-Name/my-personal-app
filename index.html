@@ -10422,8 +10422,8 @@ const kantoDetailLocationHotspots = {
     {name:"Viridian Poké Center",action:"pokemon-center",cityName:"Viridian City",x:56,y:5,w:28,h:28},
     {name:"Viridian Poké Mart",action:"poke-mart",cityName:"Viridian City",martId:"viridian-city",x:59,y:31,w:25,h:25},
     {name:"Viridian Gym",target:"viridian-gym",x:18,y:9,w:27,h:24},
-    {name:"Trainer School",action:"landmark",landmarkType:"School",storyEventId:"resonance-02",storyMarkerX:25.4000,storyMarkerY:46.5000,description:"Viridian City's Trainer School, where new trainers learn basic Pokémon battling concepts.",x:18,y:37,w:24,h:20},
-    {name:"Old Man's Corner",action:"landmark",landmarkType:"NPC",storyEventId:"resonance-03",storyMarkerX:50.0000,storyMarkerY:36.7000,description:"A familiar corner where one of Viridian's longtime residents spends his afternoons.",x:45,y:31,w:10,h:12},
+    {name:"Trainer School",action:"landmark",landmarkType:"School",storyEventId:"resonance-02",storyMarkerX:25.4000,storyMarkerY:51.8571,questIconOnly:true,description:"Viridian City's Trainer School, where new trainers learn basic Pokémon battling concepts.",x:18,y:37,w:24,h:20},
+    {name:"Old Man's Corner",action:"landmark",landmarkType:"NPC",storyEventId:"resonance-03",storyMarkerX:50.0000,storyMarkerY:42.0571,questIconOnly:true,description:"A familiar corner where one of Viridian's longtime residents spends his afternoons.",x:45,y:31,w:10,h:12},
     {name:"Viridian City Streets",action:"landmark",landmarkType:"City Streets",storyEventId:"rival-02",storyMarkerX:50.0000,storyMarkerY:74.0000,description:"The main streets through Viridian City, where travelers and local trainers pass through town.",x:44,y:68,w:12,h:15},
     {name:"Route 1",target:"route-1",x:0,y:42,w:10,h:18},
     {name:"Route 2",target:"route-2",x:43,y:0,w:14,h:11},
@@ -10861,7 +10861,7 @@ function renderKantoDetailTrainerHotspots(locationId) {
     const hotspotStoryEvents=hotspotStoryIds.map(getDmStoryEvent).filter(Boolean);
     const visibleStoryEvents=hotspotStoryEvents.filter(dmStoryVisibleOnMap);
     const usesSavedStoryMarker=location.storyMarkerX!=null && location.storyMarkerY!=null;
-    const palletQuestIconOnly=locationId==="pallet-town" && usesSavedStoryMarker && visibleStoryEvents.length;
+    const questIconOnly=!!location.questIconOnly || (locationId==="pallet-town" && usesSavedStoryMarker && visibleStoryEvents.length);
 
     if(visibleStoryEvents.length && !usesSavedStoryMarker){
       button.classList.add("story-map-hotspot-marker");
@@ -10886,9 +10886,9 @@ function renderKantoDetailTrainerHotspots(locationId) {
       }
     };
 
-    // In Pallet Town the three quest buildings are intentionally not clickable.
-    // The saved quest marker is the only interactive control for those locations.
-    if(!palletQuestIconOnly)layer.appendChild(button);
+    // Selected quest locations intentionally use the saved quest marker
+    // as the only interactive control instead of a separate landmark hitbox.
+    if(!questIconOnly)layer.appendChild(button);
 
     if(visibleStoryEvents.length && usesSavedStoryMarker){
       const markerButton=document.createElement("button");
