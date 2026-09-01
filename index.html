@@ -3286,6 +3286,105 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
 .dm-quest-consequence-list{display:grid;gap:3px}
 .dm-quest-consequence-item{font-size:10px;line-height:1.3;color:#40394f}
 
+
+.dm-campaign-sessions-card{margin-top:12px}
+.dm-campaign-sessions-summary{
+  cursor:pointer;
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.dm-campaign-sessions-summary::-webkit-details-marker{display:none}
+.dm-campaign-sessions-title{font-size:17px;font-weight:950}
+.dm-campaign-sessions-subtitle{font-size:10px;color:#6d747c;margin-top:2px}
+.dm-campaign-sessions-body{margin-top:10px}
+.dm-new-session-button{width:100%;margin:0 0 9px 0!important}
+.dm-campaign-sessions-list{display:grid;gap:8px}
+.dm-session-record{
+  border:1px solid #dfe3e8;
+  border-radius:10px;
+  background:#fff;
+  overflow:hidden;
+}
+.dm-session-record.active{border-color:#d4a62c;box-shadow:0 0 0 1px rgba(212,166,44,.12)}
+.dm-session-record.completed{border-color:#b9d8be}
+.dm-session-record>summary{
+  cursor:pointer;
+  list-style:none;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  padding:9px 10px;
+  background:#f8f9fa;
+}
+.dm-session-record>summary::-webkit-details-marker{display:none}
+.dm-session-record.active>summary{background:#fff7dc}
+.dm-session-record.completed>summary{background:#f2faf3}
+.dm-session-record-title{font-size:12px;font-weight:950}
+.dm-session-record-meta{font-size:9px;color:#6d747c;margin-top:2px}
+.dm-session-record-status{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  padding:3px 7px;
+  font-size:8px;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.3px;
+  background:#e9ecef;
+  color:#5d646b;
+}
+.dm-session-record-status.active{background:#ffe6a1;color:#6c5000}
+.dm-session-record-status.completed{background:#dcefe0;color:#2c6536}
+.dm-session-record-body{padding:9px}
+.dm-session-record-grid{display:grid;grid-template-columns:1fr 150px;gap:7px}
+.dm-session-record .form-row{margin:5px 0}
+.dm-session-record textarea{resize:vertical;min-height:82px}
+.dm-session-phase{
+  margin-top:7px;
+  border:1px solid #e3e6e9;
+  border-radius:8px;
+  overflow:hidden;
+}
+.dm-session-phase>summary{
+  cursor:pointer;
+  list-style:none;
+  padding:7px 8px;
+  font-size:10px;
+  font-weight:950;
+  background:#f6f7f8;
+}
+.dm-session-phase>summary::-webkit-details-marker{display:none}
+.dm-session-phase-body{padding:7px 8px}
+.dm-session-phase textarea{width:100%;margin:0;min-height:105px}
+.dm-session-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.dm-session-active-banner{
+  border:1px solid #d4a62c;
+  border-radius:9px;
+  padding:8px 9px;
+  background:#fff7dc;
+  margin-bottom:8px;
+}
+.dm-session-active-banner-title{font-size:11px;font-weight:950;color:#6c5000}
+.dm-session-active-banner-meta{font-size:9px;color:#765f1b;margin-top:2px}
+.dm-session-location-list{
+  margin-top:6px;
+  padding:6px 7px;
+  border-radius:7px;
+  background:#f6f7f8;
+  font-size:9px;
+  line-height:1.35;
+  color:#515961;
+}
+.dm-session-recap-help{font-size:9px;line-height:1.35;color:#6f7780;margin-bottom:6px}
+@media(max-width:600px){
+  .dm-session-record-grid{grid-template-columns:1fr}
+}
+
 </style>
 
 
@@ -4448,7 +4547,28 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
 
     </div>
 
-    <details class="form-card dm-consequence-card" id="dmCampaignConsequenceCard">
+    
+    <details class="form-card dm-campaign-sessions-card" id="dmCampaignSessionsCard" open>
+      <summary class="dm-campaign-sessions-summary">
+        <div>
+          <div class="dm-campaign-sessions-title">Game Sessions</div>
+          <div id="dmCampaignSessionsSummary" class="dm-campaign-sessions-subtitle">No sessions created yet</div>
+        </div>
+        <span aria-hidden="true">⌄</span>
+      </summary>
+
+      <div class="dm-campaign-sessions-body">
+        <div id="dmActiveSessionBanner"></div>
+
+        <button class="primary-button dm-new-session-button" type="button" onclick="createDmCampaignSession()">
+          + Create New Session
+        </button>
+
+        <div id="dmCampaignSessionsList" class="dm-campaign-sessions-list"></div>
+      </div>
+    </details>
+
+<details class="form-card dm-consequence-card" id="dmCampaignConsequenceCard">
       <summary class="dm-consequence-summary">
         <div>
           <div class="dm-consequence-title">Campaign Consequences</div>
@@ -10111,9 +10231,9 @@ function renderDmStoryMapBanner(locationId){
 
   const reminderHtml=
     '<details class="dm-session-section compact-details">'+
-      '<summary>DM Reminder'+(reminders[locationId]?' <span>Saved</span>':'')+'</summary>'+
+      '<summary>Location Reminder'+(reminders[locationId]?' <span>Saved</span>':'')+'</summary>'+
       '<div class="dm-session-section-body">'+
-        '<textarea class="dm-session-reminder" placeholder="Anything you need to remember while running this location…" data-location-id="'+dmStoryEscape(locationId)+'" oninput="saveDmSessionReminder(this.dataset.locationId,this.value)">'+dmStoryEscape(reminders[locationId]||"")+'</textarea>'+
+        '<textarea class="dm-session-reminder" placeholder="Persistent reminder for this location, regardless of game session…" data-location-id="'+dmStoryEscape(locationId)+'" oninput="saveDmSessionReminder(this.dataset.locationId,this.value)">'+dmStoryEscape(reminders[locationId]||"")+'</textarea>'+
       '</div>'+
     '</details>';
 
@@ -12253,6 +12373,7 @@ function openSelectedKantoDetailMap() {
 function openKantoDetailMap(locationId) {
   const detail = kantoDetailMaps[locationId];
   if (!detail) return;
+  if(typeof recordDmCampaignSessionLocation==="function")recordDmCampaignSessionLocation(locationId);
 
   const title = document.getElementById("kantoDetailMapTitle");
   const image = document.getElementById("kantoDetailMapImage");
@@ -12559,6 +12680,7 @@ function showPage(pageId) {
   document.getElementById(pageId).style.display = "block";
   if(typeof syncDmGlobalRefreshButton==="function")syncDmGlobalRefreshButton();
   if(pageId==="campaignPage" && typeof renderDmStoryDashboard==="function")renderDmStoryDashboard();
+  if(pageId==="campaignPage" && typeof renderDmCampaignSessions==="function")renderDmCampaignSessions();
 
   if (pageId === "pokemonPage") {
     const pokedexSection = document.getElementById("pokedexSection");
@@ -21898,6 +22020,399 @@ function calculateBattleVictoryExperience(conclusion){
   return 0;
 }
 
+
+const DM_CAMPAIGN_SESSIONS_KEY="pokemonCampaignDmGameSessionsV1";
+const DM_ACTIVE_CAMPAIGN_SESSION_KEY="pokemonCampaignDmActiveGameSessionV1";
+
+function getDmCampaignSessions(){
+  try{
+    const parsed=JSON.parse(localStorage.getItem(DM_CAMPAIGN_SESSIONS_KEY)||"[]");
+    return Array.isArray(parsed)?parsed:[];
+  }catch(e){
+    return[];
+  }
+}
+
+function saveDmCampaignSessions(sessions){
+  localStorage.setItem(DM_CAMPAIGN_SESSIONS_KEY,JSON.stringify(Array.isArray(sessions)?sessions:[]));
+}
+
+function getActiveDmCampaignSessionId(){
+  return localStorage.getItem(DM_ACTIVE_CAMPAIGN_SESSION_KEY)||"";
+}
+
+function setActiveDmCampaignSessionId(sessionId){
+  if(sessionId)localStorage.setItem(DM_ACTIVE_CAMPAIGN_SESSION_KEY,String(sessionId));
+  else localStorage.removeItem(DM_ACTIVE_CAMPAIGN_SESSION_KEY);
+}
+
+function formatDmSessionDate(value){
+  if(!value)return"";
+  const date=new Date(value+"T12:00:00");
+  if(Number.isNaN(date.getTime()))return value;
+  return date.toLocaleDateString([],{month:"short",day:"numeric",year:"numeric"});
+}
+
+function todayDmSessionDate(){
+  const now=new Date();
+  const year=now.getFullYear();
+  const month=String(now.getMonth()+1).padStart(2,"0");
+  const day=String(now.getDate()).padStart(2,"0");
+  return year+"-"+month+"-"+day;
+}
+
+function getDmSessionPokemonLabel(pokemon){
+  if(!pokemon)return"Pokémon";
+  const nickname=String(pokemon.nickname||"").trim();
+  const species=typeof getPokemonName==="function"?getPokemonName(pokemon):String(pokemon.name||pokemon.speciesName||"Pokémon");
+  return nickname && nickname.toLowerCase()!==String(species).toLowerCase()
+    ? nickname+" ("+species+")"
+    : species;
+}
+
+function captureDmCampaignSessionSnapshot(){
+  const storyState=typeof getDmStoryState==="function"?getDmStoryState():{events:{}};
+  const mapProgress=typeof getKantoMapProgress==="function"?getKantoMapProgress():{};
+  const flags=typeof getDmCampaignConsequences==="function"?getDmCampaignConsequences():{};
+  const gymState={};
+  if(typeof kantoGymBadges!=="undefined"){
+    kantoGymBadges.forEach(info=>{
+      gymState[info.gymKey]=typeof getKantoGymCompleted==="function"?getKantoGymCompleted(info.gymKey):false;
+    });
+  }
+
+  return {
+    capturedAt:new Date().toISOString(),
+    pcPokemonLevel:Number(pcPokemonLevel)||1,
+    campaignExperience:typeof getCampaignExperience==="function"?getCampaignExperience():0,
+    quests:Object.assign({},storyState.events||{}),
+    trainers:(trainers||[]).map(trainer=>({
+      id:String(trainer.id),
+      name:String(trainer.trainerName||trainer.name||"Trainer"),
+      completed:!!trainer.completed,
+      trainerType:String(trainer.trainerType||trainer.trainer_type||""),
+      mapEncounterKey:String(trainer.mapEncounterKey||"")
+    })),
+    pokemon:(ownedPokemon||[]).map(pokemon=>({
+      id:String(pokemon.id),
+      speciesNumber:Number(pokemon.speciesNumber||0),
+      speciesName:typeof getPokemonName==="function"?getPokemonName(pokemon):String(pokemon.name||pokemon.speciesName||"Pokémon"),
+      nickname:String(pokemon.nickname||""),
+      trainerId:String(pokemon.trainerId||""),
+      level:Number(pokemon.level)||1
+    })),
+    gyms:gymState,
+    consequences:Object.assign({},flags),
+    mapProgress:JSON.parse(JSON.stringify(mapProgress||{}))
+  };
+}
+
+function createDmCampaignSession(){
+  const sessions=getDmCampaignSessions();
+  const nextNumber=sessions.reduce((max,item)=>Math.max(max,Number(item.number)||0),0)+1;
+  const now=Date.now();
+  const session={
+    id:"session-"+now+"-"+Math.random().toString(36).slice(2,7),
+    number:nextNumber,
+    title:"Session "+nextNumber,
+    date:todayDmSessionDate(),
+    status:"planned",
+    prep:"",
+    notes:"",
+    recap:"",
+    locations:[],
+    createdAt:new Date().toISOString(),
+    startedAt:"",
+    endedAt:"",
+    startSnapshot:null,
+    endSnapshot:null
+  };
+  sessions.push(session);
+  saveDmCampaignSessions(sessions);
+  renderDmCampaignSessions();
+  setTimeout(()=>{
+    const card=document.getElementById("dm-session-record-"+session.id);
+    if(card){card.open=true;card.scrollIntoView({behavior:"smooth",block:"center"});}
+  },20);
+}
+
+function updateDmCampaignSessionField(sessionId,field,value){
+  const sessions=getDmCampaignSessions();
+  const session=sessions.find(item=>item.id===sessionId);
+  if(!session)return;
+  if(!["title","date","prep","notes","recap"].includes(field))return;
+  session[field]=String(value??"");
+  saveDmCampaignSessions(sessions);
+  if(field==="title"||field==="date")renderDmCampaignSessions();
+}
+
+function startDmCampaignSession(sessionId){
+  const sessions=getDmCampaignSessions();
+  const activeId=getActiveDmCampaignSessionId();
+  if(activeId && activeId!==sessionId){
+    const active=sessions.find(item=>item.id===activeId);
+    alert("End "+(active?.title||"the active session")+" before starting another session.");
+    return;
+  }
+  const session=sessions.find(item=>item.id===sessionId);
+  if(!session)return;
+  if(session.status==="completed"){
+    if(!confirm("This session is already completed. Reopen it as the active session?"))return;
+  }
+  session.status="active";
+  session.startedAt=session.startedAt||new Date().toISOString();
+  session.endedAt="";
+  session.startSnapshot=captureDmCampaignSessionSnapshot();
+  session.endSnapshot=null;
+  session.locations=[];
+  saveDmCampaignSessions(sessions);
+  setActiveDmCampaignSessionId(sessionId);
+  renderDmCampaignSessions();
+}
+
+function recordDmCampaignSessionLocation(locationId){
+  const activeId=getActiveDmCampaignSessionId();
+  if(!activeId)return;
+  const sessions=getDmCampaignSessions();
+  const session=sessions.find(item=>item.id===activeId);
+  if(!session||session.status!=="active")return;
+  const title=typeof getDmSessionLocationTitle==="function"?getDmSessionLocationTitle(locationId):String(locationId);
+  if(!Array.isArray(session.locations))session.locations=[];
+  session.locations.push({
+    locationId:String(locationId),
+    title:String(title),
+    visitedAt:new Date().toISOString()
+  });
+  saveDmCampaignSessions(sessions);
+}
+
+function buildDmCampaignSessionAutoRecap(session){
+  if(!session?.startSnapshot||!session?.endSnapshot)return"";
+  const before=session.startSnapshot;
+  const after=session.endSnapshot;
+  const lines=[];
+
+  const questIds=new Set([...Object.keys(before.quests||{}),...Object.keys(after.quests||{})]);
+  questIds.forEach(id=>{
+    const oldStatus=before.quests?.[id]||"";
+    const newStatus=after.quests?.[id]||"";
+    if(oldStatus===newStatus)return;
+    const story=typeof getDmStoryEvent==="function"?getDmStoryEvent(id):null;
+    const name=story?.title||id;
+    if(newStatus==="completed")lines.push("Completed quest: "+name);
+    else if(newStatus==="active")lines.push("Started quest: "+name);
+    else if(newStatus==="available" && oldStatus==="locked")lines.push("Unlocked quest: "+name);
+  });
+
+  const beforeTrainers=new Map((before.trainers||[]).map(item=>[String(item.id),item]));
+  (after.trainers||[]).forEach(item=>{
+    const previous=beforeTrainers.get(String(item.id));
+    if(item.completed && (!previous||!previous.completed)){
+      lines.push("Defeated trainer: "+item.name);
+    }
+  });
+
+  const beforePokemon=new Map((before.pokemon||[]).map(item=>[String(item.id),item]));
+  (after.pokemon||[]).forEach(item=>{
+    const previous=beforePokemon.get(String(item.id));
+    const label=item.nickname && item.nickname.toLowerCase()!==String(item.speciesName||"").toLowerCase()
+      ? item.nickname+" ("+item.speciesName+")"
+      : item.speciesName;
+    if(!previous){
+      lines.push("Added/Caught Pokémon: "+label);
+      return;
+    }
+    if(previous.speciesNumber && item.speciesNumber && previous.speciesNumber!==item.speciesNumber){
+      lines.push("Evolution: "+previous.speciesName+" → "+item.speciesName);
+    }
+  });
+
+  if(typeof kantoGymBadges!=="undefined"){
+    kantoGymBadges.forEach(info=>{
+      if(!before.gyms?.[info.gymKey] && after.gyms?.[info.gymKey]){
+        lines.push("Earned badge: "+info.badge+" ("+info.city+")");
+      }
+    });
+  }
+
+  if(Number(after.pcPokemonLevel)>Number(before.pcPokemonLevel)){
+    lines.push("Party Pokémon level: "+before.pcPokemonLevel+" → "+after.pcPokemonLevel);
+  }
+
+  const visits=Array.isArray(session.locations)?session.locations:[];
+  if(visits.length){
+    const orderedUnique=[];
+    visits.forEach(visit=>{
+      if(!orderedUnique.includes(visit.title))orderedUnique.push(visit.title);
+    });
+    if(orderedUnique.length)lines.push("Locations visited: "+orderedUnique.join(" → "));
+  }
+
+  const flagLabels={
+    rivalTrusts:"Rival now trusts the party",
+    rocketRecognizes:"Team Rocket now recognizes the party",
+    oakKnows:"Oak now knows about the Resonance network",
+    usedResonance:"Party has now used Resonance technology"
+  };
+  Object.keys(flagLabels).forEach(key=>{
+    if(!before.consequences?.[key] && after.consequences?.[key])lines.push("Campaign consequence: "+flagLabels[key]);
+  });
+  if(
+    before.consequences?.legendaryDisposition &&
+    after.consequences?.legendaryDisposition &&
+    before.consequences.legendaryDisposition!==after.consequences.legendaryDisposition
+  ){
+    lines.push("Legendary disposition: "+before.consequences.legendaryDisposition+" → "+after.consequences.legendaryDisposition);
+  }
+
+  return lines.length?lines.map(line=>"• "+line).join("\n"):"No automatic campaign changes were detected. Add the important events from the session below.";
+}
+
+function endDmCampaignSession(sessionId){
+  const sessions=getDmCampaignSessions();
+  const session=sessions.find(item=>item.id===sessionId);
+  if(!session)return;
+  if(session.status!=="active"){
+    alert("This session is not currently active.");
+    return;
+  }
+  if(!confirm("End "+(session.title||"this session")+" and generate its recap?"))return;
+
+  session.endSnapshot=captureDmCampaignSessionSnapshot();
+  session.endedAt=new Date().toISOString();
+  session.status="completed";
+  const generated=buildDmCampaignSessionAutoRecap(session);
+  session.recap=session.recap.trim()
+    ? session.recap.trim()+"\n\n"+generated
+    : generated;
+  saveDmCampaignSessions(sessions);
+  setActiveDmCampaignSessionId("");
+  renderDmCampaignSessions();
+}
+
+function regenerateDmCampaignSessionRecap(sessionId){
+  const sessions=getDmCampaignSessions();
+  const session=sessions.find(item=>item.id===sessionId);
+  if(!session||!session.startSnapshot)return;
+  if(session.status==="active"){
+    session.endSnapshot=captureDmCampaignSessionSnapshot();
+  }
+  if(!session.endSnapshot){
+    alert("Start and end the session before generating a recap.");
+    return;
+  }
+  const generated=buildDmCampaignSessionAutoRecap(session);
+  if(session.recap.trim() && !confirm("Replace the current recap with a newly generated recap?"))return;
+  session.recap=generated;
+  saveDmCampaignSessions(sessions);
+  renderDmCampaignSessions();
+}
+
+function deleteDmCampaignSession(sessionId){
+  const sessions=getDmCampaignSessions();
+  const session=sessions.find(item=>item.id===sessionId);
+  if(!session)return;
+  if(!confirm('Delete "'+(session.title||"this session")+'"? This cannot be undone.'))return;
+  saveDmCampaignSessions(sessions.filter(item=>item.id!==sessionId));
+  if(getActiveDmCampaignSessionId()===sessionId)setActiveDmCampaignSessionId("");
+  renderDmCampaignSessions();
+}
+
+function buildDmSessionVisitedLocationsHTML(session){
+  const visits=Array.isArray(session.locations)?session.locations:[];
+  if(!visits.length)return"";
+  const counts={};
+  const order=[];
+  visits.forEach(visit=>{
+    const key=visit.title||visit.locationId;
+    if(!counts[key]){counts[key]=0;order.push(key);}
+    counts[key]+=1;
+  });
+  const text=order.map(name=>name+(counts[name]>1?" ×"+counts[name]:"")).join(" • ");
+  return '<div class="dm-session-location-list"><strong>Locations this session:</strong> '+dmStoryEscape(text)+'</div>';
+}
+
+function renderDmCampaignSessions(){
+  const list=document.getElementById("dmCampaignSessionsList");
+  const summary=document.getElementById("dmCampaignSessionsSummary");
+  const banner=document.getElementById("dmActiveSessionBanner");
+  if(!list)return;
+
+  const sessions=getDmCampaignSessions().sort((a,b)=>(Number(b.number)||0)-(Number(a.number)||0));
+  const activeId=getActiveDmCampaignSessionId();
+  const active=sessions.find(item=>item.id===activeId && item.status==="active");
+
+  if(summary){
+    const completed=sessions.filter(item=>item.status==="completed").length;
+    summary.textContent=sessions.length
+      ? sessions.length+" session"+(sessions.length===1?"":"s")+" • "+completed+" completed"+(active?" • 1 active":"")
+      : "No sessions created yet";
+  }
+
+  if(banner){
+    banner.innerHTML=active
+      ? '<div class="dm-session-active-banner">'+
+          '<div class="dm-session-active-banner-title">Active: '+dmStoryEscape(active.title||("Session "+active.number))+'</div>'+
+          '<div class="dm-session-active-banner-meta">'+dmStoryEscape(formatDmSessionDate(active.date))+' • Map visits and campaign changes are being grouped into this game session.</div>'+
+        '</div>'
+      : '';
+  }
+
+  if(!sessions.length){
+    list.innerHTML='<div class="empty-message">Create your first game session before your next play session. Prep, live notes, and the final recap will stay together.</div>';
+    return;
+  }
+
+  list.innerHTML=sessions.map(session=>{
+    const status=session.status||"planned";
+    const title=session.title||("Session "+session.number);
+    const statusLabel=status==="active"?"Active":status==="completed"?"Completed":"Planned";
+    const startedText=session.startedAt?new Date(session.startedAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"";
+    return '<details class="dm-session-record '+status+'" id="dm-session-record-'+dmStoryEscape(session.id)+'" '+(status==="active"?'open':'')+'>'+
+      '<summary>'+
+        '<div>'+
+          '<div class="dm-session-record-title">'+dmStoryEscape(title)+'</div>'+
+          '<div class="dm-session-record-meta">'+dmStoryEscape(formatDmSessionDate(session.date))+(startedText?' • Started '+dmStoryEscape(startedText):'')+'</div>'+
+        '</div>'+
+        '<span class="dm-session-record-status '+status+'">'+statusLabel+'</span>'+
+      '</summary>'+
+      '<div class="dm-session-record-body">'+
+        '<div class="dm-session-record-grid">'+
+          '<div class="form-row"><label>Session Title</label><input type="text" maxlength="100" value="'+dmStoryEscape(title)+'" data-session-id="'+dmStoryEscape(session.id)+'" oninput="updateDmCampaignSessionField(this.dataset.sessionId,&quot;title&quot;,this.value)"></div>'+
+          '<div class="form-row"><label>Date</label><input type="date" value="'+dmStoryEscape(session.date||"")+'" data-session-id="'+dmStoryEscape(session.id)+'" onchange="updateDmCampaignSessionField(this.dataset.sessionId,&quot;date&quot;,this.value)"></div>'+
+        '</div>'+
+        '<details class="dm-session-phase" open>'+
+          '<summary>Session Prep</summary>'+
+          '<div class="dm-session-phase-body"><textarea placeholder="Planned quests, scenes, NPCs, encounters, reminders, or anything you want ready before everyone arrives…" data-session-id="'+dmStoryEscape(session.id)+'" oninput="updateDmCampaignSessionField(this.dataset.sessionId,&quot;prep&quot;,this.value)">'+dmStoryEscape(session.prep||"")+'</textarea></div>'+
+        '</details>'+
+        '<details class="dm-session-phase" '+(status==="active"?'open':'')+'>'+
+          '<summary>Session Notes</summary>'+
+          '<div class="dm-session-phase-body">'+
+            '<textarea placeholder="Live notes from this specific game session…" data-session-id="'+dmStoryEscape(session.id)+'" oninput="updateDmCampaignSessionField(this.dataset.sessionId,&quot;notes&quot;,this.value)">'+dmStoryEscape(session.notes||"")+'</textarea>'+
+            buildDmSessionVisitedLocationsHTML(session)+
+          '</div>'+
+        '</details>'+
+        '<details class="dm-session-phase" '+(status==="completed"?'open':'')+'>'+
+          '<summary>Session Recap</summary>'+
+          '<div class="dm-session-phase-body">'+
+            '<div class="dm-session-recap-help">When you end a session, the app generates a starting recap from campaign changes detected between Start Session and End Session. You can edit it freely.</div>'+
+            '<textarea placeholder="The recap will be generated when the session ends. You can also write your own recap here." data-session-id="'+dmStoryEscape(session.id)+'" oninput="updateDmCampaignSessionField(this.dataset.sessionId,&quot;recap&quot;,this.value)">'+dmStoryEscape(session.recap||"")+'</textarea>'+
+          '</div>'+
+        '</details>'+
+        '<div class="dm-session-actions">'+
+          (status==="active"
+            ? '<button class="primary-button" type="button" data-session-id="'+dmStoryEscape(session.id)+'" onclick="endDmCampaignSession(this.dataset.sessionId)">End Session & Generate Recap</button>'
+            : '<button class="small-button" type="button" data-session-id="'+dmStoryEscape(session.id)+'" onclick="startDmCampaignSession(this.dataset.sessionId)">'+(status==="completed"?'Reopen Session':'Start Session')+'</button>')+
+          (status==="completed"
+            ? '<button class="small-button" type="button" data-session-id="'+dmStoryEscape(session.id)+'" onclick="regenerateDmCampaignSessionRecap(this.dataset.sessionId)">Regenerate Auto Recap</button>'
+            : '')+
+          '<button class="delete-button" type="button" data-session-id="'+dmStoryEscape(session.id)+'" onclick="deleteDmCampaignSession(this.dataset.sessionId)">Delete</button>'+
+        '</div>'+
+      '</div>'+
+    '</details>';
+  }).join("");
+}
+
 function displayCampaignPage() {
   const display=document.getElementById("pcPokemonLevelDisplay");
   const input=document.getElementById("pcPokemonLevelInput");
@@ -21912,6 +22427,8 @@ function displayCampaignPage() {
   if(xpDisplay)xpDisplay.textContent=pcPokemonLevel>=100?"MAX LEVEL":xp.toLocaleString()+" / "+needed.toLocaleString()+" XP";
   if(xpBar)xpBar.style.width=(pcPokemonLevel>=100?100:Math.max(0,Math.min(100,(xp/needed)*100)))+"%";
   displayGymBadgeProgress();
+
+  renderDmCampaignSessions();
 }
 
 
