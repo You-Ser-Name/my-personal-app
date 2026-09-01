@@ -2606,6 +2606,29 @@ select {
 }
 .story-map-marker-button:focus-visible{outline:2px solid #cc0000;outline-offset:2px}
 
+.story-map-marker-button[data-story-sequence]::before{
+  content:attr(data-story-sequence);
+  position:absolute;
+  right:1px;
+  top:1px;
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#242424;
+  color:#fff;
+  border:1.5px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.25);
+  font-size:9px;
+  line-height:1;
+  font-weight:950;
+  pointer-events:none;
+  z-index:2;
+}
+
+
 .story-landmark-panel{margin-top:10px;padding:10px;border-radius:9px;background:#fff7e5;border:1px solid #dfc68d}
 .story-landmark-title{font-size:12px;font-weight:950;color:#6e5016}
 .story-landmark-status{font-size:9px;font-weight:900;text-transform:uppercase;margin-top:2px;color:#8d6a28}
@@ -9102,6 +9125,50 @@ upgradeSavedData();
 
 
 const DM_STORY_STATE_KEY="pokemonCampaignDmStoryStateV1";
+
+const PALLET_TOWN_STORY_SEQUENCE=[
+  "rival-01",
+  "resonance-01",
+  "side-01"
+];
+
+function getPalletTownStorySequenceInfo(eventId){
+  const index=PALLET_TOWN_STORY_SEQUENCE.indexOf(eventId);
+  if(index<0)return null;
+  return {index:index+1,total:PALLET_TOWN_STORY_SEQUENCE.length};
+}
+
+function applyPalletTownStorySequenceToState(state){
+  if(!state||!state.events)return state;
+
+  const firstId=PALLET_TOWN_STORY_SEQUENCE[0];
+  const secondId=PALLET_TOWN_STORY_SEQUENCE[1];
+  const thirdId=PALLET_TOWN_STORY_SEQUENCE[2];
+
+  const firstStatus=state.events[firstId]||"available";
+  const secondStatus=state.events[secondId]||"locked";
+  const thirdStatus=state.events[thirdId]||"locked";
+
+  // Quest 1 is always available unless it has already been started/completed.
+  if(!["active","completed"].includes(firstStatus))state.events[firstId]="available";
+
+  // Quest 2 cannot begin until Quest 1 is complete.
+  if(state.events[firstId]==="completed"){
+    if(!["active","completed"].includes(secondStatus))state.events[secondId]="available";
+  }else{
+    state.events[secondId]="locked";
+  }
+
+  // Quest 3 cannot begin until Quest 2 is complete.
+  if(state.events[secondId]==="completed"){
+    if(!["active","completed"].includes(thirdStatus))state.events[thirdId]="available";
+  }else{
+    state.events[thirdId]="locked";
+  }
+
+  return state;
+}
+
 const DM_STORY_ALL_ARCS=[
   "The Kanto Resonance",
   "Always One Step Ahead",
@@ -9203,6 +9270,8 @@ function getDmStoryState(){
     state.events[event.id]=stored.events?.[event.id]||defaultStatus;
     state.notes[event.id]=stored.notes?.[event.id]||"";
   });
+
+  applyPalletTownStorySequenceToState(state);
   return state;
 }
 function saveDmStoryState(state){
@@ -9216,6 +9285,7 @@ function dmStoryVisibleOnMap(event){const s=getDmStoryStatus(event.id);return s=
 function setDmStoryStatus(eventId,status){
   const state=getDmStoryState();
   state.events[eventId]=status;
+  applyPalletTownStorySequenceToState(state);
   saveDmStoryState(state);
   renderDmStoryDashboard();
   if(activeKantoDetailMapId){renderDmStoryMapBanner(activeKantoDetailMapId);renderKantoDetailTrainerHotspots(activeKantoDetailMapId);}
@@ -9230,6 +9300,7 @@ function unlockNextDmStoryEvent(eventId){
   const state=getDmStoryState();
   state.events[eventId]="completed";
   if(event.arc==="Side Stories"){
+    applyPalletTownStorySequenceToState(state);
     saveDmStoryState(state);
     renderDmStoryDashboard();
     if(activeKantoDetailMapId){renderDmStoryMapBanner(activeKantoDetailMapId);renderKantoDetailTrainerHotspots(activeKantoDetailMapId);}
@@ -9237,6 +9308,7 @@ function unlockNextDmStoryEvent(eventId){
   }
   const next=dmCampaignStoryEvents.find(item=>item.arc===event.arc && item.order===event.order+1);
   if(next && state.events[next.id]==="locked")state.events[next.id]="available";
+  applyPalletTownStorySequenceToState(state);
   saveDmStoryState(state);
   renderDmStoryDashboard();
   if(activeKantoDetailMapId){renderDmStoryMapBanner(activeKantoDetailMapId);renderKantoDetailTrainerHotspots(activeKantoDetailMapId);}
@@ -9501,7 +9573,14 @@ function renderDmStoryMapBanner(locationId){
   box.open=false;
   if(summary){
     const activeCount=ordered.filter(event=>["available","active"].includes(getDmStoryStatus(event.id))).length;
-    summary.textContent=ordered.length+" stor"+(ordered.length===1?"y":"ies")+(activeCount?" • "+activeCount+" available":"");
+    if(locationId==="pallet-town"){
+      const state=getDmStoryState();
+      const nextIndex=PALLET_TOWN_STORY_SEQUENCE.findIndex(id=>state.events[id]!=="completed");
+      const displayIndex=nextIndex<0?PALLET_TOWN_STORY_SEQUENCE.length:nextIndex+1;
+      summary.textContent="Pallet Town Quest "+displayIndex+" of "+PALLET_TOWN_STORY_SEQUENCE.length+(activeCount?" • "+activeCount+" available":"");
+    }else{
+      summary.textContent=ordered.length+" stor"+(ordered.length===1?"y":"ies")+(activeCount?" • "+activeCount+" available":"");
+    }
   }
 
   content.innerHTML=
@@ -9583,7 +9662,10 @@ function openDmStoryQuestPopup(eventId){
     "Side Stories":"Side Story"
   };
 
-  type.textContent=(arcShort[storyEvent.arc]||storyEvent.arc)+" • "+dmStoryStatusLabel(status);
+  const palletSequenceInfo=getPalletTownStorySequenceInfo(storyEvent.id);
+  type.textContent=palletSequenceInfo
+    ? "Pallet Town Quest "+palletSequenceInfo.index+" of "+palletSequenceInfo.total+" • "+dmStoryStatusLabel(status)
+    : (arcShort[storyEvent.arc]||storyEvent.arc)+" • "+dmStoryStatusLabel(status);
   name.textContent=storyEvent.title;
   description.textContent=storyEvent.hook;
 
@@ -9591,8 +9673,11 @@ function openDmStoryQuestPopup(eventId){
     storyPanel.innerHTML=
       '<div class="story-landmark-panel">'+
         '<div class="story-landmark-title">'+dmStoryEscape(storyEvent.title)+'</div>'+
-        '<div class="story-landmark-status">'+dmStoryEscape(dmStoryStatusLabel(status))+'</div>'+
+        '<div class="story-landmark-status">'+dmStoryEscape(palletSequenceInfo?("Pallet Town Quest "+palletSequenceInfo.index+" of "+palletSequenceInfo.total+" • "+dmStoryStatusLabel(status)):dmStoryStatusLabel(status))+'</div>'+
         '<div class="story-landmark-hook">'+dmStoryEscape(storyEvent.objective||storyEvent.hook)+'</div>'+
+        (palletSequenceInfo && palletSequenceInfo.index<palletSequenceInfo.total
+          ? '<div class="story-map-banner-note">Next: '+dmStoryEscape(getDmStoryEvent(PALLET_TOWN_STORY_SEQUENCE[palletSequenceInfo.index])?.title||"Next Pallet Town quest")+'</div>'
+          : '')+
         '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;">'+
           '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(storyEvent.id)+'" onclick="focusDmStoryEvent(this.dataset.storyId)">Open Full Quest</button>'+
           (status==="available"
@@ -10650,6 +10735,10 @@ function renderKantoDetailTrainerHotspots(locationId) {
       markerButton.style.top=location.storyMarkerY+"%";
       markerButton.setAttribute("aria-label","Open quest "+visibleStoryEvents[0].title);
       markerButton.title=visibleStoryEvents.map(event=>event.title).join(" / ");
+      const palletSequenceInfo=getPalletTownStorySequenceInfo(visibleStoryEvents[0].id);
+      if(locationId==="pallet-town" && palletSequenceInfo){
+        markerButton.dataset.storySequence=String(palletSequenceInfo.index);
+      }
       applyDmStoryMarkerStatusClass(markerButton,visibleStoryEvents);
       markerButton.onclick=function(event){
         event.stopPropagation();
