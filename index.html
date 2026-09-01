@@ -3150,6 +3150,81 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
   }
 }
 
+
+/* Compact map-first DM Session refinement */
+.dm-session-overview{gap:7px}
+.dm-session-topline{display:block}
+.dm-session-location{font-size:13px}
+.dm-session-counts{font-size:9px;margin-top:1px}
+.dm-session-section{border-radius:8px}
+.dm-session-section.compact-details>summary{
+  list-style:none;
+  cursor:pointer;
+  padding:7px 9px;
+  background:#f3f5f7;
+  border-bottom:1px solid #e1e5ea;
+  font-size:10px;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.45px;
+  color:#555f6b;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+.dm-session-section.compact-details>summary::-webkit-details-marker{display:none}
+.dm-session-section.compact-details:not([open])>summary{border-bottom:0}
+.dm-session-section.compact-details>summary::after{content:"⌄";font-size:12px;transition:transform .15s ease}
+.dm-session-section.compact-details[open]>summary::after{transform:rotate(180deg)}
+.dm-session-section-body{padding:7px}
+.dm-session-list{gap:5px}
+.dm-session-item{padding:6px 7px}
+.dm-session-item-head{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:6px;
+  align-items:center;
+}
+.dm-session-item-title{font-size:10.5px}
+.dm-session-item-meta{font-size:8.5px;margin-top:1px}
+.dm-session-item-actions{margin-top:4px;gap:4px}
+.dm-session-item-actions .small-button{padding:4px 6px!important;min-height:26px!important;font-size:10px!important}
+.dm-session-status{font-size:7.5px;padding:3px 5px}
+.dm-session-quest-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  gap:6px;
+  align-items:center;
+  padding:6px 7px;
+  border:1px solid #e3e7eb;
+  border-radius:8px;
+  background:#fbfcfd;
+}
+.dm-session-quest-copy{min-width:0}
+.dm-session-quest-title{font-size:10.5px;font-weight:950;line-height:1.2}
+.dm-session-quest-meta{font-size:8.5px;line-height:1.25;color:#6f7780;margin-top:1px;white-space:normal}
+.dm-session-quest-actions{display:flex;gap:4px;flex-wrap:nowrap}
+.dm-session-quest-actions .small-button{margin:0!important;padding:4px 6px!important;min-height:26px!important;font-size:10px!important}
+.dm-session-shortcuts-bottom{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  justify-content:center;
+  padding-top:1px;
+}
+.dm-session-shortcuts-bottom .small-button{
+  margin:0!important;
+  padding:4px 7px!important;
+  min-height:27px!important;
+  font-size:10px!important;
+}
+.dm-session-reminder{min-height:54px}
+@media(max-width:600px){
+  .dm-session-quest-row{grid-template-columns:minmax(0,1fr) auto}
+  .dm-session-quest-actions{grid-column:1/-1}
+}
+
 </style>
 
 
@@ -9721,13 +9796,13 @@ function renderDmStoryMapBanner(locationId){
   const completedCount=ordered.filter(event=>getDmStoryStatus(event.id)==="completed").length;
 
   box.className="story-map-banner story-map-master-details show";
-  box.open=true;
+  box.open=false;
 
   if(summary){
     const pieces=[];
     if(activeCount)pieces.push(activeCount+" in progress");
     if(availableCount)pieces.push(availableCount+" available");
-    if(undefeated.length)pieces.push(undefeated.length+" trainer"+(undefeated.length===1?"":"s"));
+    if(lockedCount)pieces.push(lockedCount+" locked");
     summary.textContent=locationTitle+(pieces.length?" • "+pieces.join(" • "):"");
   }
 
@@ -9735,14 +9810,14 @@ function renderDmStoryMapBanner(locationId){
     ? '<div class="dm-session-list">'+ordered.map(event=>{
         const status=getDmStoryStatus(event.id);
         const statusText=(statusLabelMap[status]||status)+(status==="locked"?" - "+getDmStoryLockedReason(event.id):"");
-        return '<div class="dm-session-item">'+
-          '<div class="dm-session-item-head">'+
-            '<div><div class="dm-session-item-title">'+dmStoryEscape(event.title)+'</div>'+
-            '<div class="dm-session-item-meta">'+dmStoryEscape(arcShort[event.arc]||event.arc)+' • '+dmStoryEscape(statusText)+'</div></div>'+
-            '<span class="dm-session-status '+dmStoryEscape(status)+'">'+dmStoryEscape(statusLabelMap[status]||status)+'</span>'+
+        return '<div class="dm-session-quest-row">'+
+          '<div class="dm-session-quest-copy">'+
+            '<div class="dm-session-quest-title">'+dmStoryEscape(event.title)+'</div>'+
+            '<div class="dm-session-quest-meta">'+dmStoryEscape(statusText)+'</div>'+
           '</div>'+
-          '<div class="dm-session-item-actions">'+
-            '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="event.stopPropagation();openDmStoryQuestPopup(this.dataset.storyId)">Open Here</button>'+
+          '<span class="dm-session-status '+dmStoryEscape(status)+'">'+dmStoryEscape(statusLabelMap[status]||status)+'</span>'+
+          '<div class="dm-session-quest-actions">'+
+            '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" onclick="event.stopPropagation();openDmStoryQuestPopup(this.dataset.storyId)">Open</button>'+
             (status==="available"
               ? '<button class="small-button" type="button" data-story-id="'+dmStoryEscape(event.id)+'" data-story-start="active" onclick="event.stopPropagation();setDmStoryStatus(this.dataset.storyId,this.dataset.storyStart);openDmStoryQuestPopup(this.dataset.storyId)">Start</button>'
               : '')+
@@ -9752,68 +9827,68 @@ function renderDmStoryMapBanner(locationId){
     : '<div class="dm-session-empty">No campaign stories are assigned to this location yet.</div>';
 
   const encounterHtml=encounters.length
-    ? '<div class="dm-session-list">'+encounters.map(encounter=>{
-        const encounterStatus=getDmSessionEncounterStatus(encounter);
-        const teamText=(encounter.team||[]).map(member=>member[0]+" Lv."+member[1]).join(" • ");
-        return '<div class="dm-session-item">'+
-          '<div class="dm-session-item-head">'+
-            '<div><div class="dm-session-item-title">'+dmStoryEscape(encounter.name)+'</div>'+
-            '<div class="dm-session-item-meta">'+dmStoryEscape(encounter.role)+' • Reward '+dmStoryEscape(encounter.reward)+'</div></div>'+
-            '<span class="dm-session-status '+(encounterStatus==="completed"?"completed":"available")+'">'+(encounterStatus==="completed"?"Defeated":"Ready")+'</span>'+
-          '</div>'+
-          '<div class="dm-session-trainer-team">'+dmStoryEscape(teamText)+'</div>'+
-          '<div class="dm-session-item-actions">'+
-            '<button class="small-button" type="button" data-trainer-key="'+dmStoryEscape(encounter.key)+'" onclick="event.stopPropagation();openDmSessionTrainerEncounter(this.dataset.trainerKey)">View Trainer</button>'+
-            (encounterStatus!=="completed"
-              ? '<button class="small-button" type="button" data-trainer-key="'+dmStoryEscape(encounter.key)+'" onclick="event.stopPropagation();prepareKantoMapTrainerBattle(this.dataset.trainerKey)">Prepare Battle</button>'
-              : '')+
-          '</div>'+
-        '</div>';
-      }).join("")+'</div>'
-    : '<div class="dm-session-empty">No map trainer encounters are assigned here.</div>';
+    ? '<details class="dm-session-section compact-details">'+
+        '<summary>Trainers / Encounters <span>'+undefeated.length+' ready</span></summary>'+
+        '<div class="dm-session-section-body"><div class="dm-session-list">'+encounters.map(encounter=>{
+          const encounterStatus=getDmSessionEncounterStatus(encounter);
+          const teamText=(encounter.team||[]).map(member=>member[0]+" Lv."+member[1]).join(" • ");
+          return '<div class="dm-session-item">'+
+            '<div class="dm-session-item-head">'+
+              '<div><div class="dm-session-item-title">'+dmStoryEscape(encounter.name)+'</div>'+
+              '<div class="dm-session-item-meta">'+dmStoryEscape(encounter.role)+' • Reward '+dmStoryEscape(encounter.reward)+'</div></div>'+
+              '<span class="dm-session-status '+(encounterStatus==="completed"?"completed":"available")+'">'+(encounterStatus==="completed"?"Defeated":"Ready")+'</span>'+
+            '</div>'+
+            '<div class="dm-session-trainer-team">'+dmStoryEscape(teamText)+'</div>'+
+            '<div class="dm-session-item-actions">'+
+              '<button class="small-button" type="button" data-trainer-key="'+dmStoryEscape(encounter.key)+'" onclick="event.stopPropagation();openDmSessionTrainerEncounter(this.dataset.trainerKey)">View</button>'+
+              (encounterStatus!=="completed"
+                ? '<button class="small-button" type="button" data-trainer-key="'+dmStoryEscape(encounter.key)+'" onclick="event.stopPropagation();prepareKantoMapTrainerBattle(this.dataset.trainerKey)">Battle</button>'
+                : '')+
+            '</div>'+
+          '</div>';
+        }).join("")+'</div></div>'+
+      '</details>'
+    : '';
 
   const servicesHtml=services.length
-    ? '<div class="dm-session-service-row">'+services.map(service=>
-        '<button class="small-button" type="button" data-location-id="'+dmStoryEscape(locationId)+'" data-service="'+dmStoryEscape(service.type)+'" onclick="event.stopPropagation();openDmSessionService(this.dataset.locationId,this.dataset.service)">'+dmStoryEscape(service.label)+'</button>'
-      ).join("")+'</div>'
-    : '<div class="dm-session-empty">No location services are configured here.</div>';
+    ? '<details class="dm-session-section compact-details">'+
+        '<summary>Location Tools <span>'+services.length+'</span></summary>'+
+        '<div class="dm-session-section-body"><div class="dm-session-service-row">'+services.map(service=>
+          '<button class="small-button" type="button" data-location-id="'+dmStoryEscape(locationId)+'" data-service="'+dmStoryEscape(service.type)+'" onclick="event.stopPropagation();openDmSessionService(this.dataset.locationId,this.dataset.service)">'+dmStoryEscape(service.label)+'</button>'
+        ).join("")+'</div></div>'+
+      '</details>'
+    : '';
+
+  const reminderHtml=
+    '<details class="dm-session-section compact-details">'+
+      '<summary>DM Reminder'+(reminders[locationId]?' <span>Saved</span>':'')+'</summary>'+
+      '<div class="dm-session-section-body">'+
+        '<textarea class="dm-session-reminder" placeholder="Anything you need to remember while running this location…" data-location-id="'+dmStoryEscape(locationId)+'" oninput="saveDmSessionReminder(this.dataset.locationId,this.value)">'+dmStoryEscape(reminders[locationId]||"")+'</textarea>'+
+      '</div>'+
+    '</details>';
 
   content.innerHTML=
     '<div class="dm-session-overview">'+
       '<div class="dm-session-topline">'+
-        '<div>'+
-          '<div class="dm-session-location">'+dmStoryEscape(locationTitle)+'</div>'+
-          '<div class="dm-session-counts">'+
-            ordered.length+' quest'+(ordered.length===1?'':'s')+
-            ' • '+activeCount+' in progress'+
-            ' • '+availableCount+' available'+
-            ' • '+lockedCount+' locked'+
-            ' • '+completedCount+' completed'+
-          '</div>'+
-        '</div>'+
-        '<div class="dm-session-shortcuts">'+
-          '<button class="small-button" type="button" onclick="showPage(&quot;campaignPage&quot;)">Campaign</button>'+
-          '<button class="small-button" type="button" onclick="showPage(&quot;trainersPage&quot;)">Trainers</button>'+
-          '<button class="small-button" type="button" onclick="showPage(&quot;battlesPage&quot;)">Battles</button>'+
+        '<div class="dm-session-location">'+dmStoryEscape(locationTitle)+'</div>'+
+        '<div class="dm-session-counts">'+ordered.length+' quest'+(ordered.length===1?'':'s')+
+          ' • '+activeCount+' in progress'+
+          ' • '+availableCount+' available'+
+          ' • '+lockedCount+' locked'+
+          ' • '+completedCount+' completed'+
         '</div>'+
       '</div>'+
       '<div class="dm-session-section">'+
-        '<div class="dm-session-section-title">Quests at this location</div>'+
+        '<div class="dm-session-section-title">Quests</div>'+
         '<div class="dm-session-section-body">'+storyHtml+'</div>'+
       '</div>'+
-      '<div class="dm-session-section">'+
-        '<div class="dm-session-section-title">Trainers / Encounters</div>'+
-        '<div class="dm-session-section-body">'+encounterHtml+'</div>'+
-      '</div>'+
-      '<div class="dm-session-section">'+
-        '<div class="dm-session-section-title">Location Tools</div>'+
-        '<div class="dm-session-section-body">'+servicesHtml+'</div>'+
-      '</div>'+
-      '<div class="dm-session-section">'+
-        '<div class="dm-session-section-title">DM Reminder</div>'+
-        '<div class="dm-session-section-body">'+
-          '<textarea class="dm-session-reminder" placeholder="Anything you need to remember while running this location…" data-location-id="'+dmStoryEscape(locationId)+'" oninput="saveDmSessionReminder(this.dataset.locationId,this.value)">'+dmStoryEscape(reminders[locationId]||"")+'</textarea>'+
-        '</div>'+
+      encounterHtml+
+      servicesHtml+
+      reminderHtml+
+      '<div class="dm-session-shortcuts-bottom">'+
+        '<button class="small-button" type="button" onclick="showPage(&quot;campaignPage&quot;)">Campaign</button>'+
+        '<button class="small-button" type="button" onclick="showPage(&quot;trainersPage&quot;)">Trainers</button>'+
+        '<button class="small-button" type="button" onclick="showPage(&quot;battlesPage&quot;)">Battles</button>'+
       '</div>'+
     '</div>';
 }
