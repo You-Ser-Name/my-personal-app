@@ -3469,6 +3469,350 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
   .settings-collapsible-body{padding:14px 15px 16px}
 }
 
+
+
+/* =========================================================
+   DM MOBILE UI POLISH — 0176
+   Intentionally scoped to the DM interface. Player dashboard
+   styling is not changed by this block.
+========================================================= */
+
+/* Cleaner DM page framing */
+#homePage,
+#campaignPage,
+#pokedexPage,
+#trainersPage,
+#battlesPage,
+#notesPage,
+#settingsPage,
+#kantoDetailMapPage{
+  color:#252525;
+}
+
+#homePage > header,
+#campaignPage > header,
+#pokedexPage > header,
+#trainersPage > header,
+#battlesPage > header,
+#notesPage > header,
+#settingsPage > header,
+#kantoDetailMapPage > header{
+  min-height:58px;
+  padding:13px 16px;
+}
+
+#homePage > header h1,
+#campaignPage > header h1,
+#pokedexPage > header h1,
+#trainersPage > header h1,
+#battlesPage > header h1,
+#notesPage > header h1,
+#settingsPage > header h1,
+#kantoDetailMapPage > header h1{
+  margin:0;
+  font-size:22px;
+  line-height:1.1;
+}
+
+/* More efficient page margins on DM screens */
+#campaignPage .page-content,
+#pokedexPage .page-content,
+#trainersPage .page-content,
+#battlesPage .page-content,
+#notesPage .page-content,
+#settingsPage .page-content{
+  width:100%;
+  max-width:1100px;
+  margin:0 auto;
+  padding:14px;
+}
+
+/* Consistent, lighter DM cards */
+#campaignPage .card,
+#pokedexPage .card,
+#trainersPage .card,
+#battlesPage .card,
+#notesPage .card,
+#settingsPage .card,
+#campaignPage .form-card,
+#pokedexPage .form-card,
+#trainersPage .form-card,
+#battlesPage .form-card,
+#notesPage .form-card,
+#settingsPage .form-card{
+  border-radius:11px;
+  box-shadow:0 1px 5px rgba(0,0,0,.12);
+}
+
+/* Keep common navigation/action bars compact */
+#campaignPage .compact-top-actions,
+#pokedexPage .compact-top-actions,
+#trainersPage .compact-top-actions,
+#battlesPage .compact-top-actions,
+#notesPage .compact-top-actions,
+#settingsPage .compact-top-actions{
+  margin-bottom:10px;
+}
+
+/* Home becomes a compact map-first command center */
+#homePage > header{
+  position:relative;
+  padding-right:98px;
+}
+
+#homePage > header .small-button{
+  min-height:32px!important;
+  margin:0!important;
+  padding:5px 9px!important;
+  font-size:11px!important;
+  border-radius:8px!important;
+  box-shadow:none!important;
+}
+
+#homePage .home-kanto-map-wrap{
+  padding:5px 5px 0;
+}
+
+#homePage .menu{
+  max-width:760px;
+  margin:0 auto;
+  padding:10px 10px calc(12px + env(safe-area-inset-bottom,0px));
+  gap:8px;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+
+#homePage .home-tab-button{
+  min-height:68px;
+  margin:0;
+  padding:8px 5px;
+  gap:4px;
+  border-radius:10px;
+  box-shadow:0 1px 4px rgba(0,0,0,.14);
+}
+
+#homePage .home-tab-icon{
+  font-size:22px;
+}
+
+#homePage .home-tab-label{
+  font-size:12px;
+}
+
+#homePage .notes-icon{
+  width:24px;
+  height:24px;
+}
+
+/* Location popup: reduce vertical bulk without shrinking tap targets */
+#homePage .kanto-location-panel{
+  padding:9px;
+}
+
+#homePage .kanto-location-actions{
+  gap:6px;
+}
+
+#homePage .kanto-location-actions button{
+  min-height:34px!important;
+  margin:0!important;
+  padding:6px 8px!important;
+  font-size:11px!important;
+  border-radius:8px!important;
+}
+
+/* DM messages remain available but much less visually dominant */
+#homePage .dm-message-panel{
+  margin:7px 8px;
+  padding:9px;
+  border-radius:10px;
+}
+#homePage .dm-message-panel h3{font-size:14px}
+#homePage .dm-message-thread{max-height:220px}
+
+/* Form controls retain 16px inputs to avoid iOS auto-zoom */
+#campaignPage input,
+#campaignPage select,
+#campaignPage textarea,
+#pokedexPage input,
+#pokedexPage select,
+#pokedexPage textarea,
+#trainersPage input,
+#trainersPage select,
+#trainersPage textarea,
+#battlesPage input,
+#battlesPage select,
+#battlesPage textarea,
+#notesPage input,
+#notesPage select,
+#notesPage textarea,
+#settingsPage input,
+#settingsPage select,
+#settingsPage textarea{
+  max-width:100%;
+}
+
+/* Settings hierarchy remains intentionally quiet */
+#settingsPage .settings-simple-card{
+  padding:15px;
+}
+#settingsPage .settings-simple-heading h2{
+  font-size:18px;
+}
+#settingsPage .settings-simple-heading p{
+  font-size:12px;
+}
+
+/* Notes: reduce wasted chrome while keeping editor comfortable */
+#notesPage .note-list-card{
+  padding:11px 12px;
+}
+#notesPage .note-list-title{
+  font-size:16px;
+}
+#notesPage .note-list-preview{
+  font-size:12px;
+}
+#notesPage .notes-add-button{
+  width:40px;
+  height:40px;
+  font-size:25px;
+}
+
+/* DM global refresh: preserve function, reduce obstruction */
+.dm-global-refresh-button.dm-global-refresh-visible{
+  opacity:.94;
+}
+
+@media(max-width:600px){
+  #homePage > header,
+  #campaignPage > header,
+  #pokedexPage > header,
+  #trainersPage > header,
+  #battlesPage > header,
+  #notesPage > header,
+  #settingsPage > header,
+  #kantoDetailMapPage > header{
+    min-height:50px;
+    padding:10px 11px;
+  }
+
+  #homePage > header{
+    padding-right:82px;
+  }
+
+  #homePage > header h1,
+  #campaignPage > header h1,
+  #pokedexPage > header h1,
+  #trainersPage > header h1,
+  #battlesPage > header h1,
+  #notesPage > header h1,
+  #settingsPage > header h1,
+  #kantoDetailMapPage > header h1{
+    font-size:19px!important;
+  }
+
+  #campaignPage .page-content,
+  #pokedexPage .page-content,
+  #trainersPage .page-content,
+  #battlesPage .page-content,
+  #notesPage .page-content,
+  #settingsPage .page-content{
+    padding:9px;
+  }
+
+  #campaignPage .card,
+  #pokedexPage .card,
+  #trainersPage .card,
+  #battlesPage .card,
+  #notesPage .card,
+  #settingsPage .card,
+  #campaignPage .form-card,
+  #pokedexPage .form-card,
+  #trainersPage .form-card,
+  #battlesPage .form-card,
+  #notesPage .form-card,
+  #settingsPage .form-card{
+    padding:11px;
+    margin-left:0;
+    margin-right:0;
+  }
+
+  #homePage .menu{
+    padding:8px 8px calc(10px + env(safe-area-inset-bottom,0px));
+    gap:6px;
+  }
+
+  #homePage .home-tab-button{
+    min-height:60px;
+    padding:6px 3px;
+  }
+
+  #homePage .home-tab-icon{
+    font-size:20px;
+  }
+
+  #homePage .home-tab-label{
+    font-size:10px;
+  }
+
+  #homePage .notes-icon{
+    width:21px;
+    height:21px;
+  }
+
+  #homePage .kanto-location-name{
+    font-size:17px;
+  }
+
+  #homePage .kanto-location-description{
+    font-size:11px;
+    line-height:1.35;
+  }
+
+  #homePage .kanto-location-actions{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  #homePage .kanto-location-actions button{
+    min-height:32px!important;
+    font-size:10px!important;
+  }
+
+  #homePage #kantoDetailMapButton{
+    min-height:36px!important;
+  }
+
+  #homePage .dm-message-grid{
+    grid-template-columns:1fr;
+    gap:7px;
+  }
+
+  #settingsPage .settings-simple-card{
+    padding:12px!important;
+  }
+
+  #settingsPage .settings-simple-heading h2{
+    font-size:17px;
+  }
+
+  #settingsPage .settings-simple-heading p,
+  #settingsPage .settings-short-help{
+    font-size:11px;
+  }
+
+  .dm-global-refresh-button{
+    width:34px!important;
+    min-width:34px!important;
+    height:34px!important;
+    padding:0!important;
+    justify-content:center;
+    border-radius:50%!important;
+  }
+  .dm-global-refresh-button span:last-child{
+    display:none;
+  }
+}
+
 </style>
 
 
