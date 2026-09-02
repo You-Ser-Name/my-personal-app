@@ -3423,6 +3423,52 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
   color:#2f3337;
 }
 
+
+.settings-simple-card h2,
+.settings-collapsible-card h2,
+.settings-collapsible-card h3{margin-top:0}
+.settings-simple-heading h2{margin:0 0 4px}
+.settings-simple-heading p{margin:0 0 12px;color:#666;line-height:1.35}
+.settings-collapsible-card{padding:0;overflow:hidden}
+.settings-collapsible-card>summary{
+  cursor:pointer;
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:17px 18px;
+  font-size:20px;
+  font-weight:900;
+}
+.settings-collapsible-card>summary::-webkit-details-marker{display:none}
+.settings-collapsible-card>summary::after{
+  content:"›";
+  font-size:28px;
+  line-height:1;
+  color:#777;
+  transform:rotate(90deg);
+  transition:transform .15s ease;
+}
+.settings-collapsible-card[open]>summary::after{transform:rotate(-90deg)}
+.settings-collapsible-card[open]>summary{border-bottom:1px solid #ececec}
+.settings-summary-note{
+  margin-left:auto;
+  font-size:11px;
+  font-weight:700;
+  color:#888;
+  white-space:nowrap;
+}
+.settings-collapsible-body{padding:16px 18px 18px}
+.settings-collapsible-body h3{margin:0 0 8px;font-size:17px}
+.settings-short-help{margin:0 0 12px;line-height:1.4;color:#555}
+.settings-divider{margin:18px 0;border:0;border-top:1px solid #ddd}
+@media(max-width:600px){
+  .settings-collapsible-card>summary{padding:14px 15px;font-size:17px}
+  .settings-summary-note{font-size:9px}
+  .settings-collapsible-body{padding:14px 15px 16px}
+}
+
 </style>
 
 
@@ -3773,161 +3819,208 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
     <div class="compact-top-actions">
       <button class="small-button" type="button" onclick="showPage('homePage')">← Back</button>
     </div>
-    <div class="card" style="margin-top:14px;">
-      <h2 style="margin-top:0;">Campaign Account</h2>
-      <p style="line-height:1.5;">Sign out of the current campaign account to switch between the DM and player views.</p>
+
+    <div class="card settings-simple-card" style="margin-top:14px;">
+      <div class="settings-simple-heading">
+        <div>
+          <h2>Campaign Account</h2>
+          <p>Switch between the DM and player accounts.</p>
+        </div>
+      </div>
       <button class="danger-button" style="width:100%;" type="button" onclick="cloudSignOut()">Sign Out</button>
     </div>
 
-    <div class="card" style="margin-top:14px;">
-      <h2 style="margin-top:0;">Cloud Campaign Migration</h2>
-      <p style="line-height:1.5;">
-        DM only. Upload the campaign currently stored on this device to the shared Supabase campaign.
-        This replaces the cloud trainer and Pokémon records, while keeping your local campaign intact.
-      </p>
-      <button class="primary-button" id="cloudMigrationButton" style="width:100%;" type="button" onclick="cloudMigrateLocalCampaignToSupabase()">
-        Upload This Device's Campaign to Cloud
-      </button>
-      <button class="small-button" id="cloudDownloadButton" style="width:100%;margin-top:10px;" type="button" onclick="cloudDownloadCampaignToThisDevice()">
-        Download Cloud Campaign to This Device
-      </button>
-      <div id="cloudMigrationStatus" class="battle-note" style="display:none;text-align:center;margin-top:12px;"></div>
+    <div class="card settings-simple-card" style="margin-top:14px;">
+      <div class="settings-simple-heading">
+        <div>
+          <h2>Quick Actions</h2>
+          <p>The two settings you are most likely to use.</p>
+        </div>
+      </div>
 
-      <hr style="margin:18px 0;">
-
-      <h3 style="margin-bottom:6px;">Cloud Disaster Recovery</h3>
-      <p style="margin-top:0;line-height:1.45;">
-        DM only. Downloads a second JSON backup containing the campaign rows stored in Supabase:
-        trainers, Pokémon, campaign state, shared Pokédex, messages, battles, battle participants/actions,
-        and campaign-member linkage information. Use Restore only if cloud campaign data is damaged or lost.
-      </p>
+      <button class="primary-button" style="width:100%;" type="button" onclick="refreshAppFromGitHub(this)">
+        Refresh App from GitHub
+      </button>
+      <div id="githubRefreshStatus" style="margin-top:8px;font-weight:700;text-align:center;"></div>
 
       <button
         class="small-button"
-        id="cloudDisasterBackupButton"
-        style="width:100%;"
-        type="button"
-        onclick="cloudDownloadDisasterRecoveryBackup()">
-        Download Full Cloud Disaster Backup
-      </button>
-
-      <input
-        id="cloudDisasterRestoreFile"
-        type="file"
-        accept=".json,application/json"
-        style="display:none;"
-        onchange="cloudRestoreDisasterRecoveryBackupFromFile(this)">
-
-      <button
-        class="danger-button"
-        id="cloudDisasterRestoreButton"
         style="width:100%;margin-top:10px;"
         type="button"
-        onclick="document.getElementById('cloudDisasterRestoreFile').click()">
-        Restore Full Cloud Backup
-      </button>
-
-      <div
-        id="cloudDisasterRecoveryStatus"
-        class="battle-note"
-        style="display:none;text-align:left;margin-top:12px;white-space:pre-line;line-height:1.4;">
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:14px;">
-      <h2 style="margin-top:0;">App Updates</h2>
-      <p>Checks the currently deployed GitHub Pages app, clears app caches, and reloads the newest copy without needing a version-file change.</p>
-      <button class="primary-button" style="width:100%;" type="button" onclick="refreshAppFromGitHub(this)">Refresh App from GitHub</button>
-      <div id="githubRefreshStatus" style="margin-top:10px;font-weight:700;text-align:center;"></div>
-      <hr style="margin:18px 0;">
-      <h3 style="margin-bottom:6px;">Map Image Preload</h3>
-      <p style="margin-top:0;line-height:1.4;">Map and badge images preload automatically after the app opens. Use this button to manually reload them into the browser image cache if needed.</p>
-      <button class="small-button" style="width:100%;" type="button" onclick="preloadAllAppImages(true)">Preload All Images</button>
-      <div id="imagePreloadStatus" style="margin-top:10px;font-weight:700;text-align:center;"></div>
-    </div>
-
-
-<details class="form-card">
-      <summary style="font-size:22px;font-weight:bold;cursor:pointer;text-align:left;list-style-position:inside;">
-        Backup & Restore
-      </summary>
-
-      <div style="margin-top:18px;">
-      <h2 style="text-align:center;">Backup Files</h2>
-
-      <p style="text-align:center;line-height:1.5;">
-        Export your complete campaign as a JSON file, including Pokémon,
-        trainers, inventories, money, completed trainers, encounter/reward
-        state, PC level, Kanto route/town progress, gym badges, campaign notes,
-        DM story progress, quest Completion Criteria, quest DM Reminders,
-        Location Reminders, Campaign Consequences, Game Sessions, session notes/recaps,
-        and other persistent campaign data added by future app features.
-        Supabase sign-in credentials are intentionally excluded.
-        On iPhone or iPad, use <strong>Share / Save to Files</strong> if you
-        want to place the backup directly in the Files app.
-      </p>
-
-      <button
-        class="primary-button"
-        style="width:100%;margin-bottom:10px;"
         onclick="shareCampaignBackup()">
-        Share / Save Backup to Files
-      </button>
-
-      <button
-        class="small-button"
-        style="width:100%;"
-        onclick="exportCampaignBackup()">
-        Download Backup
+        Share / Save Campaign Backup
       </button>
 
       <div
         id="backupExportResult"
         class="battle-note"
-        style="display:none;text-align:center;margin-top:12px;">
+        style="display:none;text-align:center;margin-top:10px;">
       </div>
+    </div>
 
-      <button
-        class="small-button"
-        style="width:100%;margin-top:10px;"
-        type="button"
-        onclick="verifyCampaignBackupCoverage()">
-        Verify Backup Coverage
-      </button>
+    <details class="card settings-collapsible-card" style="margin-top:14px;">
+      <summary>
+        <span>Backup & Recovery</span>
+        <span class="settings-summary-note">Local + cloud recovery</span>
+      </summary>
 
-      <div
-        id="backupVerificationResult"
-        class="battle-note"
-        style="display:none;text-align:left;margin-top:10px;line-height:1.45;">
+      <div class="settings-collapsible-body">
+        <p class="settings-short-help">
+          Save or restore the campaign stored on this device. Full cloud disaster backups are DM-only
+          and are intended for emergencies.
+        </p>
+
+        <h3>Local Campaign Backup</h3>
+
+        <button
+          class="small-button"
+          style="width:100%;"
+          type="button"
+          onclick="exportCampaignBackup()">
+          Download Local Backup
+        </button>
+
+        <input
+          id="backupImportFile"
+          type="file"
+          accept=".json,application/json"
+          style="width:100%;margin:10px 0;">
+
+        <button
+          class="primary-button"
+          style="width:100%;"
+          type="button"
+          onclick="importCampaignBackupFromFile()">
+          Restore Local Backup
+        </button>
+
+        <div
+          id="backupImportResult"
+          class="battle-note"
+          style="display:none;text-align:center;margin-top:10px;">
+        </div>
+
+        <hr class="settings-divider">
+
+        <h3>Cloud Disaster Recovery</h3>
+        <p class="settings-short-help">
+          Creates a complete Supabase campaign-data backup, including trainers, Pokémon,
+          campaign state, Pokédex, messages, and battle history.
+        </p>
+
+        <button
+          class="small-button"
+          id="cloudDisasterBackupButton"
+          style="width:100%;"
+          type="button"
+          onclick="cloudDownloadDisasterRecoveryBackup()">
+          Download Full Cloud Backup
+        </button>
+
+        <input
+          id="cloudDisasterRestoreFile"
+          type="file"
+          accept=".json,application/json"
+          style="display:none;"
+          onchange="cloudRestoreDisasterRecoveryBackupFromFile(this)">
+
+        <button
+          class="danger-button"
+          id="cloudDisasterRestoreButton"
+          style="width:100%;margin-top:10px;"
+          type="button"
+          onclick="document.getElementById('cloudDisasterRestoreFile').click()">
+          Restore Full Cloud Backup
+        </button>
+
+        <div
+          id="cloudDisasterRecoveryStatus"
+          class="battle-note"
+          style="display:none;text-align:left;margin-top:10px;white-space:pre-line;line-height:1.4;">
+        </div>
       </div>
+    </details>
 
-      <hr style="margin:20px 0;">
+    <details class="card settings-collapsible-card" style="margin-top:14px;">
+      <summary>
+        <span>Cloud Sync & Migration</span>
+        <span class="settings-summary-note">DM only</span>
+      </summary>
 
-      <h3>Restore Backup File</h3>
+      <div class="settings-collapsible-body">
+        <p class="settings-short-help">
+          Use these only when intentionally replacing the cloud campaign with this device,
+          or replacing this device with the cloud copy.
+        </p>
 
-      <p style="line-height:1.5;">
-        Select a JSON backup file from Files. Restoring replaces the campaign
-        currently stored on this device after first creating a safety snapshot.
-      </p>
+        <button
+          class="primary-button"
+          id="cloudMigrationButton"
+          style="width:100%;"
+          type="button"
+          onclick="cloudMigrateLocalCampaignToSupabase()">
+          Upload This Device's Campaign to Cloud
+        </button>
 
-      <input
-        id="backupImportFile"
-        type="file"
-        accept=".json,application/json"
-        style="margin-bottom:12px;">
+        <button
+          class="small-button"
+          id="cloudDownloadButton"
+          style="width:100%;margin-top:10px;"
+          type="button"
+          onclick="cloudDownloadCampaignToThisDevice()">
+          Download Cloud Campaign to This Device
+        </button>
 
-      <button
-        class="primary-button"
-        style="width:100%;"
-        onclick="importCampaignBackupFromFile()">
-        Restore Selected Backup
-      </button>
-
-      <div
-        id="backupImportResult"
-        class="battle-note"
-        style="display:none;text-align:center;margin-top:12px;">
+        <div
+          id="cloudMigrationStatus"
+          class="battle-note"
+          style="display:none;text-align:center;margin-top:10px;">
+        </div>
       </div>
+    </details>
+
+    <details class="card settings-collapsible-card" style="margin-top:14px;">
+      <summary>
+        <span>Advanced Maintenance</span>
+        <span class="settings-summary-note">Usually not needed</span>
+      </summary>
+
+      <div class="settings-collapsible-body">
+        <h3>Backup Check</h3>
+        <p class="settings-short-help">
+          Confirms that the current device's persistent campaign data is included in local backups.
+        </p>
+
+        <button
+          class="small-button"
+          style="width:100%;"
+          type="button"
+          onclick="verifyCampaignBackupCoverage()">
+          Verify Backup Coverage
+        </button>
+
+        <div
+          id="backupVerificationResult"
+          class="battle-note"
+          style="display:none;text-align:left;margin-top:10px;line-height:1.45;">
+        </div>
+
+        <hr class="settings-divider">
+
+        <h3>Map Image Cache</h3>
+        <p class="settings-short-help">
+          Images preload automatically. Use this only if a map or badge image is missing.
+        </p>
+
+        <button
+          class="small-button"
+          style="width:100%;"
+          type="button"
+          onclick="preloadAllAppImages(true)">
+          Preload All Images
+        </button>
+
+        <div id="imagePreloadStatus" style="margin-top:8px;font-weight:700;text-align:center;"></div>
       </div>
     </details>
 
@@ -3936,20 +4029,12 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
         <summary style="font-size:20px;font-weight:bold;cursor:pointer;">
           Manual Backups
         </summary>
-
-        <p style="line-height:1.5;">
-          Manual snapshots include the same persistent campaign data as exported
-          backups, including notes, Kanto map progress, gym badges, and completed route encounters.
-          The app keeps only the newest 12 manual snapshots.
-        </p>
-
         <button
           class="small-button"
           style="width:100%;margin-bottom:12px;"
           onclick="createManualLocalSnapshot()">
           Create Manual Snapshot
         </button>
-
         <div id="manualBackupList"></div>
       </details>
     </div>
@@ -3959,30 +4044,22 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
         <summary style="font-size:20px;font-weight:bold;cursor:pointer;">
           Automatic Backups
         </summary>
-
-        <p style="line-height:1.5;">
-          Automatic snapshots include persistent campaign data, notes, and Kanto map progress
-          whenever the app creates a new snapshot. The app keeps only the newest
-          12 automatic snapshots. Older automatic snapshots are removed automatically.
-        </p>
-
         <div id="automaticBackupList"></div>
       </details>
     </div>
 
-    <details class="card danger-zone-card" style="margin-top:14px;">
-      <summary style="font-size:22px;font-weight:bold;cursor:pointer;text-align:left;list-style-position:inside;color:#b71c1c;">
-        Reset Campaign
+    <details class="card danger-zone-card settings-collapsible-card" style="margin-top:14px;">
+      <summary style="color:#b71c1c;">
+        <span>Reset Campaign</span>
+        <span class="settings-summary-note">Danger zone</span>
       </summary>
-      <div style="margin-top:18px;">
-        <p style="line-height:1.5;">
-          Permanently erase all saved campaign data on this device and return the app
-          to a brand-new campaign: Pokémon, trainers, completed trainers, inventories,
-          money, battle/encounter state, visited/completed map locations, gym badges,
-          local backup snapshots, and campaign level.
+      <div class="settings-collapsible-body">
+        <p class="settings-short-help">
+          Permanently erases the campaign stored on this device. Save a backup first if you may need it again.
         </p>
-        <p style="font-weight:800;">Export a backup first if you may want this campaign again.</p>
-        <button class="danger-button" type="button" onclick="resetCampaignToNewInstall()">Reset All Campaign Data</button>
+        <button class="danger-button" style="width:100%;" type="button" onclick="resetCampaignToNewInstall()">
+          Reset All Campaign Data
+        </button>
       </div>
     </details>
 
