@@ -3792,6 +3792,46 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
         Download Cloud Campaign to This Device
       </button>
       <div id="cloudMigrationStatus" class="battle-note" style="display:none;text-align:center;margin-top:12px;"></div>
+
+      <hr style="margin:18px 0;">
+
+      <h3 style="margin-bottom:6px;">Cloud Disaster Recovery</h3>
+      <p style="margin-top:0;line-height:1.45;">
+        DM only. Downloads a second JSON backup containing the campaign rows stored in Supabase:
+        trainers, Pokémon, campaign state, shared Pokédex, messages, battles, battle participants/actions,
+        and campaign-member linkage information. Use Restore only if cloud campaign data is damaged or lost.
+      </p>
+
+      <button
+        class="small-button"
+        id="cloudDisasterBackupButton"
+        style="width:100%;"
+        type="button"
+        onclick="cloudDownloadDisasterRecoveryBackup()">
+        Download Full Cloud Disaster Backup
+      </button>
+
+      <input
+        id="cloudDisasterRestoreFile"
+        type="file"
+        accept=".json,application/json"
+        style="display:none;"
+        onchange="cloudRestoreDisasterRecoveryBackupFromFile(this)">
+
+      <button
+        class="danger-button"
+        id="cloudDisasterRestoreButton"
+        style="width:100%;margin-top:10px;"
+        type="button"
+        onclick="document.getElementById('cloudDisasterRestoreFile').click()">
+        Restore Full Cloud Backup
+      </button>
+
+      <div
+        id="cloudDisasterRecoveryStatus"
+        class="battle-note"
+        style="display:none;text-align:left;margin-top:12px;white-space:pre-line;line-height:1.4;">
+      </div>
     </div>
 
     <div class="card" style="margin-top:14px;">
@@ -3818,8 +3858,11 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
       <p style="text-align:center;line-height:1.5;">
         Export your complete campaign as a JSON file, including Pokémon,
         trainers, inventories, money, completed trainers, encounter/reward
-        state, PC level, Kanto route/town visited/completed progress, gym badge progress,
-        campaign notes, and other persistent campaign data added by future app features.
+        state, PC level, Kanto route/town progress, gym badges, campaign notes,
+        DM story progress, quest Completion Criteria, quest DM Reminders,
+        Location Reminders, Campaign Consequences, Game Sessions, session notes/recaps,
+        and other persistent campaign data added by future app features.
+        Supabase sign-in credentials are intentionally excluded.
         On iPhone or iPad, use <strong>Share / Save to Files</strong> if you
         want to place the backup directly in the Files app.
       </p>
@@ -3842,6 +3885,20 @@ body.cloud-player-mode .dm-global-refresh-button{display:none!important}
         id="backupExportResult"
         class="battle-note"
         style="display:none;text-align:center;margin-top:12px;">
+      </div>
+
+      <button
+        class="small-button"
+        style="width:100%;margin-top:10px;"
+        type="button"
+        onclick="verifyCampaignBackupCoverage()">
+        Verify Backup Coverage
+      </button>
+
+      <div
+        id="backupVerificationResult"
+        class="battle-note"
+        style="display:none;text-align:left;margin-top:10px;line-height:1.45;">
       </div>
 
       <hr style="margin:20px 0;">
@@ -8205,6 +8262,112 @@ function createManualLocalSnapshot() {
 }
 
 
+
+const CAMPAIGN_BACKUP_CRITICAL_STORAGE_KEYS = [
+  {key:"ownedPokemon",label:"Owned Pokémon"},
+  {key:"trainers",label:"Trainers / wallets / inventory"},
+  {key:"pcPokemonLevel",label:"PC Pokémon level"},
+  {key:"pokemonCampaignKantoMapProgress",label:"Kanto map progress"},
+  {key:"pokemonCampaignNotes",label:"Campaign notes"},
+  {key:"pokemonCampaignDmStoryStateV1",label:"DM story progress, Completion Criteria & quest reminders"},
+  {key:"pokemonCampaignDmSessionRemindersV1",label:"Location Reminders"},
+  {key:"pokemonCampaignDmConsequenceFlagsV1",label:"Campaign Consequences"},
+  {key:"pokemonCampaignDmGameSessionsV1",label:"Game Sessions / prep / notes / recaps"},
+  {key:"pokemonCampaignDmActiveGameSessionV1",label:"Active Game Session"}
+];
+
+function verifyCampaignBackupCoverage() {
+  const result = document.getElementById("backupVerificationResult");
+  const currentSnapshot = getPersistentCampaignStorageSnapshot();
+  const backup = getCurrentCampaignBackupObject();
+  const validation = validateImportedCampaignBackup(backup);
+
+  const lines = [];
+  let passed = true;
+
+  if (!validation.valid) {
+    passed = false;
+    lines.push("❌ Current backup object failed validation: " + (validation.message || "Unknown validation error."));
+  } else {
+    lines.push("✅ Backup format and structure validate successfully.");
+  }
+
+  const backupSnapshot =
+    backup &&
+    backup.data &&
+    isValidPersistentStorageSnapshot(backup.data.persistentStorage)
+      ? backup.data.persistentStorage
+      : null;
+
+  if (!backupSnapshot) {
+    passed = false;
+    lines.push("❌ Persistent campaign storage snapshot is missing or invalid.");
+  } else {
+    const currentKeys = Object.keys(currentSnapshot).sort();
+    const backupKeys = Object.keys(backupSnapshot).sort();
+    const sameKeyList =
+      currentKeys.length === backupKeys.length &&
+      currentKeys.every(function(key,index){return key===backupKeys[index];});
+
+    if (!sameKeyList) {
+      passed = false;
+      lines.push("❌ Backup key list does not exactly match current persistent campaign storage.");
+    } else {
+      lines.push("✅ All " + currentKeys.length + " current persistent campaign storage keys are included.");
+    }
+
+    const changedKeys = currentKeys.filter(function(key){
+      return backupSnapshot[key] !== currentSnapshot[key];
+    });
+
+    if (changedKeys.length) {
+      passed = false;
+      lines.push("❌ " + changedKeys.length + " stored value(s) differ from the current campaign snapshot.");
+    } else {
+      lines.push("✅ Every included stored value matches the current campaign exactly.");
+    }
+
+    CAMPAIGN_BACKUP_CRITICAL_STORAGE_KEYS.forEach(function(item){
+      const currentHas = Object.prototype.hasOwnProperty.call(currentSnapshot,item.key);
+      const backupHas = Object.prototype.hasOwnProperty.call(backupSnapshot,item.key);
+
+      if (currentHas && backupHas && currentSnapshot[item.key]===backupSnapshot[item.key]) {
+        lines.push("✅ " + item.label);
+      } else if (!currentHas) {
+        lines.push("○ " + item.label + " — no saved data on this device yet; it will be included automatically once created.");
+      } else {
+        passed = false;
+        lines.push("❌ " + item.label + " is not round-tripping correctly.");
+      }
+    });
+  }
+
+  const forbiddenKeys = Object.keys(backupSnapshot || {}).filter(function(key){
+    return key.indexOf("sb-")===0 || key.indexOf("supabase.auth")===0;
+  });
+
+  if (forbiddenKeys.length) {
+    passed = false;
+    lines.push("❌ Supabase authentication credentials were found in the backup and should be excluded.");
+  } else {
+    lines.push("✅ Supabase authentication/session credentials are excluded.");
+  }
+
+  lines.unshift(
+    passed
+      ? "BACKUP VERIFICATION PASSED"
+      : "BACKUP VERIFICATION FOUND A PROBLEM"
+  );
+
+  if (result) {
+    result.style.display = "block";
+    result.style.whiteSpace = "pre-line";
+    result.textContent = lines.join("\n");
+  }
+
+  return passed;
+}
+
 function getCurrentCampaignBackupObject() {
 
   const savedNotes =
@@ -8669,9 +8832,11 @@ function persistImportedCampaignData(
 
   /*
     A restore replaces current campaign-state keys while preserving
-    backup history and app housekeeping markers. This keeps old backups
-    compatible while allowing new persistent features to round-trip
-    automatically through persistentStorage.
+    backup history and app housekeeping markers. Current-format backups
+    restore the complete persistentStorage snapshot, so DM story state,
+    quest criteria/reminders, Location Reminders, Campaign Consequences,
+    Game Sessions, map progress, inventory, Pokémon, trainers, and future
+    localStorage-backed campaign features round-trip automatically.
   */
   const existingKeys = [];
 
@@ -26622,6 +26787,304 @@ async function cloudMigrateLocalCampaignToSupabase(){
     setCloudMigrationStatus(error&&error.message?error.message:"Cloud migration failed.",true);
     alert("Cloud migration failed: "+(error&&error.message?error.message:"Unknown error"));
   }finally{
+    if(button)button.disabled=false;
+  }
+}
+
+
+
+const CLOUD_DISASTER_BACKUP_FORMAT="pokemon-campaign-cloud-disaster-backup";
+const CLOUD_DISASTER_BACKUP_VERSION=1;
+
+function setCloudDisasterRecoveryStatus(message,isError=false){
+  const el=document.getElementById("cloudDisasterRecoveryStatus");
+  if(!el)return;
+  el.style.display=message?"block":"none";
+  el.textContent=message||"";
+  el.style.color=isError?"#b00020":"";
+}
+
+function cloudDownloadJsonObject(object,filename){
+  const blob=new Blob([JSON.stringify(object,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement("a");
+  link.href=url;
+  link.download=filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
+
+async function cloudSelectCampaignRows(table,campaignId,orderColumn){
+  let query=cloudSupabaseClient.from(table).select("*").eq("campaign_id",campaignId);
+  if(orderColumn)query=query.order(orderColumn,{ascending:true});
+  const {data,error}=await query;
+  if(error)throw new Error(table+": "+error.message);
+  return Array.isArray(data)?data:[];
+}
+
+async function cloudBuildDisasterRecoveryBackup(){
+  if(!cloudSupabaseClient||!cloudCurrentUser||!cloudCurrentCampaign){
+    throw new Error("Sign in to the campaign first.");
+  }
+  if(cloudCurrentMembership?.role!=="dm"){
+    throw new Error("Only the DM can create a full cloud disaster backup.");
+  }
+
+  const campaignId=cloudCurrentCampaign.id;
+  setCloudDisasterRecoveryStatus("Reading campaign metadata…");
+
+  const campaignResult=await cloudSupabaseClient.from("campaigns").select("*").eq("id",campaignId).single();
+  if(campaignResult.error)throw new Error("campaigns: "+campaignResult.error.message);
+
+  const memberResult=await cloudSupabaseClient.from("campaign_members").select("*").eq("campaign_id",campaignId);
+  if(memberResult.error)throw new Error("campaign_members: "+memberResult.error.message);
+
+  setCloudDisasterRecoveryStatus("Reading trainers, Pokémon, state, Pokédex, and messages…");
+  const [trainerResult,pokemonResult,stateResult,pokedexResult,messageResult,battleResult]=await Promise.all([
+    cloudSelectCampaignRows("trainers",campaignId,"created_at"),
+    cloudSelectCampaignRows("owned_pokemon",campaignId,"created_at"),
+    cloudSelectCampaignRows("campaign_state",campaignId,null),
+    cloudSelectCampaignRows("campaign_pokedex",campaignId,null),
+    cloudSelectCampaignRows("campaign_messages",campaignId,"created_at"),
+    cloudSelectCampaignRows("battles",campaignId,"created_at")
+  ]);
+
+  const battleIds=battleResult.map(function(row){return row.id;}).filter(Boolean);
+  let participants=[];
+  let actions=[];
+
+  if(battleIds.length){
+    setCloudDisasterRecoveryStatus("Reading battle participants and actions…");
+    const participantResult=await cloudSupabaseClient.from("battle_participants").select("*").in("battle_id",battleIds);
+    if(participantResult.error)throw new Error("battle_participants: "+participantResult.error.message);
+    participants=Array.isArray(participantResult.data)?participantResult.data:[];
+
+    const actionResult=await cloudSupabaseClient.from("battle_actions").select("*").in("battle_id",battleIds);
+    if(actionResult.error)throw new Error("battle_actions: "+actionResult.error.message);
+    actions=Array.isArray(actionResult.data)?actionResult.data:[];
+  }
+
+  const backup={
+    format:CLOUD_DISASTER_BACKUP_FORMAT,
+    version:CLOUD_DISASTER_BACKUP_VERSION,
+    createdAt:new Date().toISOString(),
+    campaignId:campaignId,
+    campaignJoinCode:cloudCurrentCampaign.join_code||null,
+    note:"Supabase Auth users/passwords and database schema/RLS policies are intentionally not included.",
+    localCampaignBackup:(typeof getCurrentCampaignBackupObject==="function")?getCurrentCampaignBackupObject():null,
+    cloud:{
+      campaigns:[campaignResult.data],
+      campaign_members:Array.isArray(memberResult.data)?memberResult.data:[],
+      trainers:trainerResult,
+      owned_pokemon:pokemonResult,
+      campaign_state:stateResult,
+      campaign_pokedex:pokedexResult,
+      campaign_messages:messageResult,
+      battles:battleResult,
+      battle_participants:participants,
+      battle_actions:actions
+    }
+  };
+
+  return backup;
+}
+
+function validateCloudDisasterRecoveryBackup(backup){
+  if(!backup||typeof backup!=="object")return {valid:false,message:"The selected file is not a JSON backup object."};
+  if(backup.format!==CLOUD_DISASTER_BACKUP_FORMAT)return {valid:false,message:"This is not a full cloud disaster-recovery backup."};
+  if(!backup.cloud||typeof backup.cloud!=="object")return {valid:false,message:"The cloud data section is missing."};
+
+  const required=["campaigns","campaign_members","trainers","owned_pokemon","campaign_state","campaign_pokedex","campaign_messages","battles","battle_participants","battle_actions"];
+  for(const key of required){
+    if(!Array.isArray(backup.cloud[key]))return {valid:false,message:"The backup is missing a valid "+key+" table snapshot."};
+  }
+  return {valid:true};
+}
+
+async function cloudDownloadDisasterRecoveryBackup(){
+  const button=document.getElementById("cloudDisasterBackupButton");
+  try{
+    if(button)button.disabled=true;
+    const backup=await cloudBuildDisasterRecoveryBackup();
+    const counts=backup.cloud;
+    const timestamp=new Date().toISOString().replace(/[:.]/g,"-");
+    cloudDownloadJsonObject(backup,"pokemon-cloud-disaster-backup-"+timestamp+".json");
+    setCloudDisasterRecoveryStatus(
+      "FULL CLOUD BACKUP DOWNLOADED\n"+
+      "Trainers: "+counts.trainers.length+
+      "\nPokémon: "+counts.owned_pokemon.length+
+      "\nMembers: "+counts.campaign_members.length+
+      "\nPokédex rows: "+counts.campaign_pokedex.length+
+      "\nMessages: "+counts.campaign_messages.length+
+      "\nBattles: "+counts.battles.length+
+      "\nBattle participants: "+counts.battle_participants.length+
+      "\nBattle actions: "+counts.battle_actions.length+
+      "\n\nThis file also contains the normal local campaign backup."
+    );
+  }catch(error){
+    console.error("Cloud disaster backup failed",error);
+    setCloudDisasterRecoveryStatus(error?.message||"Cloud disaster backup failed.",true);
+    alert("Cloud disaster backup failed: "+(error?.message||"Unknown error"));
+  }finally{
+    if(button)button.disabled=false;
+  }
+}
+
+async function cloudDeleteBattleChildrenForCampaign(campaignId){
+  const battleResult=await cloudSupabaseClient.from("battles").select("id").eq("campaign_id",campaignId);
+  if(battleResult.error)throw battleResult.error;
+  const battleIds=(battleResult.data||[]).map(function(row){return row.id;}).filter(Boolean);
+  if(!battleIds.length)return;
+
+  let result=await cloudSupabaseClient.from("battle_actions").delete().in("battle_id",battleIds);
+  if(result.error)throw result.error;
+  result=await cloudSupabaseClient.from("battle_participants").delete().in("battle_id",battleIds);
+  if(result.error)throw result.error;
+}
+
+async function cloudInsertRows(table,rows,chunkSize=100){
+  if(!Array.isArray(rows)||!rows.length)return;
+  for(let i=0;i<rows.length;i+=chunkSize){
+    const chunk=rows.slice(i,i+chunkSize);
+    const {error}=await cloudSupabaseClient.from(table).insert(chunk);
+    if(error)throw new Error(table+": "+error.message);
+  }
+}
+
+async function cloudRestoreDisasterRecoveryBackup(backup){
+  const validation=validateCloudDisasterRecoveryBackup(backup);
+  if(!validation.valid)throw new Error(validation.message);
+
+  if(!cloudSupabaseClient||!cloudCurrentUser||!cloudCurrentCampaign){
+    throw new Error("Sign in to the campaign first.");
+  }
+  if(cloudCurrentMembership?.role!=="dm"){
+    throw new Error("Only the DM can restore a full cloud backup.");
+  }
+
+  const campaignId=cloudCurrentCampaign.id;
+  if(String(backup.campaignId)!==String(campaignId)){
+    throw new Error("This backup belongs to a different campaign ID and cannot be restored into the currently open campaign.");
+  }
+
+  const c=backup.cloud;
+  const ok=confirm(
+    "RESTORE FULL CLOUD BACKUP?\n\n"+
+    "This will replace the cloud campaign data for "+(cloudCurrentCampaign.name||"this campaign")+" with the selected backup.\n\n"+
+    c.trainers.length+" trainers\n"+
+    c.owned_pokemon.length+" Pokémon\n"+
+    c.battles.length+" battles\n"+
+    c.campaign_messages.length+" messages\n\n"+
+    "A fresh pre-restore cloud backup will be downloaded first.\n\nThis operation cannot be undone except by restoring another backup."
+  );
+  if(!ok)return false;
+
+  setCloudDisasterRecoveryStatus("Creating pre-restore cloud safety backup…");
+  const before=await cloudBuildDisasterRecoveryBackup();
+  cloudDownloadJsonObject(before,"pokemon-cloud-PRE-RESTORE-"+new Date().toISOString().replace(/[:.]/g,"-")+".json");
+
+  // Keep the current campaign and DM membership rows intact so RLS permission
+  // is not lost mid-restore. Member trainer links are restored at the end.
+  setCloudDisasterRecoveryStatus("Preparing membership links…");
+  const currentMembersResult=await cloudSupabaseClient.from("campaign_members").select("*").eq("campaign_id",campaignId);
+  if(currentMembersResult.error)throw currentMembersResult.error;
+  const currentMembers=Array.isArray(currentMembersResult.data)?currentMembersResult.data:[];
+  for(const member of currentMembers){
+    if(member.trainer_id){
+      const {error}=await cloudSupabaseClient.from("campaign_members").update({trainer_id:null}).eq("id",member.id);
+      if(error)throw new Error("campaign_members: "+error.message);
+    }
+  }
+
+  setCloudDisasterRecoveryStatus("Clearing current battle history…");
+  await cloudDeleteBattleChildrenForCampaign(campaignId);
+  let result=await cloudSupabaseClient.from("battles").delete().eq("campaign_id",campaignId);
+  if(result.error)throw result.error;
+
+  setCloudDisasterRecoveryStatus("Clearing cloud messages and Pokédex…");
+  result=await cloudSupabaseClient.from("campaign_messages").delete().eq("campaign_id",campaignId);
+  if(result.error)throw result.error;
+  result=await cloudSupabaseClient.from("campaign_pokedex").delete().eq("campaign_id",campaignId);
+  if(result.error)throw result.error;
+
+  setCloudDisasterRecoveryStatus("Clearing cloud Pokémon and trainers…");
+  result=await cloudSupabaseClient.from("owned_pokemon").delete().eq("campaign_id",campaignId);
+  if(result.error)throw result.error;
+  result=await cloudSupabaseClient.from("trainers").delete().eq("campaign_id",campaignId);
+  if(result.error)throw result.error;
+
+  setCloudDisasterRecoveryStatus("Restoring trainers…");
+  await cloudInsertRows("trainers",c.trainers);
+
+  setCloudDisasterRecoveryStatus("Restoring Pokémon…");
+  await cloudInsertRows("owned_pokemon",c.owned_pokemon);
+
+  setCloudDisasterRecoveryStatus("Restoring campaign state…");
+  result=await cloudSupabaseClient.from("campaign_state").delete().eq("campaign_id",campaignId);
+  if(result.error)throw result.error;
+  await cloudInsertRows("campaign_state",c.campaign_state);
+
+  setCloudDisasterRecoveryStatus("Restoring shared Pokédex and messages…");
+  await cloudInsertRows("campaign_pokedex",c.campaign_pokedex);
+  await cloudInsertRows("campaign_messages",c.campaign_messages);
+
+  setCloudDisasterRecoveryStatus("Restoring battle history…");
+  await cloudInsertRows("battles",c.battles);
+  await cloudInsertRows("battle_participants",c.battle_participants);
+  await cloudInsertRows("battle_actions",c.battle_actions);
+
+  setCloudDisasterRecoveryStatus("Restoring player-to-trainer links…");
+  const backupMemberByUser=new Map(
+    c.campaign_members.map(function(row){return [String(row.user_id||""),row];})
+  );
+  for(const member of currentMembers){
+    const saved=backupMemberByUser.get(String(member.user_id||""));
+    if(saved){
+      const {error}=await cloudSupabaseClient.from("campaign_members")
+        .update({trainer_id:saved.trainer_id||null})
+        .eq("id",member.id);
+      if(error)throw new Error("campaign_members: "+error.message);
+    }
+  }
+
+  setCloudDisasterRecoveryStatus(
+    "FULL CLOUD RESTORE COMPLETE\n"+
+    "Trainers: "+c.trainers.length+
+    "\nPokémon: "+c.owned_pokemon.length+
+    "\nPokédex rows: "+c.campaign_pokedex.length+
+    "\nMessages: "+c.campaign_messages.length+
+    "\nBattles: "+c.battles.length+
+    "\nBattle participants: "+c.battle_participants.length+
+    "\nBattle actions: "+c.battle_actions.length+
+    "\n\nExisting campaign/account membership rows were preserved so the DM did not lose access during restore."
+  );
+
+  alert("Full cloud campaign restore completed successfully.");
+  return true;
+}
+
+async function cloudRestoreDisasterRecoveryBackupFromFile(input){
+  const button=document.getElementById("cloudDisasterRestoreButton");
+  try{
+    const file=input?.files?.[0];
+    if(!file)return;
+    if(button)button.disabled=true;
+    setCloudDisasterRecoveryStatus("Reading selected cloud backup…");
+    const raw=await file.text();
+    const backup=JSON.parse(raw);
+    await cloudRestoreDisasterRecoveryBackup(backup);
+  }catch(error){
+    console.error("Cloud disaster restore failed",error);
+    setCloudDisasterRecoveryStatus(
+      "RESTORE STOPPED\n"+(error?.message||"Unknown error")+
+      "\n\nThe automatically downloaded PRE-RESTORE file can be used to return to the state that existed before this restore attempt.",
+      true
+    );
+    alert("Cloud restore failed: "+(error?.message||"Unknown error"));
+  }finally{
+    if(input)input.value="";
     if(button)button.disabled=false;
   }
 }
