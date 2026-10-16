@@ -26640,7 +26640,11 @@ function removeInventoryItem(itemId) {
    INITIAL LOAD
 ========================================================= */
 
-displayPokemonDatabase();
+// Wait until the cloud state in later script blocks has initialized.
+// Rendering earlier aborts this script and leaves image preloading uninitialized.
+window.addEventListener("DOMContentLoaded", function() {
+  displayPokemonDatabase();
+});
 
 
 /* =========================================================
