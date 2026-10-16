@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokémon Campaign — QA Sandbox</title>
+  <meta name="robots" content="noindex,nofollow">
+</head>
+<body>
+  <h1>Pokémon QA Sandbox</h1>
+  <p>Use a disposable test campaign and test accounts. Browser saves are isolated from the main app.</p>
+  <form id="qaForm">
+    <label for="qaCampaignCode">Test campaign code</label>
+    <input id="qaCampaignCode" name="campaign" required pattern="KANTO-QA-[A-Za-z0-9-]+" autocomplete="off">
+    <button type="submit">Open test campaign</button>
+  </form>
+  <p id="qaLoading" role="status"></p>
+  <script src="./loader.js"></script>
+</body>
+</html>
